@@ -1,0 +1,7 @@
+model:
+  name: svd_rerank
+  base_model: svd
+reranker:
+  alpha: 0.85
+  popularity_penalty: 0.10
+  diversity_weight: 0.05

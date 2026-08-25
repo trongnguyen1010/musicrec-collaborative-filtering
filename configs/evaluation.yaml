@@ -1,0 +1,11 @@
+metrics:
+  - rmse
+  - precision_at_k
+  - recall_at_k
+  - catalog_coverage
+  - intra_list_diversity
+  - popularity_ratio
+segments:
+  - all_users
+  - low_history_users
+  - high_history_users

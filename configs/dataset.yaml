@@ -1,0 +1,7 @@
+source:
+  name: hetrec_lastfm_2k
+  url: TODO
+  checksum: TODO
+filters:
+  min_user_interactions: 5
+  min_item_interactions: 5

@@ -1,0 +1,53 @@
+stages:
+  validate:
+    cmd: python scripts/validate_data.py
+    deps:
+      - data/raw
+      - scripts/validate_data.py
+      - configs/dataset.yaml
+    outs:
+      - data/interim/validated.parquet
+  preprocess:
+    cmd: python scripts/preprocess.py
+    deps:
+      - data/interim/validated.parquet
+      - scripts/preprocess.py
+      - configs/base.yaml
+    outs:
+      - data/processed/interactions.parquet
+      - data/processed/id_mappings.json
+  split:
+    cmd: python scripts/split_data.py
+    deps:
+      - data/processed/interactions.parquet
+      - scripts/split_data.py
+      - configs/base.yaml
+    outs:
+      - data/processed/splits
+  train:
+    cmd: python scripts/train.py
+    deps:
+      - data/processed/splits
+      - src/musicrec/recommenders
+      - scripts/train.py
+      - params.yaml
+    outs:
+      - outputs/train
+  evaluate:
+    cmd: python scripts/evaluate.py
+    deps:
+      - outputs/train
+      - data/processed/splits
+      - src/musicrec/evaluation
+      - scripts/evaluate.py
+    metrics:
+      - outputs/metrics.json:
+          cache: false
+  export_release:
+    cmd: python scripts/export_release.py
+    deps:
+      - outputs/train
+      - outputs/metrics.json
+      - scripts/export_release.py
+    outs:
+      - artifacts/releases

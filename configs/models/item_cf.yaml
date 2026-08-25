@@ -1,0 +1,4 @@
+model:
+  name: item_cf
+  neighbors: 80
+  similarity: cosine

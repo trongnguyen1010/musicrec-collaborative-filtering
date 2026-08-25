@@ -1,0 +1,4 @@
+model:
+  name: user_cf
+  neighbors: 40
+  similarity: cosine

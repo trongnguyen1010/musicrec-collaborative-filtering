@@ -1,0 +1,32 @@
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.venv/
+
+# Secrets and local settings
+.env
+.env.*
+!.env.example
+
+# ML experiment outputs (MLflow owns these locally)
+mlruns/
+mlartifacts/
+outputs/
+logs/
+
+# Data/model contents are versioned by DVC, never by Git
+data/raw/*
+data/interim/*
+data/processed/*
+artifacts/releases/*
+!data/README.md
+!artifacts/README.md
+
+# Editor and OS files
+.vscode/
+.idea/
+Thumbs.db
+.DS_Store

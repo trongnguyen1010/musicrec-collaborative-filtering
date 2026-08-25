@@ -1,0 +1,14 @@
+project:
+  name: musicrec
+  seed: 42
+  top_k: 10
+dataset:
+  interaction_key: [user_id, item_id]
+  feedback_column: listening_count
+  log_transform: true
+split:
+  strategy: leave_one_out
+  validation_seed: 42
+evaluation:
+  ks: [5, 10, 20]
+  exclude_seen_items: true

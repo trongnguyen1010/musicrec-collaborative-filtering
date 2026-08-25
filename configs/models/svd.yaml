@@ -1,0 +1,5 @@
+model:
+  name: svd
+  latent_factors: 64
+  regularization: 0.02
+  iterations: 30
