@@ -5,6 +5,10 @@ __pycache__/
 .ruff_cache/
 .mypy_cache/
 .venv/
+.venv-legacy/
+.tools/
+.dvc/cache/
+.dvc/tmp/
 
 # Secrets and local settings
 .env
@@ -16,6 +20,8 @@ mlruns/
 mlartifacts/
 outputs/
 logs/
+log_tensorboard/
+saved/
 
 # Data/model contents are versioned by DVC, never by Git
 data/raw/*
@@ -24,6 +30,9 @@ data/processed/*
 artifacts/releases/*
 !data/README.md
 !artifacts/README.md
+!data/raw/*.dvc
+!data/interim/*.dvc
+!data/processed/*.dvc
 
 # Editor and OS files
 .vscode/

@@ -1,0 +1,5 @@
+outs:
+- md5: 296d61afe4e8632b173fc2dd3be20ce2
+  size: 2589075
+  hash: md5
+  path: hetrec2011-lastfm-2k.zip

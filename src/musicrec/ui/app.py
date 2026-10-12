@@ -1,6 +1,7 @@
 """Streamlit demo that deliberately consumes the REST API instead of model code."""
 
 import os
+from typing import Any
 
 import requests
 import streamlit as st
@@ -13,7 +14,7 @@ user_id = st.text_input("User ID (tùy chọn)")
 k = st.slider("Số gợi ý", min_value=1, max_value=20, value=10)
 
 if st.button("Tạo gợi ý"):
-    payload: dict[str, object] = {"k": k}
+    payload: dict[str, Any] = {"k": k}
     if user_id:
         payload["user_id"] = user_id
     else:

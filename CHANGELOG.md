@@ -5,11 +5,23 @@ Mọi thay đổi đáng chú ý của MusicRec được ghi trong file này the
 
 ## [Unreleased]
 
+### Added
+
+- Nghiên cứu HetRec LastFM: tải và xác minh nguồn, EDA, dataset card và manifest/DVC cục bộ.
+- Giao thức tái hiện một phần Deng (2022): 30 split công khai, Pure-DHC/ProbS/AIProbS
+  thưa và adapter BPR huấn luyện bằng RecBole 1.1.1 trong môi trường riêng.
+- Evaluator full-catalog với Recall/MRR/NDCG/Hit/Precision@10, kiểm chứng tham chiếu,
+  chống rò rỉ và báo cáo từng split; MLflow cục bộ, checkpoint có RNG và dependency lock.
+
+### Fixed
+
+- Precision@K chia cho K khi danh sách ngắn; từ chối listening count NaN/vô hạn/không dương.
+
 ### Planned
 
 - Thêm pipeline xử lý HetRec/Last.fm và data validation.
 - Cài đặt Popularity, User-based CF, Item-based CF, SVD và reranker.
-- Thêm MLflow tracking, DVC remote và API/UI demo.
+- Thêm DVC remote và API/UI demo cho pipeline khóa luận.
 
 ## [0.1.0] - 2026-08-25
 

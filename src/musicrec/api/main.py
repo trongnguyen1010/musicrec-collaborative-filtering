@@ -2,7 +2,7 @@
 
 from fastapi import FastAPI
 
-from musicrec.api.schemas import RecommendRequest, RecommendResponse, RecommendationResponse
+from musicrec.api.schemas import RecommendationResponse, RecommendRequest, RecommendResponse
 from musicrec.data.contracts import Interaction
 from musicrec.recommenders.popularity import PopularityRecommender
 from musicrec.serving.service import RecommendationService

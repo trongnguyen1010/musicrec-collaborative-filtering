@@ -1,8 +1,8 @@
 """Base interface that every recommender implementation must follow."""
 
 from abc import ABC, abstractmethod
+from collections.abc import Iterable
 from dataclasses import dataclass
-from typing import Iterable
 
 from musicrec.data.contracts import Interaction
 

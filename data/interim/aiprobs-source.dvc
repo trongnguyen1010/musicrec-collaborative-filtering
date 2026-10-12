@@ -1,0 +1,6 @@
+outs:
+- md5: a88e72491365024ffc02bf7a8bd99974.dir
+  size: 375441435
+  nfiles: 37
+  hash: md5
+  path: aiprobs-source

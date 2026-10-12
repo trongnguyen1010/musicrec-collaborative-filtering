@@ -1,7 +1,7 @@
 """Popularity baseline used as the mandatory reference model."""
 
 from collections import defaultdict
-from typing import Iterable
+from collections.abc import Iterable
 
 from musicrec.data.contracts import Interaction
 from musicrec.recommenders.base import Recommendation, Recommender

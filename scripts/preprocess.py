@@ -13,9 +13,9 @@ OUTPUT_DIR = Path("data/processed")
 def main() -> None:
     frame = pd.read_parquet(INPUT_FILE)
     interactions = (
-        frame.groupby(["user_id", "item_id"], as_index=False)["listening_count"].sum().sort_values(
-            ["user_id", "item_id"]
-        )
+        frame.groupby(["user_id", "item_id"], as_index=False)["listening_count"]
+        .sum()
+        .sort_values(["user_id", "item_id"])
     )
     interactions["log_listening_count"] = interactions["listening_count"].map(
         lambda value: math.log(float(value) + 1.0)
