@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "musicrec"
-version = "0.1.0"
+version = "0.2.0"
 description = "Collaborative filtering-based music recommendation system."
 readme = "README.md"
 requires-python = ">=3.11,<3.13"
@@ -24,12 +24,14 @@ dependencies = [
   "pyyaml>=6.0,<7.0",
   "pyarrow>=18.0,<20.0",
   "requests>=2.32,<3.0",
+  "threadpoolctl>=3.0,<4.0",
 ]
 
 [project.optional-dependencies]
 app = ["streamlit>=1.42,<2.0"]
 experiments = ["mlflow>=3.0,<4.0", "dvc>=3.60,<4.0"]
 dev = [
+  "httpx>=0.28,<1.0",
   "pytest>=8.3,<9.0",
   "pytest-cov>=6.0,<7.0",
   "ruff>=0.11,<1.0",
@@ -47,6 +49,7 @@ addopts = "-q"
 [tool.ruff]
 line-length = 100
 target-version = "py311"
+extend-exclude = [".venv-legacy", ".tools", "outputs", "log_tensorboard"]
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "B", "UP"]
@@ -58,5 +61,5 @@ packages = ["musicrec"]
 exclude = ["tests"]
 
 [[tool.mypy.overrides]]
-module = ["requests"]
+module = ["requests", "yaml", "streamlit", "sklearn.*", "threadpoolctl"]
 ignore_missing_imports = true

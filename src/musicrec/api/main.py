@@ -1,39 +1,68 @@
-"""Minimal FastAPI entry point; model loading will be added with release export."""
+"""FastAPI prototype loading one verified Last.fm release at startup."""
 
-from fastapi import FastAPI
+import logging
+import os
+from collections.abc import AsyncIterator
+from contextlib import asynccontextmanager
+from pathlib import Path
 
-from musicrec.api.schemas import RecommendRequest, RecommendResponse, RecommendationResponse
-from musicrec.data.contracts import Interaction
-from musicrec.recommenders.popularity import PopularityRecommender
+from fastapi import FastAPI, HTTPException, Response
+
+from musicrec.api.schemas import RecommendationResponse, RecommendRequest, RecommendResponse
+from musicrec.configuration import ROOT
 from musicrec.serving.service import RecommendationService
 
-app = FastAPI(title="MusicRec API", version="0.1.0")
 
-_baseline = PopularityRecommender().fit(
-    [
-        Interaction(user_id="seed_user", item_id="seed_item_a", listening_count=10),
-        Interaction(user_id="seed_user", item_id="seed_item_b", listening_count=5),
-    ]
-)
-_service = RecommendationService(_baseline, model_version="scaffold-popularity-v0")
+def create_app(release_path: Path | None = None) -> FastAPI:
+    """Create the API; absent/corrupt artifacts produce not-ready instead of fake artists."""
+    folder = release_path or ROOT / os.environ.get("MUSICREC_RELEASE", "artifacts/releases/v0.2.0")
+    service: RecommendationService | None = None
+
+    @asynccontextmanager
+    async def lifespan(app: FastAPI) -> AsyncIterator[None]:
+        nonlocal service
+        try:
+            service = RecommendationService.from_release(folder)
+        except (OSError, ValueError, KeyError):
+            logging.getLogger(__name__).exception("Release could not be loaded")
+            service = None
+        yield
+        service = None
+
+    app = FastAPI(title="MusicRec API", version="0.2.0", lifespan=lifespan)
+
+    @app.get("/health")
+    def health(response: Response) -> dict[str, str]:
+        if service is None:
+            response.status_code = 503
+            return {"status": "not_ready", "model_version": "unavailable"}
+        return {"status": "ready", "model_version": service._model_version}
+
+    @app.post("/recommend", response_model=RecommendResponse)
+    def recommend(request: RecommendRequest) -> RecommendResponse:
+        if service is None:
+            raise HTTPException(503, "Mô hình chưa sẵn sàng")
+        history = (
+            [entry.model_dump() for entry in request.history]
+            if request.history is not None
+            else None
+        )
+        result = service.recommend_profile(request.user_id, history, request.k)
+        return RecommendResponse(
+            model_version=result.model_version,
+            fallback_used=result.fallback_used,
+            recommendations=[
+                RecommendationResponse(
+                    item_id=r.item_id,
+                    name=service.names.get(r.item_id, f"Artist {r.item_id}"),
+                    score=r.score,
+                    reason=r.reason,
+                )
+                for r in result.recommendations
+            ],
+        )
+
+    return app
 
 
-@app.get("/health")
-def health() -> dict[str, str]:
-    """Return the current service state without exposing internal implementation."""
-    return {"status": "ok", "model_version": "scaffold-popularity-v0"}
-
-
-@app.post("/recommend", response_model=RecommendResponse)
-def recommend(request: RecommendRequest) -> RecommendResponse:
-    """Return unseen popular items until a release model is configured."""
-    seen_item_ids = {entry.item_id for entry in request.history or []}
-    result = _service.recommend(request.user_id or "temporary_profile", request.k, seen_item_ids)
-    return RecommendResponse(
-        model_version=result.model_version,
-        fallback_used=result.fallback_used,
-        recommendations=[
-            RecommendationResponse(item_id=item.item_id, score=item.score, reason=item.reason)
-            for item in result.recommendations
-        ],
-    )
+app = create_app()

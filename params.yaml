@@ -1,4 +1,5 @@
 base: configs/base.yaml
 dataset: configs/dataset.yaml
-model: configs/models/svd.yaml
+model: configs/models/popularity.yaml
 evaluation: configs/evaluation.yaml
+experiment: configs/experiment.yaml

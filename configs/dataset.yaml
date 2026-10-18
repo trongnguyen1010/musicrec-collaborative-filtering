@@ -1,7 +1,6 @@
 source:
   name: hetrec_lastfm_2k
-  url: TODO
-  checksum: TODO
-filters:
-  min_user_interactions: 5
-  min_item_interactions: 5
+  url: https://files.grouplens.org/datasets/hetrec2011/hetrec2011-lastfm-2k.zip
+  interactions: data/raw/hetrec2011/user_artists.dat
+  artists: data/raw/hetrec2011/artists.dat
+  interaction_sha256: 001400dc3c7d2667fca6e4ea6dc6acc31a9dd28ad5cd0f74cea988c019934d3b

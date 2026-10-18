@@ -1,11 +1,6 @@
-metrics:
-  - rmse
-  - precision_at_k
-  - recall_at_k
-  - catalog_coverage
-  - intra_list_diversity
-  - popularity_ratio
-segments:
-  - all_users
-  - low_history_users
-  - high_history_users
+evaluation:
+  ks: [5, 10, 20]
+  selection_metric: ndcg_at_10
+  candidate_catalog: train
+  ground_truth: full_including_cold_misses
+  test_mask: train_union_validation

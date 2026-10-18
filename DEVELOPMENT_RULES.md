@@ -26,3 +26,13 @@
 - Ghi nguồn, ngày tải, license, checksum và schema trong `docs/data-card.md`.
 - Mọi bảng/hình báo cáo phải truy xuất được về một MLflow run hoặc release manifest.
 - Không kết luận mô hình “tốt hơn” chỉ dựa vào một metric: báo cáo cả accuracy, coverage/diversity và chi phí suy luận.
+
+## Lưu phiên bản kế hoạch và báo cáo
+
+1. Giữ `khang-dev` làm nhánh nền; lưu thử nghiệm hiện tại trên `codex/musicrec-experiments-18-10-2026`, chỉ đưa về nhánh nền khi người dùng yêu cầu. Giữ thử nghiệm `lastfm-reproduction` độc lập.
+2. Không bắt buộc tạo kế hoạch, báo cáo tiến độ hoặc cặp DOCX/Markdown sau mỗi mốc. Ghi tiến độ và kiểm tra trong cuộc trò chuyện; kết quả kỹ thuật nằm trong run riêng.
+3. Khi phương pháp, số liệu hoặc hiện trạng code làm báo cáo không còn phù hợp, xuất một bản khóa luận đầy đủ mới ở `docs/reports/`. Giữ văn phong và cấu trúc của báo cáo đang nộp, đồng bộ các chương liên quan; không bắt buộc xuất Markdown.
+4. Giữ nguyên bản đã phát hành, kể cả file chưa commit. Không ghi đè, đổi tên hoặc di chuyển. Chỉ xóa những đầu ra được người dùng yêu cầu xóa rõ ràng.
+5. Tên mới dùng phiên bản tăng dần, thứ và ngày thực tế tại Việt Nam: `BaoCao_KLTN_CaoTrongNguyen_LeKhacGiaKhang_V2_ChuNhat_18-10-2026.docx`. Kiểm tra trùng tên, tạo file độc quyền; nếu trùng chọn phiên bản tiếp theo.
+6. Phân biệt thiết kế, phần đã triển khai và kết quả đã kiểm chứng; không ghi GVHD đã duyệt khi chưa có xác nhận. Không chuyển mục tiêu kỳ vọng thành kết quả đo.
+7. Render và kiểm tra tất cả các trang của Word trước bàn giao; giữ bản nháp và ảnh QA ngoài thư mục báo cáo đã phát hành. Xác minh checksum bản nguồn không đổi.

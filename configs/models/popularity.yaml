@@ -1,3 +1,2 @@
 model:
   name: popularity
-  top_k: 10
