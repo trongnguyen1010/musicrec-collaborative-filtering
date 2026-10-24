@@ -7,6 +7,13 @@ Mọi thay đổi đáng chú ý của MusicRec được ghi trong file này the
 
 ### Changed
 
+- 2026-10-24: Hoàn thành Bước 4 chia tập/ánh xạ: 74.275 cặp train, 9.263 validation,
+  9.263 test, seed 42; giữ đủ 1.877 user, catalog train 15.398 artist. Thay split
+  hard-code leave-one-out bằng CLI đọc run làm sạch có hash và config, chỉ ghi run mới.
+  Giữ mọi cặp/count holdout ngoài catalog với item_index null; báo đích và user đủ điều kiện.
+  Kiểm tra độc lập bảo toàn, phân tách, mapping và chạy lại trùng hash; cập nhật tài liệu
+  và bản Word đầy đủ ngày 24/10 kế thừa V13. Chưa biến đổi, học đặc trưng hoặc huấn luyện.
+
 - 2026-10-24: Khảo sát nhánh mở rộng sau sáu baseline: ưu tiên implicit ALS và BPR-MF,
   dự phòng SLIM; đối chiếu Lesota 2021, LFGCF 2022, BoxGNN 2024 cùng phương pháp gốc.
   Bổ sung thiết kế lượt đầu, trần 8/8/4 cấu hình, kiểm tra seed và điều kiện trước khóa

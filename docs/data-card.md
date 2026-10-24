@@ -1,8 +1,8 @@
 # Data card HetRec 2011 Last.fm 2K
 
-## Trạng thái sau Bước 3 ngày 21/10/2026
+## Trạng thái sau Bước 4 ngày 24/10/2026
 
-Đã kiểm tra nguồn ở Bước 1, EDA dữ liệu gốc ở Bước 2 và làm sạch ở Bước 3 theo yêu cầu người dùng. **Chưa chia tập, tạo mapping, biến đổi đầu vào mô hình hoặc huấn luyện.** Đang dừng giải thích kết quả Bước 3 trước khi chuyển Bước 4. Các phần Bước 1–2 bên dưới giữ bối cảnh lịch sử; kết quả mới nhất ở mục Bước 3 cuối tệp.
+Đã hoàn thành kiểm tra nguồn, EDA, làm sạch và Bước 4 chia tập/ánh xạ theo yêu cầu người dùng. **Train có 74.275 cặp; validation và test mỗi tập 9.263 cặp; mapping gồm 1.877 user và 15.398 artist từ train.** Chưa biến đổi count, học đặc trưng, huấn luyện hoặc tính chỉ số chất lượng trên test. Đang dừng giải thích Bước 4; các phần Bước 1–3 giữ bối cảnh lịch sử, kết quả mới nhất ở mục Bước 4 cuối tệp.
 
 Bằng chứng máy đọc được: [source_audit.json](../outputs/runs/source_audit_20261019_162917_245445/source_audit.json). Tệp ghi thời điểm, phiên bản mã, tình trạng thay đổi chưa commit, cách đọc, từng kiểm tra và mã băm. Dùng Python standard library để đọc/kiểm tra trực tiếp, không thêm pipeline hoặc thư viện mới. Không có thao tác ngẫu nhiên nên seed không áp dụng.
 
@@ -173,3 +173,34 @@ Tham khảo [mã PoissonMF-CS 2017](https://github.com/zehsilva/poissonmf_cs/blo
 Run: [metrics.json](../outputs/runs/cleaning_20261021/metrics.json), [verification.json](../outputs/runs/cleaning_20261021/verification.json), [bảng trước/sau](../outputs/runs/cleaning_20261021/before_after.csv). Sáu Parquet lưu tương tác sạch, tương tác loại, danh mục, từ điển thẻ, gán thẻ hợp lệ và gán thẻ loại; bản ghi loại có dòng nguồn/lý do. Run có cấu hình, hash đầu vào/đầu ra, Git SHA/trạng thái thay đổi và snapshot mã. Kiểm tra độc lập bằng csv/Counter xác nhận từng cặp/count giữ lại, từng dòng loại, bảo toàn gán thẻ/danh mục và hash nguồn.
 
 Báo cáo nội dung mới ngày 21/10/2026 kế thừa bản V12 đã bàn giao ngày 20/10, giữ nguyên cấu trúc, công thức và phần đề cương Chương 4–5; cập nhật phần dữ liệu/làm sạch và công việc còn lại. Không ghi nhận đã chia tập hoặc có chất lượng mô hình; bản V12 giữ nguyên.
+
+## Bước 4 chia tập và ánh xạ ngày 24/10/2026
+
+Đầu vào là interactions.parquet thuộc run làm sạch đã kiểm chứng, cùng mã băm các Parquet trong metrics.json Bước 3. [splitting.py](../src/musicrec/data/splitting.py) chứa logic và [split_data.py](../scripts/split_data.py) là CLI ghi run mới; cấu hình split ở [base.yaml](../configs/base.yaml). Tên protocol là per_user_random_holdout, không phải leave-one-out hoặc temporal split. Hạt giống và tỷ lệ là lựa chọn của nhóm đã chốt trước khi chia, không phải giá trị tối ưu được tài liệu chứng minh.
+
+Sắp user và artist theo giá trị số tăng dần, dùng một random.Random(42) lần lượt qua các user. Với mỗi lịch sử n nghệ sĩ, xáo trộn rồi lấy n_val = n_test = max(1, floor(0,1 × n)); lấy validation trước, test tiếp theo và train nhận phần còn lại. Không lọc thêm nghệ sĩ, đổi count, chuyển đích sang train để bảo đảm độ phủ hoặc thử seed khác để chọn catalog đẹp hơn.
+
+| Tập | Cặp tương tác | User | Artist phân biệt trong tập | Tổng lượt nghe |
+| --- | ---: | ---: | ---: | ---: |
+| Train | 74.275 | 1.877 | 15.398 | 55.418.502 |
+| Validation | 9.263 | 1.877 | 3.945 | 6.956.688 |
+| Test | 9.263 | 1.877 | 4.054 | 6.763.537 |
+| Hợp ba tập | 92.801 | 1.877 | 17.617 | 69.138.727 |
+
+Ba tập không giao cặp user–artist và bảo toàn từng cặp/count nguồn. ID gốc vẫn là chuỗi định danh; user_index và item_index là chỉ số liên tiếp từ 0, theo thứ tự ID số, **chỉ tạo từ train**. Mapping user có 1.877 phần tử (0–1.876), mapping artist có 15.398 phần tử (0–15.397). 2.219 artist có tương tác sạch nhưng không xuất hiện trong train; danh mục metadata nguồn vẫn giữ đủ 17.632 artist.
+
+Toàn bộ holdout được giữ nguyên trong Parquet, kể cả đích ngoài catalog. item_index của artist không có trong train là null, không phải một chỉ số dùng chung hoặc một artist được thêm từ test vào ánh xạ. Chưa tạo điểm đại diện, ma trận đặc trưng, từ vựng/IDF, similarity, popularity hoặc mô hình; M2 chưa chia nhóm user và vẫn là protocol riêng khi đến bước.
+
+| Đích đánh giá theo catalog train | Validation | Test |
+| --- | ---: | ---: |
+| Tổng đích đã giữ lại | 9.263 | 9.263 |
+| Đích thuộc catalog | 8.142 | 8.060 |
+| Đích ngoài catalog | 1.121 (12,10%) | 1.203 (12,99%) |
+| User có ít nhất một đích thuộc catalog | 1.865 | 1.855 |
+| User không còn đích sau giao catalog | 12 | 22 |
+
+Các số này là kiểm tra cấu trúc của protocol, không phải Precision/Recall/NDCG hoặc kết quả mô hình. Khi xây evaluator, lấy giao đích với catalog train và báo rõ mẫu số người dùng/đích đủ điều kiện; không thay split để giữ lại cả 1.877 user trong mọi phép đo. Validation lọc lịch sử train, test lọc train + validation; hồ sơ/học vẫn chỉ dùng train theo kế hoạch hiện hành.
+
+Run [split_20261024](../outputs/runs/split_20261024/metrics.json) lưu ba Parquet, id_mappings.json, user_split_counts.csv, cấu hình, seed, phiên bản mã/trạng thái Git, hash input/output, runtime và snapshot mã. [Kiểm tra độc lập](../outputs/runs/split_20261024/verification.json) dùng Arrow records, tập hợp và từ điển, không gọi hàm chia production: tái dựng từng cặp/count, kiểm tra giao nhau, kích thước từng user, mapping/round-trip, đích ngoài catalog và eligibility. Run chạy lại split_20261024_recheck cho năm tệp dữ liệu/mapping/bảng đếm trùng mã băm. Nguồn thô và run làm sạch không đổi.
+
+Bản [báo cáo ngày 24/10/2026](reports/33_BaoCaoKhoaLuan_CaoTrongNguyen_LeKhacGiaKhang_24-10-2026.docx) kế thừa V13, bổ sung phương pháp/kết quả chia tập và công việc còn lại; không thêm mô hình mở rộng hoặc kết quả chất lượng. Dừng sau Bước 4; bước tiếp theo là biểu diễn train ở Bước 5 khi được phép.

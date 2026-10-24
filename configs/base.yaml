@@ -7,8 +7,10 @@ dataset:
   feedback_column: listening_count
   log_transform: true
 split:
-  strategy: leave_one_out
-  validation_seed: 42
+  strategy: per_user_random_holdout
+  seed: 42
+  validation_fraction: 0.1
+  test_fraction: 0.1
 evaluation:
   ks: [5, 10, 20]
   exclude_seen_items: true

@@ -16,6 +16,8 @@ Lịch mục tiêu là 19/10–30/11/2026; ngày/giờ nộp chính xác chờ t
 
 ## Một bước làm việc
 
+Trạng thái sau Bước 4 ngày 24/10/2026: đã chia 92.801 tương tác thành 74.275 train, 9.263 validation và 9.263 test; đủ 1.877 user, mapping train có 15.398 artist. Run và kiểm tra độc lập ở [data card](data-card.md); báo cáo mới kế thừa V13. Chỉ giải thích Bước 4 rồi dừng; chưa chạy Bước 5 biểu diễn, evaluator hoặc mô hình. User không còn đích sau giao catalog (12 validation, 22 test) phải được báo rõ khi đến bước đánh giá.
+
 1. Xác nhận bước được phép, mục tiêu, đầu vào, đầu ra và những việc chưa thuộc bước đó.
 2. Trước khi thực hiện, giải thích căn cứ tài liệu và lựa chọn riêng; chỉ cần kiến thức đủ để hiểu công việc sắp làm.
 3. Khi đến bước code/thực nghiệm, kiểm tra logic trên ví dụ nhỏ trước; lưu kết quả thật cùng cấu hình.

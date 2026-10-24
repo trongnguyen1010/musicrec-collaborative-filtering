@@ -378,8 +378,8 @@ Nếu chưa kiểm tra bảng kết quả, nói luận điểm định tính đ�
 ### 7.2. Trạng thái repo có thể trình bày trung thực
 
 - Đã có đề cương, tài liệu tham khảo, khung module và cấu hình dự kiến.
-- Đã làm sạch riêng ở Bước 3, giữ 1.877 user và 92.801 cặp nghe, chưa biến đổi count hoặc tạo mapping. CLI preprocess ghi run mới, dừng nếu cặp có count mâu thuẫn, không tự gộp count.
-- Data card có bằng chứng nguồn, EDA và làm sạch; đang dừng giải thích Bước 3, chưa chia tập hoặc huấn luyện. Script split còn là khung cũ, không đại diện protocol che giấu ngẫu nhiên khoảng 10% validation và 10% test/user trong kế hoạch hiện hành.
+- Đã làm sạch riêng ở Bước 3, giữ 1.877 user và 92.801 cặp nghe. CLI preprocess ghi run mới, dừng nếu cặp có count mâu thuẫn, không tự gộp count.
+- Đã hoàn thành Bước 4 ngày 24/10/2026: train 74.275, validation/test mỗi tập 9.263 cặp; mapping train có 15.398 artist. Script split mới dùng protocol che giấu ngẫu nhiên theo user, seed 42; đích ngoài catalog giữ nguyên với chỉ số rỗng và được thống kê riêng trong data card. Chưa biến đổi count, học đặc trưng hoặc huấn luyện; dừng giải thích trước Bước 5.
 - `SVDRecommender` còn `NotImplementedError`; evaluator script còn trạng thái `not_evaluated`. Không dùng khung bảng trong đề cương như kết quả đã có.
 
 Tài liệu ôn tập này bổ sung kiến thức và đề xuất; không thay đổi cấu hình, mô hình hay đề cương gốc.
