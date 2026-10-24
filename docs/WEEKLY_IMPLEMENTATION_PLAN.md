@@ -1,8 +1,8 @@
 # Kế hoạch thực hiện khóa luận MusicRec theo từng bước
 
-Cập nhật kết quả Bước 4 ngày 24/10/2026 trên kế hoạch hiện hành, đối chiếu [Hướng dẫn từng bước hoàn thành khóa luận của GVHD](Hướng%20dẫn%20từng%20bước%20hoàn%20thành%20khóa%20luận.docx) và các lựa chọn đã trao đổi với người dùng. Bản nội dung mới nhất là [báo cáo ngày 24/10/2026](reports/33_BaoCaoKhoaLuan_CaoTrongNguyen_LeKhacGiaKhang_24-10-2026.docx), kế thừa V13 ngày 21/10 đã bàn giao.
+Cập nhật kết quả Bước 5 ngày 24/10/2026 trên kế hoạch hiện hành, đối chiếu [Hướng dẫn từng bước hoàn thành khóa luận của GVHD](Hướng%20dẫn%20từng%20bước%20hoàn%20thành%20khóa%20luận.docx) và các lựa chọn đã trao đổi với người dùng. Bản nội dung mới nhất là [báo cáo Bước 5, V14](reports/V14/33_BaoCaoKhoaLuan_CaoTrongNguyen_LeKhacGiaKhang_24-10-2026.docx), kế thừa bản Bước 4 ngày 24/10; mọi bản trước giữ nguyên.
 
-Đây là kế hoạch dự kiến, không phải xác nhận đã hoàn thành thực nghiệm mô hình hoặc đã được GVHD duyệt. Đã kiểm tra nguồn, EDA, làm sạch và chia tập/ánh xạ; đang dừng giải thích Bước 4, chưa biến đổi hoặc huấn luyện. **Hạn nộp demo người dùng đã xác nhận là cuối tháng 11/2026.** Dùng ngày 30/11/2026 làm mốc lập kế hoạch khi chưa có ngày/giờ nộp cụ thể, hoàn thành nội bộ ngày 27/11 và giữ 28–30/11 làm dự phòng. Lịch này thay cả lịch 12 tuần cũ và nhịp 16 tuần tham khảo; không suy ra hạn nộp toàn bộ khóa luận từ hạn demo.
+Đây là kế hoạch dự kiến, không phải xác nhận đã hoàn thành thực nghiệm mô hình hoặc đã được GVHD duyệt. Đã hoàn thành dữ liệu qua Bước 5 biểu diễn đầu vào; đang dừng giải thích Bước 5, chưa xây evaluator hoặc huấn luyện. **Hạn nộp demo người dùng đã xác nhận là cuối tháng 11/2026.** Dùng ngày 30/11/2026 làm mốc lập kế hoạch khi chưa có ngày/giờ nộp cụ thể, hoàn thành nội bộ ngày 27/11 và giữ 28–30/11 làm dự phòng. Lịch này thay cả lịch 12 tuần cũ và nhịp 16 tuần tham khảo; không suy ra hạn nộp toàn bộ khóa luận từ hạn demo.
 
 ## 1. Mục tiêu và phạm vi
 
@@ -49,7 +49,7 @@ Cuối mỗi bước, chat gồm: việc/tệp đã đổi; kết quả thật h
 
 Bước 0 dọn đợt triển khai vượt phạm vi đã hoàn thành: nền khang-dev tại e80cfbf, lịch sử cũ và lastfm-reproduction được giữ riêng. Không phục hồi kết quả đợt cũ làm kết quả mới.
 
-Trạng thái ngày 24/10: Bước 1–4 đã có bằng chứng; xem [data card](data-card.md) và [metrics chia tập](../outputs/runs/split_20261024/metrics.json). Từ 1.877 user và 92.801 tương tác sạch, có 74.275 cặp train, 9.263 validation và 9.263 test; mapping artist train có 15.398 phần tử. Có kiểm tra độc lập và chạy lại cùng seed; nguồn và run cũ giữ nguyên. Dừng giải thích Bước 4, chỉ chuyển Bước 5 khi người dùng cho phép; chưa biến đổi, học đặc trưng hoặc huấn luyện.
+Trạng thái ngày 24/10: Bước 1–5 đã có bằng chứng; xem [data card](data-card.md), [metrics chia tập](../outputs/runs/split_20261024/metrics.json) và [metrics biểu diễn](../outputs/runs/representations_20261024/metrics.json). Có 74.275 cặp train, 9.263 validation và 9.263 test; mapping train gồm 1.877 user và 15.398 artist. Đã lưu riêng count/log2/điểm 1–5/nhị phân, ngưỡng chỉ fit train; kiểm tra độc lập và chạy lại trùng hash. Dừng giải thích Bước 5, chỉ chuyển Bước 6 khi người dùng cho phép; chưa học thẻ/similarity, xây evaluator hoặc huấn luyện.
 
 | Bước | Phạm vi được làm khi đến bước | Điều kiện hoàn thành trước khi dừng |
 | --- | --- | --- |
@@ -97,6 +97,7 @@ Chỉ đưa kết quả test cuối vào bản kết luận sau Bước 17. Khô
 - Seed 42, thứ tự ID ổn định; mỗi user có n_val = n_test = max(1, floor(0,1 × n)); train nhận phần còn lại. Không gọi đây là leave-one-out hay temporal split.
 - Bước 4 đã hiện thực: sắp ID theo giá trị số tăng dần, dùng một random.Random(42) qua các user; lấy validation trước, test tiếp rồi train. Mapping liên tiếp từ 0 chỉ theo train. Holdout ngoài catalog vẫn giữ cặp/count với item_index null; xem thống kê đích/người dùng đủ điều kiện trong data card. configs/base.yaml đã thay chiến lược leave_one_out cũ, chưa nối chuỗi DVC.
 - Bốn phân vị 20/40/60/80% trên log-count train, nội suy tuyến tính; điểm = 1 + số ngưỡng mà giá trị lớn hơn nghiêm ngặt. Đây là phép quy đổi của nhóm, không phải tối ưu được Hu et al. chứng minh.
+- Bước 5 đã hiện thực: ngưỡng train lần lượt 6.392317422778761, 7.562242424221073, 8.491853096329674, 9.579315937580015; validation/test áp dụng nguyên giá trị. Ba Parquet giữ đủ dòng/chỉ số gốc; bốn CSR train cùng mapping có shape 1.877 × 15.398 và 74.275 ô quan sát mỗi ma trận. transform.json lưu quy tắc/độ chính xác đầy đủ; không biến ô thiếu thành điểm 1 hoặc xóa đích ngoài catalog. Chưa nối chuỗi DVC hoặc tạo evaluator.
 - Catalog chính là artist xuất hiện trong train. Đích đánh giá giao catalog; báo riêng tỷ lệ đích ngoài catalog và user không còn đích hợp lệ.
 - Full ranking; validation lọc train, test lọc train + validation. Hồ sơ chấm điểm chỉ dùng train, không tự refit train + validation.
 - Chọn bằng NDCG@10 validation; báo Precision/Recall/NDCG tại K = 5,10,20. Precision chia K ngay cả khi trả thiếu.

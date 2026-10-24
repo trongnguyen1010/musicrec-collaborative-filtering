@@ -1,8 +1,8 @@
 # Data card HetRec 2011 Last.fm 2K
 
-## Trạng thái sau Bước 4 ngày 24/10/2026
+## Trạng thái sau Bước 5 ngày 24/10/2026
 
-Đã hoàn thành kiểm tra nguồn, EDA, làm sạch và Bước 4 chia tập/ánh xạ theo yêu cầu người dùng. **Train có 74.275 cặp; validation và test mỗi tập 9.263 cặp; mapping gồm 1.877 user và 15.398 artist từ train.** Chưa biến đổi count, học đặc trưng, huấn luyện hoặc tính chỉ số chất lượng trên test. Đang dừng giải thích Bước 4; các phần Bước 1–3 giữ bối cảnh lịch sử, kết quả mới nhất ở mục Bước 4 cuối tệp.
+Đã hoàn thành Bước 1–5 theo yêu cầu người dùng. **Train có 74.275 cặp; validation và test mỗi tập 9.263 cặp; mapping gồm 1.877 user và 15.398 artist từ train.** Đã lưu bốn biểu diễn và học ngưỡng điểm đại diện chỉ từ train, áp dụng nguyên cho hai tập còn lại. Chưa xây evaluator, học đặc trưng thẻ/similarity, huấn luyện hoặc tính chỉ số chất lượng trên test. Dừng giải thích Bước 5; các phần Bước 1–4 giữ bối cảnh lịch sử, kết quả mới nhất ở mục Bước 5 cuối tệp.
 
 Bằng chứng máy đọc được: [source_audit.json](../outputs/runs/source_audit_20261019_162917_245445/source_audit.json). Tệp ghi thời điểm, phiên bản mã, tình trạng thay đổi chưa commit, cách đọc, từng kiểm tra và mã băm. Dùng Python standard library để đọc/kiểm tra trực tiếp, không thêm pipeline hoặc thư viện mới. Không có thao tác ngẫu nhiên nên seed không áp dụng.
 
@@ -204,3 +204,30 @@ Các số này là kiểm tra cấu trúc của protocol, không phải Precisio
 Run [split_20261024](../outputs/runs/split_20261024/metrics.json) lưu ba Parquet, id_mappings.json, user_split_counts.csv, cấu hình, seed, phiên bản mã/trạng thái Git, hash input/output, runtime và snapshot mã. [Kiểm tra độc lập](../outputs/runs/split_20261024/verification.json) dùng Arrow records, tập hợp và từ điển, không gọi hàm chia production: tái dựng từng cặp/count, kiểm tra giao nhau, kích thước từng user, mapping/round-trip, đích ngoài catalog và eligibility. Run chạy lại split_20261024_recheck cho năm tệp dữ liệu/mapping/bảng đếm trùng mã băm. Nguồn thô và run làm sạch không đổi.
 
 Bản [báo cáo ngày 24/10/2026](reports/33_BaoCaoKhoaLuan_CaoTrongNguyen_LeKhacGiaKhang_24-10-2026.docx) kế thừa V13, bổ sung phương pháp/kết quả chia tập và công việc còn lại; không thêm mô hình mở rộng hoặc kết quả chất lượng. Dừng sau Bước 4; bước tiếp theo là biểu diễn train ở Bước 5 khi được phép.
+
+## Bước 5 biểu diễn đầu vào ngày 24/10/2026
+
+Đầu vào là run split_20261024 đã xác minh. [representations.py](../src/musicrec/data/representations.py) giữ logic, [prepare_inputs.py](../scripts/prepare_inputs.py) điều phối CLI; quy tắc nằm trong mục representations của [base.yaml](../configs/base.yaml). Count gốc không bị sửa hoặc cắt ngoại lai. Trên từng cặp quan sát, lưu thêm log_count = log2(1 + listening_count), binary = 1 và proxy_score = 1 + số ngưỡng log-count bị vượt nghiêm ngặt. Điểm đại diện không phải sao thật; ô chưa quan sát không được thêm như phản hồi âm hoặc điểm 1.
+
+| Phân vị trên log-count train | Ngưỡng đầy đủ |
+| --- | ---: |
+| 20% | 6.392317422778761 |
+| 40% | 7.562242424221073 |
+| 60% | 8.491853096329674 |
+| 80% | 9.579315937580015 |
+
+Nội suy tuyến tính tại vị trí (n − 1) × q trên các log-count train đã sắp tăng. Bằng ngưỡng vẫn thuộc mức thấp hơn; ngưỡng trùng không bị tách tùy ý. Bốn giá trị trong transform.json chỉ học từ 74.275 cặp train; validation/test áp dụng lại nguyên giá trị, không đóng góp vào ước lượng hoặc chọn ngưỡng. Cơ số 2, các phân vị và quy tắc điểm là lựa chọn của nhóm cần kiểm chứng về Top-K, không phải kết luận Hu et al. đã chứng minh tối ưu.
+
+| Tập | Điểm 1 | Điểm 2 | Điểm 3 | Điểm 4 | Điểm 5 | Tổng cặp |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| Train | 14.989 | 14.805 | 14.819 | 14.818 | 14.844 | 74.275 |
+| Validation | 1.889 | 1.824 | 1.865 | 1.838 | 1.847 | 9.263 |
+| Test | 1.867 | 1.836 | 1.861 | 1.846 | 1.853 | 9.263 |
+
+Đây là kiểm tra giá trị biến đổi, không phải kết quả chất lượng hoặc căn cứ tinh chỉnh từ test. Chênh lệch số cặp giữa các mức được giữ nguyên do đồng hạng.
+
+Run [representations_20261024](../outputs/runs/representations_20261024/metrics.json) lưu ba Parquet với đủ cột gốc/chỉ số và ba cột bổ sung; bốn ma trận CSR train_raw_count/train_log_count/train_proxy_score/train_binary ở định dạng NPZ, kích thước 1.877 × 15.398, mỗi ma trận có đúng 74.275 ô quan sát. Raw count là int64, log là float64, proxy/binary là uint8. id_mappings.json sao chép nguyên byte từ Bước 4; transform.json lưu ngưỡng, cách fit, biên và ý nghĩa ô thiếu. Không tạo ma trận validation/test: vẫn giữ toàn bộ 1.121/1.203 đích ngoài catalog với item_index null trong Parquet, không biến chúng thành cột chung hoặc xóa dòng âm thầm.
+
+[Kiểm tra độc lập](../outputs/runs/representations_20261024/verification.json) dùng Arrow records, math.log2, tự nội suy trên danh sách sắp xếp và đối chiếu từng tọa độ/giá trị sparse, không gọi hàm biến đổi production. Xác nhận bảo toàn đủ mọi cặp/count/chỉ số, đúng log/binary/điểm, mapping không đổi, nguồn thô/clean/split giữ nguyên. Chạy lại cho chín tệp dữ liệu/mapping/biến đổi trùng hash; run representations_20261024_final_recheck dùng mã sau kiểm tra kiểu cũng cho cùng chín hash. Run có seed kế thừa 42, config, Git SHA/trạng thái, hash input/output, runtime và snapshot mã; phép biến đổi không phát sinh ngẫu nhiên mới.
+
+Bản [báo cáo Bước 5, V14](reports/V14/33_BaoCaoKhoaLuan_CaoTrongNguyen_LeKhacGiaKhang_24-10-2026.docx) kế thừa bản Bước 4, cập nhật mục 3.5.3 và công việc còn lại, giữ công thức và đề cương Chương 4–5. Chưa học popularity, similarity, TF–IDF, xây evaluator hoặc huấn luyện. Bước tiếp theo là Bước 6 kiểm chứng evaluator trên ví dụ tính tay khi được phép.

@@ -7,6 +7,14 @@ Mọi thay đổi đáng chú ý của MusicRec được ghi trong file này the
 
 ### Changed
 
+- 2026-10-24: Hoàn thành Bước 5: giữ count gốc, tạo log2(1 + count), nhị phân
+  và điểm đại diện 1–5; phân vị 20/40/60/80% nội suy tuyến tính chỉ học từ train,
+  áp dụng nguyên cho validation/test, bằng ngưỡng ở mức thấp hơn. Lưu ba Parquet
+  đầy đủ, bốn CSR train 1.877 × 15.398 với 74.275 ô quan sát và mapping nguyên byte.
+  CLI kiểm tra hash và không ghi đè; kiểm tra độc lập từng giá trị/tọa độ và chạy lại
+  chín tệp trùng hash. Đồng bộ docs và bản khóa luận đầy đủ V14 kế thừa Bước 4,
+  giữ mọi Word cũ. Chưa xây evaluator, học thẻ/similarity hoặc huấn luyện.
+
 - 2026-10-24: Hoàn thành Bước 4 chia tập/ánh xạ: 74.275 cặp train, 9.263 validation,
   9.263 test, seed 42; giữ đủ 1.877 user, catalog train 15.398 artist. Thay split
   hard-code leave-one-out bằng CLI đọc run làm sạch có hash và config, chỉ ghi run mới.

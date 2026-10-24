@@ -5,12 +5,17 @@ project:
 dataset:
   interaction_key: [user_id, item_id]
   feedback_column: listening_count
-  log_transform: true
 split:
   strategy: per_user_random_holdout
   seed: 42
   validation_fraction: 0.1
   test_fraction: 0.1
+
+representations:
+  log_base: 2
+  quantiles: [0.2, 0.4, 0.6, 0.8]
+  quantile_method: linear
+  score_boundary: strictly_greater
 evaluation:
   ks: [5, 10, 20]
   exclude_seen_items: true

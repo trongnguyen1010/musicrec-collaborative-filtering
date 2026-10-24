@@ -82,7 +82,7 @@ $$x_{ui}=\log_2(1+w_{ui}).$$
 
 Log làm giảm chênh lệch giữa giá trị rất lớn và nhỏ: `1 → 1`, `10 → 3,459`, `100 → 6,658`. Nó giữ thứ tự nhưng nén thang đo. **Log-transform không biến count thành rating thật và không xử lý hết vấn đề implicit feedback.**
 
-Thiết kế hiện hành còn giữ riêng tương tác nhị phân và điểm đại diện 1–5. Điểm đại diện dùng bốn phân vị 20/40/60/80% của log-count trên train, nội suy tuyến tính và quy tắc lớn hơn nghiêm ngặt; không học lại ngưỡng từ validation/test. UserCF, ItemCF và MF có độ lệch bắt đầu từ điểm đại diện theo V1; PureSVD sẽ kiểm tra ba biểu diễn tại cấu hình cố định. Đây là lựa chọn nhóm kiểm chứng, không phải phép biến đổi được Hu et al. chứng minh tối ưu.
+Bước 5 đã lưu riêng count gốc, log2(1 + count), nhị phân và điểm đại diện 1–5. Điểm đại diện dùng bốn phân vị 20/40/60/80% của log-count trên train, nội suy tuyến tính và quy tắc lớn hơn nghiêm ngặt; không học lại ngưỡng từ validation/test. Ngưỡng train là 6.392317422778761, 7.562242424221073, 8.491853096329674 và 9.579315937580015; giá trị bằng ngưỡng thuộc mức thấp hơn. UserCF, ItemCF và MF có độ lệch dự kiến bắt đầu từ điểm đại diện theo V1; PureSVD sẽ kiểm tra ba biểu diễn tại cấu hình cố định. Đây là lựa chọn nhóm cần kiểm chứng về Top-K, không phải phép biến đổi được Hu et al. chứng minh tối ưu.
 
 Theo Hu et al. (2008), có thể tách:
 
@@ -379,7 +379,7 @@ Nếu chưa kiểm tra bảng kết quả, nói luận điểm định tính đ�
 
 - Đã có đề cương, tài liệu tham khảo, khung module và cấu hình dự kiến.
 - Đã làm sạch riêng ở Bước 3, giữ 1.877 user và 92.801 cặp nghe. CLI preprocess ghi run mới, dừng nếu cặp có count mâu thuẫn, không tự gộp count.
-- Đã hoàn thành Bước 4 ngày 24/10/2026: train 74.275, validation/test mỗi tập 9.263 cặp; mapping train có 15.398 artist. Script split mới dùng protocol che giấu ngẫu nhiên theo user, seed 42; đích ngoài catalog giữ nguyên với chỉ số rỗng và được thống kê riêng trong data card. Chưa biến đổi count, học đặc trưng hoặc huấn luyện; dừng giải thích trước Bước 5.
+- Đã hoàn thành Bước 5 ngày 24/10/2026: bốn biểu diễn count/log2/điểm 1–5/nhị phân từ split đã chốt; ngưỡng chỉ fit 74.275 cặp train rồi áp dụng lại. Bốn ma trận train 1.877 × 15.398 có cùng 74.275 tọa độ; Parquet giữ nguyên mọi cặp/count/chỉ số và đích ngoài catalog. Kiểm tra độc lập và chạy lại cho chín tệp dữ liệu/biến đổi trùng hash; xem data card. Chưa học đặc trưng thẻ/similarity, xây evaluator hoặc huấn luyện; dừng trước Bước 6.
 - `SVDRecommender` còn `NotImplementedError`; evaluator script còn trạng thái `not_evaluated`. Không dùng khung bảng trong đề cương như kết quả đã có.
 
 Tài liệu ôn tập này bổ sung kiến thức và đề xuất; không thay đổi cấu hình, mô hình hay đề cương gốc.
