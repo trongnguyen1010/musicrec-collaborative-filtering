@@ -27,6 +27,7 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
+analysis = ["matplotlib>=3.8,<4.0"]
 app = ["streamlit>=1.42,<2.0"]
 experiments = ["mlflow>=3.0,<4.0", "dvc>=3.60,<4.0"]
 dev = [

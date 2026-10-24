@@ -1,10 +1,10 @@
 # Tài liệu chuẩn bị seminar MusicRec: Chương 1–2, dữ liệu và nghiên cứu liên quan
 
-Ngày đối chiếu: 05/10/2026. Dựa trên đề cương của Cao Trọng Nguyên – Lê Khắc Gia Khang, tài liệu PDF trong repo, mã nguồn nhánh `khang-dev` và dữ liệu HetRec tải trực tiếp từ GroupLens để kiểm tra. Các phương án nghiên cứu dưới đây là **đề xuất để trình bày/thảo luận**, chưa phải quyết định đã được GVHD duyệt hay kết quả mô hình đã thực nghiệm.
+Ngày cập nhật phạm vi và phương pháp: 19/10/2026, theo [hướng dẫn của GVHD](Hướng%20dẫn%20từng%20bước%20hoàn%20thành%20khóa%20luận.docx) và [kế hoạch từng bước](WEEKLY_IMPLEMENTATION_PLAN.md). Đã có kiểm tra nguồn Bước 1 và EDA Bước 2 chạy lại từ dữ liệu gốc, xem [data card](data-card.md) và [metrics EDA](../outputs/runs/raw_eda_20261019_verified/metrics.json). Những thống kê seminar trước đây vẫn có nguồn thời điểm riêng; kết quả mô hình chưa có và các lựa chọn nghiên cứu chưa được xem là đã có GVHD duyệt.
 
 ## 1. Điều cần nói rõ trong 60 giây
 
-> Nhóm nghiên cứu bài toán khuyến nghị Top-K nghệ sĩ chưa xuất hiện trong lịch sử quan sát của người dùng, từ số lượt nghe trong HetRec 2011 Last.fm 2K. Dữ liệu là phản hồi ngầm: nghe nhiều là bằng chứng về sự quan tâm, nhưng chưa nghe không chứng minh không thích. Nhóm dự kiến so sánh Popularity, User-based CF, Item-based CF và một mô hình phân rã ma trận trên cùng giao thức đánh giá; sau đó kiểm chứng một cải tiến giảm thiên lệch phổ biến. Kết quả được đánh giá bằng chất lượng xếp hạng, độ bao phủ, mức phổ biến và chi phí suy luận, rồi tích hợp vào prototype.
+> Nhóm nghiên cứu bài toán khuyến nghị Top-K nghệ sĩ chưa xuất hiện trong lịch sử quan sát của người dùng, từ số lượt nghe trong HetRec 2011 Last.fm 2K. Dữ liệu là phản hồi ngầm: nghe nhiều là bằng chứng về sự quan tâm, nhưng chưa nghe không chứng minh không thích. Nhóm dự kiến so sánh Random, Popularity, UserCF, ItemCF, MF có độ lệch và PureSVD trên cùng giao thức; sau đó kiểm chứng M1 về tái xếp hạng và M2 cho hồ sơ ít lịch sử. Kết quả được đánh giá bằng chất lượng xếp hạng, độ bao phủ, mức phổ biến và chi phí, rồi mới chọn mô hình để triển khai prototype.
 
 **Bảy ý phải nắm trước khi lên trình bày:**
 
@@ -78,9 +78,11 @@ Explicit: user chủ động đánh giá 1–5 sao hoặc like/dislike. Implicit
 
 Với số lượt nghe $w_{ui}$:
 
-$$x_{ui}=\ln(1+w_{ui}).$$
+$$x_{ui}=\log_2(1+w_{ui}).$$
 
-Log làm giảm chênh lệch giữa giá trị rất lớn và nhỏ: `1 → 0,693`, `10 → 2,398`, `100 → 4,615`. Nó giữ thứ tự nhưng nén thang đo. **Log-transform không biến count thành rating thật và không xử lý hết vấn đề implicit feedback.**
+Log làm giảm chênh lệch giữa giá trị rất lớn và nhỏ: `1 → 1`, `10 → 3,459`, `100 → 6,658`. Nó giữ thứ tự nhưng nén thang đo. **Log-transform không biến count thành rating thật và không xử lý hết vấn đề implicit feedback.**
+
+Thiết kế hiện hành còn giữ riêng tương tác nhị phân và điểm đại diện 1–5. Điểm đại diện dùng bốn phân vị 20/40/60/80% của log-count trên train, nội suy tuyến tính và quy tắc lớn hơn nghiêm ngặt; không học lại ngưỡng từ validation/test. UserCF, ItemCF và MF có độ lệch bắt đầu từ điểm đại diện theo V1; PureSVD sẽ kiểm tra ba biểu diễn tại cấu hình cố định. Đây là lựa chọn nhóm kiểm chứng, không phải phép biến đổi được Hu et al. chứng minh tối ưu.
 
 Theo Hu et al. (2008), có thể tách:
 
@@ -106,9 +108,13 @@ Một baseline cosine trên vector tương tác đã chọn:
 
 $$\operatorname{sim}(u,v)=\frac{\mathbf{x}_u^\top\mathbf{x}_v}{\|\mathbf{x}_u\|\|\mathbf{x}_v\|},$$
 
-$$s(u,i)=\frac{\sum_{v\in N_k(u)}\operatorname{sim}(u,v)x_{vi}}{\sum_{v\in N_k(u)}|\operatorname{sim}(u,v)|}.$$
+Với điểm đại diện $r$ và trung bình các quan sát train $\bar r_u$, biến thể dự đoán trừ trung bình dự kiến theo V1 là:
 
-Cần nói rõ vector binary hay log-count, cách xử lý thiếu dữ liệu, láng giềng hợp lệ và mẫu số bằng 0. Không nhầm $k$ láng giềng với $K$ kết quả.
+$$\hat r_{ui}=\bar r_u+\frac{\sum_{v\in N_k(u;i)}\operatorname{sim}(u,v)(r_{vi}-\bar r_v)}{\sum_{v\in N_k(u;i)}|\operatorname{sim}(u,v)|}.$$
+
+$N_k(u;i)$ chỉ gồm láng giềng hợp lệ có quan sát về nghệ sĩ i. Cần chốt cách lấy danh sách láng giềng và fallback khi mẫu số bằng 0 trước triển khai; không lấy trung bình trên các ô chưa quan sát như điểm 0 thật.
+
+Cần nói rõ vector binary, log-count hay điểm đại diện; cấu hình đầu dự kiến dùng điểm đại diện theo V1. Công thức cosine giữ nguyên nguyên tắc nhưng ý nghĩa giá trị đầu vào thay đổi. Phải ghi cách xử lý thiếu dữ liệu, láng giềng hợp lệ và mẫu số bằng 0. Không nhầm $k$ láng giềng với $K$ kết quả.
 
 Pearson trong CF rating so sánh độ lệch khỏi điểm trung bình của mỗi user, hữu ích khi user có thói quen chấm điểm khác nhau. Áp dụng vào log-count là **một lựa chọn chuyển thể cần kiểm chứng**, không phải mặc định đúng cho implicit.
 
@@ -124,9 +130,9 @@ với $n_{uv}$ là số nghệ sĩ chung trong train, $\gamma$ là ngưỡng. N�
 
 So sánh các **cột** nghệ sĩ theo các user nghe chúng; tích lũy score từ nghệ sĩ trong lịch sử:
 
-$$s(u,i)=\sum_{j\in H_u\cap N_k(i)}\operatorname{sim}(i,j)x_{uj}.$$
+$$\hat r_{ui}=\frac{\sum_{j\in H_u\cap N_k(i)}\operatorname{sim}(i,j)r_{uj}}{\sum_{j\in H_u\cap N_k(i)}|\operatorname{sim}(i,j)|}.$$
 
-Có thể chuẩn hóa tổng theo similarity; nếu dùng phải ghi rõ vì thay đổi thứ hạng. Với Item-CF, lý do gợi ý có thể là “nghệ sĩ này thường được nghe cùng các nghệ sĩ trong lịch sử của bạn”.
+Đây là biến thể trung bình có trọng số dự kiến theo V1; cần xử lý mẫu số 0. Biến thể chỉ lấy tổng là phương án khác, không được âm thầm đổi giữa các lần chạy. Với Item-CF, lý do gợi ý có thể là “nghệ sĩ này thường được nghe cùng các nghệ sĩ trong lịch sử của bạn”.
 
 Sarwar et al. trình bày cosine, correlation, adjusted cosine và cách dự đoán rating. Adjusted cosine trừ mean rating của user, phù hợp bối cảnh rating tường minh; không được lấy nguyên giả định đó cho count mà không giải thích.
 
@@ -150,9 +156,9 @@ Cần phân biệt ba cách dùng tên “SVD”:
 | MF thường được gọi SVD trong recommender | Học factor/bias bằng tối ưu trên các tương tác quan sát; không nhất thiết chạy phân rã SVD đại số. |
 | PureSVD | Baseline phân rã ma trận theo cách dựng dữ liệu cụ thể; khác MF rating có bias và khác implicit ALS. |
 
-Nếu giữ SVD theo đề cương, cần nói rõ target là log-count hay giá trị nào, loss trên cặp quan sát hay cả cặp chưa quan sát, regularization và cơ chế xếp hạng. Hồi quy log-count chỉ trên positive observations là baseline có giới hạn; không được gọi là mô hình confidence của Hu et al.
+SVD có độ lệch dự kiến học bằng SGD trên các cặp quan sát có điểm đại diện 1–5, với loss bình phương và điều chuẩn; không phải phân rã đại số trực tiếp. PureSVD là mô hình nền riêng, khởi đầu theo biểu diễn V1 và kiểm tra thêm nhị phân/log ở bước riêng. Không coi TruncatedSVD là cách thay thế tương đương cho MF có bias. Hồi quy điểm suy từ lượt nghe có giới hạn; không được gọi là mô hình confidence của Hu et al.
 
-Implicit ALS là phương án để thảo luận, chưa phải mô hình đã thay thế SVD trong repo:
+Implicit ALS dưới đây giúp đối chiếu lý thuyết. Từ khảo sát ngày 24/10/2026, đây còn là ứng viên mở rộng có điều kiện, chưa thuộc sáu baseline đã chọn và không tự thay SVD trong repo:
 
 $$\min_{A,B}\sum_{u,i}c_{ui}(p_{ui}-\mathbf{a}_u^\top\mathbf{b}_i)^2+\lambda\left(\sum_u\|\mathbf{a}_u\|^2+\sum_i\|\mathbf{b}_i\|^2\right).$$
 
@@ -173,6 +179,8 @@ Fallback Popularity giúp trả danh sách cho user rỗng lịch sử, nhưng c
 ## 4. Bộ dữ liệu dự kiến: các thông tin đã kiểm tra
 
 Nguồn: [GroupLens HetRec 2011](https://grouplens.org/datasets/hetrec-2011/). Bản ZIP được kiểm tra ngày 05/10/2026, README ghi Version 1.0 (May 2011). Kiểm tra này phục vụ chuẩn bị seminar; cấu hình/pipeline nghiên cứu của repo vẫn cần hoàn thiện riêng.
+
+Bổ sung Bước 1–2 ngày 19/10/2026: ZIP trùng hash trước đây, bảy tệp khớp thành viên ZIP và nguồn giữ nguyên sau EDA. Không có trùng cặp hoặc count bất hợp lệ trong bảng tương tác. Có 444 URL ảnh trống, tám chuỗi thẻ không hợp lệ UTF-8; mỗi bản gán thẻ có 1.538 dòng thuộc 390 mã artist không nối danh mục. Hai bản gán thẻ không được cộng đôi. Có 12.133 artist có thẻ và 5.499 chưa có thẻ (31,19%). Đây là độ phủ toàn snapshot, không phải dữ liệu được phép học M2 sau chia tập. Chưa làm sạch hoặc huấn luyện.
 
 | Thuộc tính | Số liệu từ file gốc, trước lọc |
 | --- | ---: |
@@ -232,16 +240,16 @@ Chi tiết lưu ở [dataset_verified.json](seminar/dataset_verified.json) và [
 ### 5.1. Một giao thức đề xuất để đem thảo luận
 
 1. Khóa bộ dữ liệu, schema, phạm vi item và quy tắc hợp lệ; báo cáo thống kê trước/sau lọc.
-2. Chia ngẫu nhiên theo user vì không có timestamp nghe: một item validation, một item test, phần còn lại train; cố định seed. Đây là **random per-user holdout**, không phải leave-last-one-out.
+2. Chia ngẫu nhiên theo user vì không có timestamp nghe: seed 42, ID có thứ tự ổn định; n_val = n_test = max(1, floor(0,1 × n)), còn lại train. Tập chính dự kiến user có ít nhất năm nghệ sĩ; kiểm tra lý do ngưỡng sau EDA. Đây là **random per-user holdout**, không phải leave-one-out hay leave-last-one-out.
 3. Tính similarity, factors, popularity và mọi thống kê phục vụ score/rerank từ train. Dùng validation chọn tham số.
 4. Với warm-start, xác định candidate catalog là item có trong train; item giữ lại nhưng vắng hoàn toàn khỏi train phải được báo cáo/xử lý thành tình huống cold-start riêng. Công bố số user/test cases bị loại hoặc không thể xếp hạng.
-5. Khi validation, che các item trong lịch sử train. Khi chốt tham số, có thể refit train + validation rồi đánh giá test, che lịch sử train + validation; đây là lựa chọn cần công bố. Với giao thức không refit phải công bố riêng quy tắc masking.
+5. Validation lọc train; test lọc train + validation. Thiết kế hiện hành không refit train + validation; hồ sơ chấm điểm và thành phần học vẫn chỉ dùng train.
 6. Full ranking trên cùng catalog hợp lệ với mọi model; nếu dùng sampled negatives thì cùng cách lấy mẫu và tập ứng viên, không so trực tiếp score với full ranking.
 7. Tính metric trung bình theo user, thêm độ bất định/độ biến thiên và phân tích nhóm phù hợp; test không dùng để lựa chọn cấu hình.
 
 Nếu đặt ngưỡng lọc dựa trên toàn bộ snapshot trước split, phải công bố đó là cách định nghĩa benchmark; khi muốn mô phỏng triển khai không biết test thì ngưỡng/thống kê thích nghi phải dựa trên train. Không âm thầm dùng toàn bộ count để chuẩn hóa, tính popularity hoặc chọn trọng số.
 
-Đối với user có dưới ba nghệ sĩ, không đủ cho cách giữ một validation + một test + ít nhất một train; phải ghi số user bị loại. Dữ liệu gốc có 9 user thuộc nhóm này, nhưng sau lọc item con số sẽ thay đổi.
+Quy tắc user tối thiểu và số lượng giữ/loại sẽ được kiểm chứng ở bước dữ liệu. Không dùng ngưỡng dưới ba của phương án leave-one-out cũ thay cho thiết kế ít nhất năm nghệ sĩ hiện hành.
 
 ### 5.2. Công thức và ví dụ phải tự tính được
 
@@ -261,13 +269,13 @@ NDCG thưởng việc đặt item đúng lên đầu. Nếu chỉ có một rele
 
 $$RMSE=\sqrt{\frac{1}{|\Omega_{test}|}\sum_{(u,i)\in\Omega_{test}}(y_{ui}-\hat y_{ui})^2}.$$
 
-RMSE yêu cầu target và thang đo rõ. Nếu $y=\ln(1+w)$, đây là sai số dự đoán **log-count**, không phải sai số đo “độ thích”. Không so RMSE giữa count thô và log-count hoặc giữa score confidence và hồi quy count như thể cùng đơn vị. Đề xuất ưu tiên NDCG@10 cho mục tiêu ranking; RMSE chỉ là phân tích phụ cho mô hình có target phù hợp, nếu vẫn giữ yêu cầu trong đề cương.
+RMSE yêu cầu target và thang đo rõ. Thiết kế hiện hành chỉ dùng RMSE khi mô hình dự đoán cùng điểm đại diện 1–5; không áp lên mọi score ranking. Không so RMSE giữa count thô, log-count và điểm đại diện như thể cùng đơn vị. NDCG@10 validation chọn mô hình; RMSE là phân tích phụ và không đo trực tiếp “độ thích”.
 
 $$Coverage@K=\frac{|\bigcup_u L_u|}{|I_{eval}|}.$$
 
 Mẫu số phải là catalog đánh giá đã chốt. Lọc bỏ phần lớn long tail có thể làm coverage tăng do mẫu số nhỏ hơn; không quy hết cho thuật toán.
 
-Popularity có thể định nghĩa bằng số user riêng biệt nghe artist trong train, hoặc tổng count; hai định nghĩa khác nhau. Số user riêng biệt ít bị một user nghe lặp nhiều chi phối hơn. Nếu đổi từ tổng count trong đề cương sang listener count, nêu đó là phương án cần thống nhất.
+Score Popularity dự kiến là tổng log2(1 + count) trên train theo V1. ARP và các thành phần đo mức phổ biến dùng số người nghe riêng biệt trên train. Hai đại lượng có vai trò khác nhau; nếu thử Popularity theo listener count phải trình bày đó là một đối chứng riêng trước khi chạy.
 
 Popularity ratio: tỷ lệ vị trí khuyến nghị thuộc nhóm head, ví dụ top 20% item theo listener count **trong train**. Chốt nhóm head trước test. Diversity cần similarity riêng được xác định và tính từ dữ liệu được phép; dùng similarity CF chỉ đo đa dạng trong hành vi, chưa chứng minh đa dạng thể loại/âm thanh.
 
@@ -282,6 +290,14 @@ Tilde biểu thị phép đưa score/popularity về thang đo tương thích, �
 Thí nghiệm cần có base ($\beta=0$), base + penalty và đường trade-off giữa ranking/coverage/popularity. Phạt popularity không tự bảo đảm diversity: có thể đề xuất nhiều nghệ sĩ ít phổ biến nhưng cùng một nhóm. Muốn tăng diversity có thể cân nhắc lựa chọn tuần tự có penalty similarity, nhưng đó là một thành phần khác và phải ablate riêng.
 
 “Tăng Recall từ 0,20 lên 0,22” là tăng 0,02 tuyệt đối, 2 điểm phần trăm và 10% tương đối. Nêu đúng đơn vị; thêm biến thiên giữa seed/user trước khi gọi mức cải thiện là ổn định.
+
+### 5.4. M1 và M2 trong kế hoạch hiện hành
+
+Ví dụ phạt popularity ở trên giúp hiểu một thành phần, chưa phải toàn bộ M1. M1 kiểm tra bốn biến thể: nền, chỉ đa dạng, chỉ phạt phổ biến và đầy đủ. Chọn nền bằng validation; chốt mức giảm NDCG@10 tương đối tối đa 5% trước chạy. Giảm ARP không tự chứng minh tăng đa dạng hoặc công bằng; cần đọc cùng ILD, coverage, Gini và ranking.
+
+M2 kết hợp ItemCF từ hồ sơ, TF–IDF thẻ và Popularity tại N = 0,1,3,5. Tách user học/tinh chỉnh/kiểm tra và không dùng đóng góp tương tác/thẻ của user đánh giá để học thành phần chung. So cùng nhóm đủ năm tương tác hồ sơ, cùng đích, chỉ lọc N nghệ sĩ đã cung cấp. N = 0 là đường Popularity; chưa cá nhân hóa. Đây là protocol riêng cho user chưa có tham số đã học, không chỉ cắt lịch sử rồi vẫn dùng vector user đã được học từ phần bị giấu.
+
+Trước khi chạy mỗi mô-đun phải giải thích thiết kế, phép chuẩn hóa score, xử lý thiếu thẻ/điểm cộng tác và tiêu chí chọn. Công thức chi tiết đối chiếu báo cáo V1 và [kế hoạch hiện hành](WEEKLY_IMPLEMENTATION_PLAN.md); chưa có kết quả để khẳng định M1/M2 cải thiện.
 
 ## 6. Các bài báo: đọc để bảo vệ một quyết định nghiên cứu
 
@@ -344,18 +360,26 @@ Nếu chưa kiểm tra bảng kết quả, nói luận điểm định tính đ�
 | --- | --- |
 | Đề cương dùng lẫn bài hát/nghệ sĩ, track/artist | Với HetRec này, nói **artist recommendation** xuyên suốt. Track/playlist chỉ là tác vụ tham khảo hoặc hướng phát triển. |
 | Có RMSE cùng Top-K nhưng chưa khóa mục tiêu chính | Đề xuất ranking là chính, NDCG@10 chọn model; P/R hỗ trợ. Nếu giữ RMSE phải ghi target/thang đo. |
-| “SVD” chưa rõ cách xử lý implicit | Giải thích baseline MF log-count và hạn chế, hoặc đề xuất implicit ALS để GVHD thống nhất; không tự đổi tên mô hình. |
+| “SVD” dễ bị hiểu lẫn với PureSVD/ALS/BPR | MF có bias học điểm đại diện 1–5 bằng SGD; PureSVD phân rã ma trận; implicit ALS học preference/confidence; BPR-MF học thứ tự theo cặp. ALS/BPR-MF mới là ứng viên mở rộng đã khảo sát, chưa triển khai hoặc có kết quả. |
 | `TONG_QUAN_TAI_LIEU_THAM_KHAO.md` ghi bài GNN 2024 là Lacic et al. | PDF gốc/nhà xuất bản ghi **Matej Bevec, Marko Tkalčič, Matevž Pesek**. |
 | Bản tổng hợp ghi mini review fairness là Ferraro et al. | PDF gốc/nhà xuất bản ghi **Karlijn Dinnissen, Christine Bauer**. |
 | Bản tổng hợp gán công thức/bảng/mục chi tiết cho đề cương | Kiểm tra lại: đề cương đang có nghiên cứu liên quan ở 2.8, công cụ ở 2.9; một số số mục/công thức trong tổng hợp không khớp file thực tế. |
 | Dữ liệu ghi GroupLens/Kaggle/Last.fm tương đương | Chốt đúng HetRec Last.fm 2K Version 1.0; LFM-1b và Last.fm 360K là các dataset khác. |
 | Low-history và low-mainstream dùng như cùng nhóm | Hai trục khác nhau: số nghệ sĩ đã nghe và mức yêu thích mainstream. |
 
-### 7.1. Trạng thái repo có thể trình bày trung thực
+### 7.1. Khảo sát mở rộng để chuẩn bị bảo vệ
+
+Đối chiếu ngày 24/10/2026 ở [khảo sát tài liệu](TONG_QUAN_TAI_LIEU_THAM_KHAO.md#khao-sat-mo-rong-20261024): ưu tiên implicit ALS → BPR-MF, dự phòng SLIM, chưa thay sáu baseline chính. Lượt chạy đầu và tinh chỉnh chỉ thực hiện sau baseline khi được phép, trước chốt nền M1/test nếu còn thời gian; không ảnh hưởng M1/M2 hoặc mốc 15/11.
+
+- **Vì sao thêm ALS/BPR khi đã có MF/PureSVD?** Chúng kiểm tra các mục tiêu học khác nhau: confidence trên phản hồi ngầm và xếp hạng theo cặp. Chưa thể nói mô hình nào tốt hơn nếu chưa chạy cùng protocol.
+- **SLIM khác ItemCF ở đâu?** ItemCF dùng similarity định trước; SLIM học trọng số item–item với phạt L1/L2, không âm và đường chéo 0. Học sparse không bảo đảm train nhanh; cần đo cả chi phí và hội tụ.
+- **Có bỏ mô hình cũ để chỉ giữ kết quả đẹp không?** Khi có căn cứ, có thể rút gọn diễn giải hoặc chuyển chi tiết xuống phụ lục, nhưng giữ bảng kết quả mọi mô hình đã chạy. Chọn trên validation, test chỉ xác nhận sau khóa; nếu đổi nền M1 phải đánh giá lại M1, còn M2 vẫn dùng ItemCF.
+
+### 7.2. Trạng thái repo có thể trình bày trung thực
 
 - Đã có đề cương, tài liệu tham khảo, khung module và cấu hình dự kiến.
-- Script preprocessing có gộp cặp và log-count; script split hiện giữ ngẫu nhiên một validation và một test/user, seed 42.
-- `configs/dataset.yaml` còn URL/checksum TODO; `docs/data-card.md` chưa hoàn chỉnh. Việc kiểm tra dữ liệu cho seminar này chưa cập nhật các file đó hoặc vận hành pipeline.
+- Đã làm sạch riêng ở Bước 3, giữ 1.877 user và 92.801 cặp nghe, chưa biến đổi count hoặc tạo mapping. CLI preprocess ghi run mới, dừng nếu cặp có count mâu thuẫn, không tự gộp count.
+- Data card có bằng chứng nguồn, EDA và làm sạch; đang dừng giải thích Bước 3, chưa chia tập hoặc huấn luyện. Script split còn là khung cũ, không đại diện protocol che giấu ngẫu nhiên khoảng 10% validation và 10% test/user trong kế hoạch hiện hành.
 - `SVDRecommender` còn `NotImplementedError`; evaluator script còn trạng thái `not_evaluated`. Không dùng khung bảng trong đề cương như kết quả đã có.
 
 Tài liệu ôn tập này bổ sung kiến thức và đề xuất; không thay đổi cấu hình, mô hình hay đề cương gốc.
@@ -388,7 +412,7 @@ User-CF so các hàng người dùng; Item-CF so các cột nghệ sĩ từ hàn
 
 **7. SVD của nhóm là SVD nào?**
 
-Đây là điểm cần chốt. Nếu dùng MF học factor/bias trên log-count thì nói rõ loss và tập cặp huấn luyện; không gọi đó là implicit ALS. Repo hiện chưa có triển khai SVD hoàn chỉnh.
+Thiết kế dự kiến là MF có độ lệch học bằng SGD trên điểm đại diện 1–5 ở các cặp quan sát, với loss bình phương và điều chuẩn. PureSVD là mô hình riêng dùng phân rã ma trận. Không gọi hai mô hình này là implicit ALS; chưa có thực nghiệm hoàn chỉnh để báo kết quả.
 
 **8. Tại sao không chỉ dùng RMSE?**
 
@@ -412,11 +436,11 @@ Seed giúp tái lập split. Chống leakage còn cần tách dữ liệu dùng 
 
 **13. Popularity dựa trên tổng count hay listener count?**
 
-Đề cương hiện dùng tổng count; listener count là phương án ít bị một user nghe lặp chi phối. Phải chốt công thức và chỉ tính từ train; không dùng hai định nghĩa lẫn nhau trong bảng so sánh.
+Baseline dự kiến cộng log2(1 + count) trên train. Listener count train dùng đo ARP và mức phổ biến; nếu dùng nó làm score Popularity thì là một đối chứng khác, cần thiết kế riêng trước chạy.
 
 **14. Lọc item dưới 5 người nghe có hợp lý không?**
 
-Có thể giúp similarity ổn định nhưng dữ liệu gốc có 83,96% artist dưới ngưỡng này. Cần báo cáo mất bao nhiêu dữ liệu, sensitivity của ngưỡng và ảnh hưởng tới nghiên cứu long tail.
+Kế hoạch hiện hành không lọc thêm artist theo số người nghe. Việc lọc này có thể loại nhiều đuôi dài và thay đổi chính đối tượng nghiên cứu M1. Nếu cần thay đổi thì phải có bằng chứng EDA, thống kê mất dữ liệu và giải thích trước khi làm, không chỉ vì chỉ số tăng.
 
 **15. Dữ liệu rất thưa nhưng user thường có 50 artist có mâu thuẫn không?**
 
@@ -428,7 +452,7 @@ Nhóm tự nhiên có ít biến thiên. Có thể giảm lịch sử train có 
 
 **17. Recall@10 và Precision@10 sao khác mười lần?**
 
-Nếu mỗi user có một test artist, Precision@10 chia cho 10 còn Recall chia cho 1. Đó là hệ quả giao thức; Precision tối đa 0,1.
+Điều đó xảy ra khi mỗi user chỉ có một đích hợp lệ: Precision@10 chia 10, Recall chia 1. Thiết kế 10% hiện hành có thể có nhiều đích/user nên không mặc định tỷ lệ mười lần; phải đọc đúng số đích sau giao catalog.
 
 **18. Rerank giảm popularity có chắc làm chất lượng tốt hơn?**
 
@@ -461,6 +485,14 @@ Chưa có kết quả. Nhóm sẽ chọn theo metric và trade-off đã chốt t
 **25. Hiện nhóm làm xong gì?**
 
 Có đề cương, khảo sát và khung phần mềm; dữ liệu gốc đã được kiểm tra cho tài liệu seminar. Mô hình/evaluator hoàn chỉnh và bảng kết quả chưa có bằng chứng trong nhánh hiện tại.
+
+**26. Vì sao khuyến nghị nghệ sĩ thay vì bài hát?**
+
+Mục tiêu là khám phá nghệ sĩ phù hợp từ lịch sử nghe. Dữ liệu quan sát trực tiếp ở cấp nghệ sĩ, đủ để kiểm chứng CF, M1 và M2 trong phạm vi đó. Gợi ý đúng nghệ sĩ không chứng minh chọn đúng bài hát hoặc người dùng thích mọi tác phẩm; bài toán bài hát cần dữ liệu và đánh giá riêng.
+
+**27. Không làm đúng mọi mô hình/tham số trong hướng dẫn của cô có hợp lý không?**
+
+Nhóm giữ trình tự nghiên cứu và nguyên tắc kiểm chứng. PureSVD, so sánh biểu diễn và các ablation được bổ sung để trả lời câu hỏi cụ thể; ngân sách nhỏ phù hợp việc kiểm tra từng bước. Mọi khác biệt phải giải thích, có đối chứng và số liệu thật, không gọi là yêu cầu hoặc phê duyệt của cô khi chưa có xác nhận.
 
 ## 9. Dàn ý trình bày 15–20 phút
 

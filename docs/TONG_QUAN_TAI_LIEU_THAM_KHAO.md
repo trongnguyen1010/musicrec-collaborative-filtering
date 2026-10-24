@@ -7,6 +7,9 @@
 ---
 
 ## MỤC LỤC
+
+Bổ sung hiện hành: [Khảo sát mô hình mở rộng ngày 24/10/2026](#khao-sat-mo-rong-20261024).
+
 1. [Phần 1: Nhóm tài liệu nền tảng (8 tài liệu)](#phần-1-nhóm-tài-liệu-nền-tảng-8-tài-liệu)
    - [1. Resnick et al. (1994)](#1-resnick-et-al-1994)
    - [2. Sarwar et al. (2001)](#2-sarwar-et-al-2001)
@@ -27,6 +30,54 @@
    - [8. Shakespeare et al. (2020)](#8-shakespeare-et-al-2020)
    - [9. Doh, Choi, Nam (2025)](#9-doh-choi-nam-2025)
 3. [Bảng tổng hợp đối sánh các công trình khảo sát và tổng quan](#bảng-tổng-hợp-đối-sánh-các-công-trình-khảo-sát-và-tổng-quan)
+
+---
+
+<a id="khao-sat-mo-rong-20261024"></a>
+
+## Khảo sát mô hình mở rộng ngày 24/10/2026
+
+**Trạng thái:** đã đối chiếu phương pháp, thiết lập và bảng kết quả của ba bài dưới đây cùng nguồn nền tảng ALS/BPR/SLIM. Ưu tiên khảo sát implicit ALS và BPR-MF, dự phòng SLIM; chưa triển khai, chưa có kết quả validation/test và chưa bổ sung mô hình vào báo cáo Word. Sáu baseline và M1/M2 hiện hành giữ nguyên. Ngân sách và điều kiện thử nằm ở [kế hoạch thực hiện](WEEKLY_IMPLEMENTATION_PLAN.md#thực-nghiệm-bổ-sung-có-giới-hạn), không phải cấu hình được bài báo chứng minh tối ưu cho dữ liệu nhóm.
+
+### Bài báo đã dùng những mô hình nào?
+
+| Công trình và vị trí đối chiếu | Mô hình thực nghiệm | Dữ liệu/protocol và phần có thể kế thừa |
+| --- | --- | --- |
+| [Lesota et al. (2021), Analyzing Item Popularity Bias of Music Recommender Systems](https://arxiv.org/html/2108.06973), mục 4.1–4.2, Bảng 2 | Random, Popularity, ItemKNN, SLIM, ALS, BPR, VAE. | LFM-2b-DemoBias, bài hát, tương tác nhị phân; chia nhóm user 60/20/20, 5 vòng. Bảng 2 ghi NDCG@10 của SLIM = 0,365, ALS = 0,184, BPR = 0,129 trong thiết lập đó. Đây là bằng chứng cân nhắc cả mô hình tuyến tính và đánh đổi popularity, không phải thứ hạng dự kiến trên HetRec nghệ sĩ. |
+| [Zhang et al. (2022), LFGCF](https://arxiv.org/pdf/2208.03454), mục 5.1, 5.3–5.5, Bảng 1–4 | LFGCF so với DSPR, CFA, BPR-T, TGCN; NGCFT và bỏ TransRT là các đối chiếu thành phần. | Last.fm từ HetRec cùng MovieLens/Delicious; lọc thẻ ít xuất hiện, chia gán thẻ 60/20/20. Last.fm sau xử lý có 1.808 user, 12.212 item và 175.641 gán thẻ. BPR-T dùng thẻ, khác BPR-MF chỉ dùng lịch sử nghe. |
+| [Lin et al. (2024), When Box Meets Graph Neural Network in Tag-aware Recommendation](https://arxiv.org/html/2406.12020), mục 5.1, Bảng 1–2 | BoxGNN; BPR, NFM, IFM, LightGCN, NGCF, KGIN, KGRec, DSPR, LFGCF; có BoxGNN bỏ thẻ. | Có HetRec Last.fm nhưng chia gán thẻ 80/10/10, đồ thị dựng từ train, full ranking. Bảng 2 cho thấy BoxGNN có kết quả tốt trong protocol của tác giả; không dùng điểm đó làm mục tiêu tái lập cho split nghe nhạc của nhóm. |
+
+Hai bài đồ thị cùng ghi Last.fm sau xử lý 1.808 user và 12.212 item nhưng khác tỷ lệ chia và cách học. Không ghép điểm giữa các bài để xếp hạng mô hình; cần đối chiếu đơn vị tương tác, cách tạo đích/candidate và công thức metric, không chỉ tên NDCG. Trong đề tài, 92.801 cặp nghe sạch khác dữ liệu gán thẻ của các bài này; số artist có tương tác cũng chưa phải catalog train sau split.
+
+### Đối chiếu phương pháp nền tảng và giả thuyết của nhóm
+
+**Implicit ALS — ưu tiên 1.** [Hu, Koren, Volinsky (2008)](https://yifanhu.net/PUB/cf.pdf), mục 4 và công thức (6), tách preference nhị phân khỏi confidence, tối ưu sai số bình phương có trọng số và điều chuẩn trên cả ô quan sát/chưa quan sát. Bài gốc thực nghiệm dữ liệu TV; không chứng minh ALS thắng trên HetRec. Câu hỏi của nhóm là liệu học confidence từ count có cải thiện Top-K so với MF học điểm đại diện 1–5 trên cặp quan sát và PureSVD hay không. Thiết kế riêng dự kiến dùng c = 1 + a_conf × ln(1 + count) trên train; ô chưa quan sát có p = 0, c = 1, là giả định học với độ tin cậy thấp, không phải chứng cứ user ghét artist. Lưu riêng confidence; không đổi biểu diễn baseline.
+
+**BPR-MF — ưu tiên 2.** [Rendle et al., BPR: Bayesian Personalized Ranking from Implicit Feedback](https://arxiv.org/pdf/1205.2618), UAI 2009, bản arXiv đăng 2012: mục 4 và 6 đối chiếu BPR-MF với SVD-MF/WR-MF, BPR-kNN với Cosine-kNN và MostPopular; dữ liệu Rossmann/Netflix. BPR học chênh lệch score giữa positive và item chưa quan sát, tối ưu log-sigmoid theo cặp cùng điều chuẩn. Câu hỏi của nhóm là loss ranking có giúp NDCG@10 hơn loss dự đoán điểm hay không; BPR không trực tiếp tối ưu NDCG@10 và không có bảo đảm sẽ thắng. Đầu vào dự kiến là nhị phân train, không phải điểm 1–5; mẫu âm là đối chứng học, không phải dislike đã quan sát. Chỉ dùng positive train khi kiểm tra mẫu âm, không nhìn nhãn validation/test.
+
+**SLIM — dự phòng.** [Ning và Karypis (2011), thông tin xuất bản ICDM, DOI 10.1109/ICDM.2011.134](https://experts.umn.edu/en/publications/slim-sparse-linear-methods-for-top-n-recommender-systems/); [toàn văn đối chiếu](https://www.scribd.com/document/685632483/SLIM-Sparse-Linear-Methods-for-Top-N-Recommender-Systems), mục IV–VI. SLIM học ma trận trọng số item–item W với phạt L1/L2, W không âm, diag(W) = 0 và score = XW. Cặp chưa quan sát xuất hiện dưới dạng 0 trong loss tái tạo, là giả định mô hình. Bài gốc gồm Yahoo! Music cùng dữ liệu miền khác và đánh giá leave-one-out HR/ARHR; không phải protocol HetRec của nhóm. Giả thuyết cần kiểm chứng là học trọng số có ích hơn similarity định trước của ItemCF; W không bắt buộc đối xứng. Không kết luận SLIM tốt nhất chỉ vì đứng đầu bảng Lesota.
+
+### Khả năng hiện thực và chi phí chưa đo
+
+| Ứng viên | Công cụ đề xuất, chưa cài hoặc chạy | Chi phí/điểm cần kiểm tra ở lượt đầu |
+| --- | --- | --- |
+| ALS | [implicit CPU ALS](https://benfred.github.io/implicit/api/models/cpu/als.html). Truyền CSR user × artist với confidence đã tính; alpha thư viện = 1. | Lưu factor theo (user + artist) × số chiều và ma trận sparse; đánh giá full ranking cũng cần đo riêng. Kiểm tra bằng ví dụ tay cách thư viện xử lý confidence 1 cho ô chưa quan sát và tránh nhân hệ số hai lần. |
+| BPR-MF | [implicit CPU BPR](https://benfred.github.io/implicit/api/models/cpu/bpr.html); đối chiếu [mã v0.7.3](https://github.com/benfred/implicit/blob/v0.7.3/implicit/cpu/bpr.pyx). | Thư viện bỏ qua trọng số count, có item bias; ứng viên âm được lấy từ danh sách item của tương tác train, nên chịu ảnh hưởng tần suất, không phải đều trên catalog. Ghi số mẫu bỏ qua và cấu hình luồng; không dùng train_auc thay NDCG validation. |
+| SLIM | [Mã nhóm tác giả KarypisLab](https://github.com/KarypisLab/SLIM) để đối chiếu; hướng hiện thực trên Windows là [ElasticNet của scikit-learn](https://scikit-learn.org/stable/modules/generated/sklearn.linear_model.ElasticNet.html), đã có trong môi trường. | Cần một hồi quy mỗi artist; không hứa nhẹ chỉ vì suy luận sparse. Loại cột đích trước fit, không chỉ đặt đường chéo về 0 sau fit; giữ X/W sparse, ghi cảnh báo hội tụ và chi phí. Tham số alpha/l1_ratio của sklearn có chuẩn hóa theo số user, không sao chép số λ/β trong bài như thể cùng thang. |
+
+Đã kiểm tra môi trường hiện có: Python 3.11.17, NumPy 2.4.6, SciPy 1.17.1, scikit-learn 1.9.1; máy khoảng 16 GB RAM và RTX 3050 Laptop 4 GB. Ưu tiên CPU, chưa cần GPU hoặc dữ liệu ngoài. [PyPI implicit 0.7.3](https://pypi.org/project/implicit/0.7.3/) có wheel CPython 3.11 Windows x86-64; điều này chưa xác nhận tương thích NumPy, import hoặc fit thành công trong môi trường nhóm. Không cài phụ thuộc trong bước khảo sát; thử tương thích là việc đầu tiên khi được phép triển khai.
+
+### Kết luận khảo sát và điều kiện đưa vào báo cáo
+
+| Trạng thái | Mô hình | Lý do và bước tiếp theo |
+| --- | --- | --- |
+| Ưu tiên | Implicit ALS, sau đó BPR-MF | Hai mục tiêu học bổ sung cho baseline hiện tại; dùng ngay dữ liệu nghe sạch và protocol chung khi được phép thử. Lượt đầu/tinh chỉnh và trần 8/8 cấu hình theo kế hoạch hiện hành. |
+| Dự phòng | SLIM | Có căn cứ từ nghiên cứu âm nhạc và khác ItemCF về cách học; chỉ xét sau ALS/BPR nếu còn thời gian, trần 4 cấu hình sau kiểm tra chi phí. |
+| Chưa thử trong đợt này | LightGCN, LFGCF, BoxGNN, VAE và các hướng KG/đa phương thức/hội thoại | Không mở thêm kiến trúc hoặc tín hiệu dữ liệu trong nhánh 2–3 mô hình nhẹ. Các bài này phục vụ đối chiếu, chưa được chọn để triển khai. |
+
+Ưu tiên NDCG@10 validation ổn định hơn baseline mạnh nhất trong sáu mô hình, đồng thời công bố độ phủ, phổ biến, đa dạng và chi phí. Giữ split/catalog/evaluator, kiểm tra seed 42/43/44 theo [kế hoạch](WEEKLY_IMPLEMENTATION_PLAN.md#thực-nghiệm-bổ-sung-có-giới-hạn), không so điểm test của bài báo với validation của nhóm. Nếu đổi nền M1 phải đánh giá lại M1/ablation; M2 giữ ItemCF. Chỉ test sau khóa cấu hình để xác nhận; không dùng test đã xem để chọn lại mô hình.
+
+Khảo sát này chưa tạo kết quả chất lượng mô hình. Chỉ khi có bằng chứng thật mới cân nhắc bổ sung vào báo cáo đầy đủ; khi cần chỗ, rút gọn diễn giải hoặc chuyển chi tiết xuống phụ lục và giữ bảng kết quả mọi mô hình đã chạy. Không sửa Word hay tạo báo cáo tiến độ song song ở lượt này.
 
 ---
 

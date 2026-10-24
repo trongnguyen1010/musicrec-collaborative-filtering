@@ -2,6 +2,8 @@
 
 Ngày đánh giá: 2026-09-03
 
+**Lưu ý ngày 19/10/2026:** Đây là đánh giá lịch sử của bộ khung, không phải danh sách việc bắt buộc hiện hành hoặc kết quả kiểm tra lại hôm nay. Các đề xuất ALS/BPR, leave-one-out, thiết lập DVC/MLflow, board tiến độ và lịch 12 tuần phía dưới đã được thay bằng [kế hoạch từng bước](WEEKLY_IMPLEMENTATION_PLAN.md) cùng [quy tắc phát triển](../DEVELOPMENT_RULES.md). Giữ sáu baseline đã thống nhất, mỗi bước có giải thích và điểm dừng. Các kết quả test/lint và điểm đánh giá bên dưới chỉ phản ánh thời điểm 03/09/2026.
+
 ## Kết luận
 
 **Chấp thuận có điều kiện.** Hướng kiến trúc hiện tại phù hợp với đề tài hệ khuyến nghị

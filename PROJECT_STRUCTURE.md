@@ -1,60 +1,53 @@
 # Bộ khung và cấu trúc dự án MusicRec
 
-## Mục tiêu kiến trúc
+## Mục tiêu kiến trúc và trạng thái
 
-Đây là modular monorepo Python. Pipeline offline xử lý dữ liệu, huấn luyện, đánh giá
-và phát hành artifact; API/UI online chỉ nạp artifact đã phát hành để suy luận. Không
-được huấn luyện lại model trong HTTP request.
+Đây là modular monorepo Python cho khuyến nghị nghệ sĩ. Cấu trúc dưới đây mô tả trách nhiệm hiện có và hướng hoàn thiện; không xác nhận mọi module, pipeline hoặc cơ chế phát hành đã hoạt động.
+
+Thứ tự thực hiện theo [kế hoạch từng bước](docs/WEEKLY_IMPLEMENTATION_PLAN.md) và [quy tắc phát triển](DEVELOPMENT_RULES.md). Mô hình nền trước, M1/M2 sau, prototype sau lựa chọn mô hình. API/UI online dự kiến chỉ nạp artifact để suy luận; không huấn luyện trong HTTP request.
 
 ```text
 src/musicrec/
-  data/          dữ liệu, kiểm tra schema, preprocessing, split, mapping
-  recommenders/  Popularity, User-CF, Item-CF, SVD và reranker
-  evaluation/    RMSE, Precision@K, Recall@K, coverage, diversity, bias
-  artifacts/     manifest và kiểm tra tương thích artifact
-  serving/       candidate generation, filtering và cold-start fallback
-  api/           FastAPI router, schema và xử lý lỗi
-  ui/            Streamlit demo; chỉ gọi REST API
+  data/          kiểm tra schema, làm sạch, split, biến đổi và mapping
+  recommenders/  sáu baseline, sau đó M1/M2 theo bước được phép
+  evaluation/    evaluator chung cho ranking và các chỉ số bổ sung
+  artifacts/     thông tin phiên bản và kiểm tra artifact khi đến bước đóng gói
+  serving/       ứng viên, lọc lịch sử và fallback khi đến bước prototype
+  api/           FastAPI và schema
+  ui/            Streamlit gọi API
 ```
 
-## Cấu trúc thư mục
+## Vị trí các thành phần
 
 | Đường dẫn | Trách nhiệm |
 | --- | --- |
-| `configs/` | Cấu hình có version cho dataset, model, split và đánh giá. |
-| `data/` | Nội dung dữ liệu do DVC quản lý; Git chỉ giữ `README.md` và metadata DVC. |
-| `artifacts/releases/` | Model đã duyệt để demo, mapping, metadata, metrics, manifest; do DVC quản lý. |
-| `notebooks/` | EDA/phân tích. Logic tái sử dụng phải chuyển vào `src/` hoặc `scripts/`. |
-| `reports/` | Hình/bảng sinh cho báo cáo. |
-| `scripts/` | Entry point CLI cho từng stage của pipeline. |
-| `tests/` | Unit, integration và contract test. |
-| `docs/adr/` | Architecture Decision Records; mỗi quyết định quan trọng có lý do và hậu quả. |
+| configs/, params.yaml | Cấu hình; phải đối chiếu với phương pháp đã thống nhất trước khi chạy, chưa coi mặc định cũ là quyết định nghiên cứu. |
+| data/ | Nguồn và dữ liệu dẫn xuất, giữ tách biệt; không commit dataset vào Git. |
+| notebooks/ | EDA/phân tích khi đến bước; logic dùng lại chuyển vào src/ hoặc scripts/. |
+| scripts/ | Điểm chạy từng bước; không tự nối các bước chưa được phép. |
+| tests/ | Kiểm tra phù hợp với thay đổi và ví dụ tính tay; không chạy thực nghiệm ngoài phạm vi để kiểm tra tài liệu. |
+| outputs/runs/ | Vị trí dự kiến cho run riêng: cấu hình, dự đoán, metric và thời gian; không ghi đè. |
+| artifacts/releases/ | Artifact được chọn để demo sau thực nghiệm; không phải mọi lần thử đều là release. |
+| docs/reports/ | Các bản Word đầy đủ đã bàn giao; tên `33_BaoCaoKhoaLuan_CaoTrongNguyen_LeKhacGiaKhang_DD-MM-YYYY.docx`, giữ nguyên nội dung bản cũ. Bản mới trùng ngày lưu trong thư mục con Vn theo DEVELOPMENT_RULES.md. |
+| docs/adr/ | Quyết định kiến trúc đã có; không bắt buộc tạo thêm ADR. |
 
-## Luồng tái lập
+## Luồng nghiên cứu dự kiến
 
 ```text
-data/raw → validate → preprocess → split → train → evaluate → export_release
-                             ↑                      ↓
-                       params.yaml             MLflow run
+kiểm tra nguồn → EDA → làm sạch → split → biểu diễn → evaluator
+→ từng baseline → tinh chỉnh được phép → so sánh validation
+→ M1 → M2 → khóa cấu hình → test cuối → đóng gói và prototype
 ```
 
-`dvc.yaml` mô tả stage, dependency và output. `params.yaml` chứa các tham số có
-thể thay đổi giữa experiment. MLflow lưu run-level metrics, biểu đồ và artifact tạm.
-Chỉ artifact được chọn cho demo mới export vào `artifacts/releases/<model_version>/`.
+Đây là các lần làm riêng có điểm dừng. Chưa phải cam kết rằng một lệnh DVC có thể chạy đúng toàn bộ luồng. DVC/MLflow hiện có có thể được dùng khi cần; không yêu cầu thiết lập remote/tracking server để thay thế kiểm chứng phương pháp.
 
-Mỗi release bắt buộc có `manifest.json` với: `model_version`, Git SHA, DVC data
-hash/phiên bản, MLflow run ID, seed, config hash, metrics và ngày tạo.
+Khảo sát mở rộng ngày 24/10/2026 ưu tiên implicit ALS rồi BPR-MF, dự phòng SLIM. Nếu được phép và còn thời gian trước mốc 15/11, nhánh này nằm sau tổng hợp validation sáu baseline, trước chốt nền M1 và test; thiếu thời gian thì sau demo. Chưa tạo module/config hoặc đổi giao diện fit/predict/recommend/API. Khi triển khai vẫn dùng recommenders/ và evaluator chung; điều kiện, ngân sách và ảnh hưởng khi đổi nền M1 ở [kế hoạch hiện hành](docs/WEEKLY_IMPLEMENTATION_PLAN.md#thực-nghiệm-bổ-sung-có-giới-hạn). M2 vẫn dùng ItemCF theo protocol riêng.
 
-## Quy trình Git
+Mỗi run phải có config, seed, phiên bản mã và tình trạng thay đổi chưa commit, hash dữ liệu/split, biến đổi, dự đoán, metric và thời gian. CSV/JSON cùng các tệp kết quả là đủ nếu truy vết và tái lập được. Khi đến bước release, lưu model, mapping, biến đổi, metadata, config, metric và manifest; ID MLflow chỉ cần khi thực sự sử dụng MLflow.
 
-- `main` luôn chạy được, không push trực tiếp.
-- Nhánh ngắn hạn: `feat/`, `fix/`, `research/`, `docs/`, `chore/`.
-- Mọi PR cần CI xanh và ít nhất một review của thành viên còn lại.
-- Commit theo Conventional Commits: `feat:`, `fix:`, `docs:`, `test:`, `chore:`.
-- Release demo theo tag Semantic Versioning, ví dụ `v0.1.0`.
+## Quy trình thay đổi
 
-## Definition of Done
-
-Một thay đổi được xem là hoàn thành khi: code đã format/lint, test phù hợp đã pass,
-config/seed/metric được ghi lại, README hoặc ADR được cập nhật nếu cần, và không có
-dataset, model lớn hoặc secret bị commit vào Git.
+- Giữ lịch sử Git; không đưa lại mã/đầu ra của đợt đã bỏ vào quy trình mới nếu chưa được phép.
+- Một thay đổi có mục tiêu rõ, review và kiểm tra phù hợp. Quy tắc PR/CI áp dụng khi chuẩn bị PR; không tạo công việc quản lý riêng để trì hoãn bước nghiên cứu.
+- Thay đổi chỉ Markdown kiểm tra nội dung, liên kết và diff; không yêu cầu chạy huấn luyện hoặc xử lý dữ liệu.
+- Hoàn thành bước phải có giải thích và dừng theo yêu cầu người dùng, không đồng nghĩa đã phát hành hệ thống.
