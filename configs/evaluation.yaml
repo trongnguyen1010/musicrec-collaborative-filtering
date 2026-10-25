@@ -1,11 +1,32 @@
+protocol:
+  catalog: train_items_only
+  ranking: full_catalog_minus_seen
+  tie_break: train_mapping_order
+  validation_seen: train
+  test_seen: train_plus_validation
+  model_fit: train_only_no_refit
+  relevance: binary_heldout_intersect_catalog
+  empty_targets: exclude_and_report
+  invalid_recommendations: reject_duplicates_seen_unknown
+  precision_denominator: k_even_for_short_lists
+  ranking_aggregation: macro_eligible_users_including_empty_lists
+  beyond_accuracy_cohort: same_eligible_users
+  arp: train_distinct_listeners_pooled_returned_positions
+  novelty: minus_log2_laplace_listener_share_pooled_returned_positions
+  gini: unnormalized_all_catalog_including_zero_exposure
+  ild: mean_pairwise_one_minus_binary_train_cosine_macro_users_with_two_results
+  undefined_metrics: null_with_denominator
+ks: [5, 10, 20]
+selection_metric: ndcg_at_10_validation
 metrics:
-  - rmse
   - precision_at_k
   - recall_at_k
+  - ndcg_at_k
   - catalog_coverage
+  - gini
+  - arp
+  - novelty
   - intra_list_diversity
-  - popularity_ratio
-segments:
-  - all_users
-  - low_history_users
-  - high_history_users
+supplementary:
+  rmse: compatible_proxy_score_models_only_no_clipping_not_for_ranking_selection
+  timing: measure_model_fit_and_recommendation_separately_in_model_runs

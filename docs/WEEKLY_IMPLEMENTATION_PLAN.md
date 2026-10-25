@@ -1,8 +1,8 @@
 # Kế hoạch thực hiện khóa luận MusicRec theo từng bước
 
-Cập nhật kết quả Bước 5 ngày 24/10/2026 trên kế hoạch hiện hành, đối chiếu [Hướng dẫn từng bước hoàn thành khóa luận của GVHD](Hướng%20dẫn%20từng%20bước%20hoàn%20thành%20khóa%20luận.docx) và các lựa chọn đã trao đổi với người dùng. Bản nội dung mới nhất là [báo cáo Bước 5, V14](reports/V14/33_BaoCaoKhoaLuan_CaoTrongNguyen_LeKhacGiaKhang_24-10-2026.docx), kế thừa bản Bước 4 ngày 24/10; mọi bản trước giữ nguyên.
+Cập nhật kết quả Bước 9 ngày 25/10/2026 trên kế hoạch hiện hành, đối chiếu [Hướng dẫn từng bước hoàn thành khóa luận của GVHD](Hướng%20dẫn%20từng%20bước%20hoàn%20thành%20khóa%20luận.docx) và các lựa chọn đã trao đổi với người dùng. Word gần nhất vẫn là [báo cáo Bước 6](reports/33_BaoCaoKhoaLuan_CaoTrongNguyen_LeKhacGiaKhang_25-10-2026.docx); chỉ sửa Word khi người dùng yêu cầu rõ ràng. Bằng chứng Bước 7–9 nằm trong run và tài liệu làm việc.
 
-Đây là kế hoạch dự kiến, không phải xác nhận đã hoàn thành thực nghiệm mô hình hoặc đã được GVHD duyệt. Đã hoàn thành dữ liệu qua Bước 5 biểu diễn đầu vào; đang dừng giải thích Bước 5, chưa xây evaluator hoặc huấn luyện. **Hạn nộp demo người dùng đã xác nhận là cuối tháng 11/2026.** Dùng ngày 30/11/2026 làm mốc lập kế hoạch khi chưa có ngày/giờ nộp cụ thể, hoàn thành nội bộ ngày 27/11 và giữ 28–30/11 làm dự phòng. Lịch này thay cả lịch 12 tuần cũ và nhịp 16 tuần tham khảo; không suy ra hạn nộp toàn bộ khóa luận từ hạn demo.
+Đây là kế hoạch cho các bước còn lại, không phải xác nhận đã hoàn thành toàn bộ thực nghiệm hoặc đã được GVHD duyệt. Đã hoàn thành dữ liệu, evaluator, Random/Popularity và UserCF một cấu hình ở Bước 9; dừng giải thích Bước 9, chưa tinh chỉnh UserCF, chạy ItemCF/MF hoặc đánh giá test. **Hạn nộp demo người dùng đã xác nhận là cuối tháng 11/2026.** Dùng ngày 30/11/2026 làm mốc lập kế hoạch khi chưa có ngày/giờ nộp cụ thể, hoàn thành nội bộ ngày 27/11 và giữ 28–30/11 làm dự phòng. Lịch này thay cả lịch 12 tuần cũ và nhịp 16 tuần tham khảo; không suy ra hạn nộp toàn bộ khóa luận từ hạn demo.
 
 ## 1. Mục tiêu và phạm vi
 
@@ -49,7 +49,7 @@ Cuối mỗi bước, chat gồm: việc/tệp đã đổi; kết quả thật h
 
 Bước 0 dọn đợt triển khai vượt phạm vi đã hoàn thành: nền khang-dev tại e80cfbf, lịch sử cũ và lastfm-reproduction được giữ riêng. Không phục hồi kết quả đợt cũ làm kết quả mới.
 
-Trạng thái ngày 24/10: Bước 1–5 đã có bằng chứng; xem [data card](data-card.md), [metrics chia tập](../outputs/runs/split_20261024/metrics.json) và [metrics biểu diễn](../outputs/runs/representations_20261024/metrics.json). Có 74.275 cặp train, 9.263 validation và 9.263 test; mapping train gồm 1.877 user và 15.398 artist. Đã lưu riêng count/log2/điểm 1–5/nhị phân, ngưỡng chỉ fit train; kiểm tra độc lập và chạy lại trùng hash. Dừng giải thích Bước 5, chỉ chuyển Bước 6 khi người dùng cho phép; chưa học thẻ/similarity, xây evaluator hoặc huấn luyện.
+Trạng thái ngày 25/10: Bước 1–9 đã có bằng chứng; xem [data card](data-card.md), [split](../outputs/runs/split_20261024/metrics.json), [biểu diễn](../outputs/runs/representations_20261024/metrics.json), [evaluator](../outputs/runs/evaluator_20261025/metrics.json), [Random](../outputs/runs/random_validation_20261025/metrics.json), [Popularity](../outputs/runs/popularity_validation_20261025/metrics.json) và [UserCF đã kiểm tra](../outputs/runs/user_cf_l40_s0_validation_20261025_checked/metrics.json). Cùng catalog 15.398 artist, 1.877 danh sách và 1.865 user đánh giá. NDCG@10 lần lượt 0.0003721497, 0.0623622664 và 0.0080787555; UserCF đầu chưa vượt Popularity. Kiểm tra độc lập, nạp lại và chạy lại đã khớp; chưa mở test. Dừng Bước 9, Bước 10 cần cho phép riêng; chưa tuning UserCF, ItemCF/MF hoặc học thẻ.
 
 | Bước | Phạm vi được làm khi đến bước | Điều kiện hoàn thành trước khi dừng |
 | --- | --- | --- |
@@ -97,12 +97,16 @@ Chỉ đưa kết quả test cuối vào bản kết luận sau Bước 17. Khô
 - Seed 42, thứ tự ID ổn định; mỗi user có n_val = n_test = max(1, floor(0,1 × n)); train nhận phần còn lại. Không gọi đây là leave-one-out hay temporal split.
 - Bước 4 đã hiện thực: sắp ID theo giá trị số tăng dần, dùng một random.Random(42) qua các user; lấy validation trước, test tiếp rồi train. Mapping liên tiếp từ 0 chỉ theo train. Holdout ngoài catalog vẫn giữ cặp/count với item_index null; xem thống kê đích/người dùng đủ điều kiện trong data card. configs/base.yaml đã thay chiến lược leave_one_out cũ, chưa nối chuỗi DVC.
 - Bốn phân vị 20/40/60/80% trên log-count train, nội suy tuyến tính; điểm = 1 + số ngưỡng mà giá trị lớn hơn nghiêm ngặt. Đây là phép quy đổi của nhóm, không phải tối ưu được Hu et al. chứng minh.
-- Bước 5 đã hiện thực: ngưỡng train lần lượt 6.392317422778761, 7.562242424221073, 8.491853096329674, 9.579315937580015; validation/test áp dụng nguyên giá trị. Ba Parquet giữ đủ dòng/chỉ số gốc; bốn CSR train cùng mapping có shape 1.877 × 15.398 và 74.275 ô quan sát mỗi ma trận. transform.json lưu quy tắc/độ chính xác đầy đủ; không biến ô thiếu thành điểm 1 hoặc xóa đích ngoài catalog. Chưa nối chuỗi DVC hoặc tạo evaluator.
+- Bước 5 đã hiện thực: ngưỡng train lần lượt 6.392317422778761, 7.562242424221073, 8.491853096329674, 9.579315937580015; validation/test áp dụng nguyên giá trị. Ba Parquet giữ đủ dòng/chỉ số gốc; bốn CSR train cùng mapping có shape 1.877 × 15.398 và 74.275 ô quan sát mỗi ma trận. transform.json lưu quy tắc/độ chính xác đầy đủ; không biến ô thiếu thành điểm 1 hoặc xóa đích ngoài catalog. Chưa nối chuỗi DVC.
 - Catalog chính là artist xuất hiện trong train. Đích đánh giá giao catalog; báo riêng tỷ lệ đích ngoài catalog và user không còn đích hợp lệ.
 - Full ranking; validation lọc train, test lọc train + validation. Hồ sơ chấm điểm chỉ dùng train, không tự refit train + validation.
 - Chọn bằng NDCG@10 validation; báo Precision/Recall/NDCG tại K = 5,10,20. Precision chia K ngay cả khi trả thiếu.
 - Bổ sung Coverage, Gini, ARP, Novelty, ILD và thời gian. ARP dùng listener count train; ILD dùng cùng biểu diễn tương tác nhị phân train cho mọi mô hình.
 - RMSE chỉ cho mô hình dự đoán cùng điểm đại diện 1–5; không áp lên Random/PureSVD/reranker như thể cùng thang dự đoán, không dùng chọn mô hình ranking.
+- Bước 6 đã kiểm chứng: từ chối trùng/seen/ngoài catalog; danh sách rỗng của user còn đích vẫn nhận 0 trong trung bình ranking. Các chỉ số bổ sung dùng cùng cohort; Coverage/Gini toàn catalog (gồm tần suất 0), ARP/Novelty trung bình các vị trí thực trả, ILD trung bình user có ít nhất hai mục và báo mẫu số. Novelty giữ phân bố `(listeners + 1) / sum_catalog(listeners + 1)` của báo cáo V14. Giá trị không xác định lưu null cùng số lượng liên quan. Hòa điểm theo thứ tự mapping train, không phụ thuộc thứ tự dict đầu vào. CLI hiện chỉ chạy ví dụ tổng hợp; thời gian fit/recommend sẽ đo riêng ở run mô hình.
+- Bước 7 đã chạy: Random dùng `random.Random("musicrec-random-v1:42:{user_id}")` xáo trộn catalog theo thứ tự ID số trước lọc lịch sử. Tất cả K dùng prefix cùng thứ tự, score là thứ hạng hoán vị giảm dần; không phải sở thích đã học. Lựa chọn RNG theo user của nhóm giúp không phụ thuộc thứ tự gọi, không đổi seed sau kết quả. CLI chỉ đọc train/validation/mapping, lưu thời gian và snapshot; không dùng `scripts/train.py` cũ. Chưa chạy Bước 8.
+- Bước 8 đã chạy: Popularity nhận count gốc, biến đổi từng cặp thành log2(1 + count) rồi cộng trên train bằng tổng ổn định theo thứ tự dòng; hòa điểm theo ID số tăng dần. Fit cố định thứ tự toàn catalog, recommend lọc lịch sử và lấy prefix. Điểm này khác số người nghe dùng ARP/Novelty; không thử thêm biến thể listener count. Model xác định, seed 42 chỉ ghi nhận nguồn split. Hai baseline dùng chung runner I/O/evaluator, không đọc test, không đổi Word. Chưa chạy UserCF.
+- Bước 9 đã chạy cấu hình đầu: L=40, shrinkage=0, cosine toàn vector proxy, chỉ giữ tương đồng dương và bỏ chính user. Chọn top-L toàn user rồi giao láng giềng đã nghe từng item; mean chỉ tính quan sát train. Co rút khi dùng là cosine × n_common/(n_common + shrinkage), ít nhất một artist chung; lượt hiện tại shrinkage=0. Không có đóng góp dùng mean user, user mới dùng mean chung, chưa phải M2. Khóa sort neighbor/item làm tròn 12 chữ số rồi theo mapping để loại nhiễu số thực; score gốc không clip. Nạp CSR/model không fit lại, kiểm tra đủ 1.877 user; RMSE proxy chỉ bổ sung. Run chốt có hậu tố checked, run ban đầu có audit không dùng báo cáo. Chưa tuning hoặc chạy ItemCF.
 
 ### Ngân sách và mô-đun cải tiến
 
@@ -195,7 +199,7 @@ Phân công tham khảo: Cao Trọng Nguyên phụ trách chính dữ liệu/đ�
 
 Mỗi lượt bắt đầu bằng mục tiêu nhỏ, cuối lượt giải thích và dừng. Cuối mỗi mốc tuần đối chiếu đầu ra với bảng trên ngay trong chat; nếu trễ, nêu việc còn thiếu và thời gian dự kiến cần thêm trước khi quyết định phạm vi. Không bắt buộc tạo GitHub Project, nhật ký mới, ADR, DVC remote hoặc MLflow để theo lịch này.
 
-Chương 1–2 tận dụng bản đã có; chỉ ôn/bổ sung đúng phần cần cho bước đang làm. Chương 3–4 cập nhật theo kết quả khi cần, không dồn viết lại toàn bộ vào tuần cuối. Hạn nộp toàn bộ báo cáo và ngày bảo vệ chưa được xác nhận; lịch này bảo đảm ưu tiên demo và tài liệu phản ánh đúng phần đã hoàn thành.
+Chương 1–2 tận dụng bản đã có; chỉ ôn đúng phần cần cho bước đang làm. Kết quả mới lưu trong run và tài liệu làm việc. Theo yêu cầu mới nhất ngày 25/10/2026, chỉ cập nhật Word khi người dùng yêu cầu rõ ràng, không tự cập nhật sau từng bước hoặc sau khi chạy hết mô hình. Hạn nộp toàn bộ báo cáo và ngày bảo vệ chưa được xác nhận.
 
 ## 7. Lưu bằng chứng và đồng bộ báo cáo
 
@@ -204,7 +208,7 @@ Chương 1–2 tận dụng bản đã có; chỉ ôn/bổ sung đúng phần c�
 - So sánh cặp định trước: mô hình chọn với Popularity, SVD với PureSVD, M1 với nền, M2 với Popularity tại N = 3; dùng Wilcoxon và Holm trên các user tương ứng, giải thích cả mức chênh lệch thực tế. Trường hợp toàn chênh lệch bằng 0 phải có cách báo cáo phù hợp.
 - Nếu giữ ứng viên mở rộng, thêm cặp ứng viên được chọn với baseline mạnh nhất của nhóm sáu mô hình đã xác định bằng validation vào cùng họ kiểm định Holm trước khi mở test. Trung bình theo seed trong từng user trước so sánh; không coi ba seed là ba user độc lập.
 - Số liệu seminar hoặc lastfm-reproduction không thay thế kết quả của quy trình đang làm lại.
-- Cập nhật nội dung báo cáo song song khi từng bước có bằng chứng, nhưng chỉ xuất **bản khóa luận đầy đủ mới** khi nội dung hiện tại không còn đúng. Không tạo báo cáo tiến độ Word/Markdown khác.
+- Chỉ cập nhật Word khi người dùng yêu cầu rõ ràng; không tự sửa sau từng bước hoặc khi chạy xong các mô hình. Khi được yêu cầu, xuất **bản khóa luận đầy đủ mới**, kế thừa bản mới nhất. Bằng chứng vẫn lưu ngay trong run và tài liệu làm việc hiện có; không tạo báo cáo tiến độ Word/Markdown khác.
 - Theo [quy tắc lưu báo cáo](../DEVELOPMENT_RULES.md): giữ nguyên nội dung các bản đã bàn giao; tên tệp dùng `33_BaoCaoKhoaLuan_CaoTrongNguyen_LeKhacGiaKhang_DD-MM-YYYY.docx`, ngày tạo bản thực tế tại Việt Nam, không thêm thứ hoặc Vn vào tên. Không ghi đè; bản mới trùng ngày lưu trong thư mục con Vn theo quy tắc. Kiểm tra toàn bộ trang của bản sửa nội dung trước bàn giao để người dùng tự gửi cô.
 
 ## 8. Giai đoạn prototype sau thực nghiệm

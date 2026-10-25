@@ -16,7 +16,7 @@ Lịch mục tiêu là 19/10–30/11/2026; ngày/giờ nộp chính xác chờ t
 
 ## Một bước làm việc
 
-Trạng thái sau Bước 5 ngày 24/10/2026: đã lưu count gốc, log2, nhị phân và điểm đại diện 1–5; ngưỡng chỉ học từ 74.275 cặp train, áp dụng nguyên cho validation/test (mỗi tập 9.263 cặp). Bốn CSR train cùng shape 1.877 × 15.398, giữ nguyên mapping và mọi đích ngoài catalog trong Parquet. Run/kiểm tra độc lập ở [data card](data-card.md); báo cáo mới V14 kế thừa bản Bước 4. Chỉ giải thích Bước 5 rồi dừng; chưa xây evaluator hoặc huấn luyện. User không còn đích sau giao catalog (12 validation, 22 test) phải được báo rõ khi đến bước đánh giá.
+Trạng thái sau Bước 9 ngày 25/10/2026: UserCF L=40/shrinkage=0 đã chạy một cấu hình validation, NDCG@10 0.0080787555; Random/Popularity lần lượt 0.0003721497 và 0.0623622664. Cùng 1.865 user đánh giá, UserCF đầu chưa vượt Popularity nhưng Coverage@10 cao hơn (10.3065% so 0.1818%). Có ví dụ tay, kiểm tra độc lập toàn láng giềng/điểm, sửa tie số thực, nạp lại và chạy lại khớp; [data card](data-card.md) ghi giới hạn/fallback. Chưa tuning UserCF, mở test, chạy ItemCF/MF hoặc học thẻ. Word vẫn Bước 6, chỉ sửa khi người dùng yêu cầu. Dừng Bước 9, Bước 10 cần cho phép riêng.
 
 1. Xác nhận bước được phép, mục tiêu, đầu vào, đầu ra và những việc chưa thuộc bước đó.
 2. Trước khi thực hiện, giải thích căn cứ tài liệu và lựa chọn riêng; chỉ cần kiến thức đủ để hiểu công việc sắp làm.
@@ -43,7 +43,7 @@ Không tạo tệp nhật ký hoặc Word tiến độ mới. Trình bày trong 
 3. **Căn cứ:** bài báo/README nào được dùng; lựa chọn nào của nhóm; có phải tái hiện chính xác không.
 4. **Diễn giải:** kết quả có nghĩa gì, chưa chứng minh điều gì, có lỗi hoặc kết quả không cải thiện không.
 5. **Tự kiểm tra:** 2–3 câu hỏi bảo vệ cùng trả lời ngắn; nếu chưa hiểu, giải thích lại trước chuyển bước.
-6. **Đồng bộ báo cáo:** bản hiện có còn đúng không; nếu cần sửa thì nêu phần cần sửa và xuất bản đầy đủ theo quy tắc phiên bản khi được phép.
+6. **Báo cáo Word:** chỉ sửa hoặc xuất bản mới khi người dùng yêu cầu rõ ràng, theo yêu cầu mới nhất ngày 25/10/2026. Không tự cập nhật sau từng bước hoặc khi chạy hết mô hình; kết quả mới vẫn lưu ngay trong run và tài liệu làm việc hiện có.
 
 Bước quản lý hoặc chỉ sửa tài liệu dùng chính tài liệu nguồn làm căn cứ; không đòi có bài báo hay metric mới.
 

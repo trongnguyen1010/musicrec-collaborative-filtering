@@ -7,6 +7,43 @@ Mọi thay đổi đáng chú ý của MusicRec được ghi trong file này the
 
 ### Changed
 
+- 2026-10-25: Hoàn thành Bước 9 UserCF một cấu hình L=40/shrinkage=0, cosine
+  toàn vector proxy train, láng giềng toàn user rồi giao người nghe từng item,
+  dự đoán trừ mean quan sát và mean fallback rõ ràng. Thêm proxy_score tùy chọn
+  trong Interaction, giữ count gốc riêng. Kiểm tra tay, sửa nhiễu số thực khi
+  hòa điểm bằng khóa sắp 12 chữ số; bản run đầu giữ audit, run chốt có hậu tố
+  checked. NDCG@10 0.0080787555 thấp hơn Popularity tại cấu hình đầu, Coverage
+  10.3065333%; RMSE proxy 0.9326875842. Kiểm tra độc lập và nạp model không fit
+  khớp 1.877 user; chạy lại trùng chín tệp. Chưa tuning, ItemCF/MF hoặc mở test;
+  giữ mọi Word theo yêu cầu.
+
+- 2026-10-25: Hoàn thành Bước 8 Popularity trên validation: tổng log2(1 + count)
+  từng cặp train, tổng ổn định theo thứ tự dòng và hòa điểm theo ID số tăng dần.
+  Phân biệt điểm với listener count dùng đo ARP/Novelty, kiểm tra ví dụ tính tay,
+  count không hữu hạn, trùng cặp, lọc lịch sử và cold-start. Dùng chung runner
+  I/O với Random, giữ hai CLI riêng và mọi run cũ. NDCG@10 0.06236226641020536,
+  Coverage@10 28/15.398; kiểm tra độc lập và chạy lại trùng năm hash kết quả.
+  Chưa mở test hoặc triển khai UserCF; toàn bộ Word giữ nguyên theo yêu cầu.
+
+- 2026-10-25: Hoàn thành Bước 7 Random seed 42 trên validation, RNG cục bộ theo
+  user, xáo trộn full catalog train và lọc lịch sử. Giữ giao diện fit/predict/
+  recommend, điểm thứ hạng và reason/cold-start rõ ràng; không học lượt nghe.
+  CLI đọc run Bước 4 có hash, không mở test hoặc ghi đè. Lưu danh sách, chỉ số
+  từng user/từng K, trạng thái catalog/config và thời gian; đối chiếu độc lập
+  NumPy/ma trận thưa và chạy lại trùng năm hash kết quả. NDCG@10 validation
+  0.0003721497084376631, 1.865 user đủ điều kiện. Chưa chạy Popularity.
+  Theo yêu cầu mới nhất, chỉ sửa Word khi người dùng yêu cầu rõ ràng, không tự
+  cập nhật sau mỗi bước hoặc sau khi chạy hết mô hình; mọi bản Word giữ nguyên.
+
+- 2026-10-25: Hoàn thành Bước 6 kiểm chứng evaluator trên ví dụ tổng hợp: sửa
+  Precision chia K khi trả thiếu, thêm NDCG, full ranking/hòa điểm theo mapping,
+  lọc lịch sử đúng từng split và từ chối trùng/seen/ngoài catalog. Báo đích ngoài
+  catalog, user không còn đích và danh sách rỗng/thiếu; thêm Coverage/Gini/ARP/
+  Novelty/ILD cùng mẫu số và RMSE riêng cho điểm đại diện. Giữ Novelty cộng một
+  theo V14, ILD nhị phân train; kiểm tra tay và đối chiếu NDCG độc lập. CLI toy
+  không đọc HetRec, lưu run mới có hash/snapshot, chạy lại trùng ba JSON kết quả.
+  Đồng bộ cấu hình, tài liệu và báo cáo đầy đủ kế thừa V14. Chưa chạy mô hình.
+
 - 2026-10-24: Hoàn thành Bước 5: giữ count gốc, tạo log2(1 + count), nhị phân
   và điểm đại diện 1–5; phân vị 20/40/60/80% nội suy tuyến tính chỉ học từ train,
   áp dụng nguyên cho validation/test, bằng ngưỡng ở mức thấp hơn. Lưu ba Parquet

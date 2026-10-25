@@ -1,8 +1,8 @@
 # Data card HetRec 2011 Last.fm 2K
 
-## Trạng thái sau Bước 5 ngày 24/10/2026
+## Trạng thái sau Bước 9 ngày 25/10/2026
 
-Đã hoàn thành Bước 1–5 theo yêu cầu người dùng. **Train có 74.275 cặp; validation và test mỗi tập 9.263 cặp; mapping gồm 1.877 user và 15.398 artist từ train.** Đã lưu bốn biểu diễn và học ngưỡng điểm đại diện chỉ từ train, áp dụng nguyên cho hai tập còn lại. Chưa xây evaluator, học đặc trưng thẻ/similarity, huấn luyện hoặc tính chỉ số chất lượng trên test. Dừng giải thích Bước 5; các phần Bước 1–4 giữ bối cảnh lịch sử, kết quả mới nhất ở mục Bước 5 cuối tệp.
+Đã hoàn thành Bước 1–9 theo yêu cầu người dùng. **Train có 74.275 cặp; validation và test mỗi tập 9.263 cặp; mapping gồm 1.877 user và 15.398 artist từ train.** Đã có evaluator và Random/Popularity/UserCF một cấu hình trên validation. Chưa tuning UserCF, chạy ItemCF/MF, học thẻ hoặc đánh giá test. Dừng Bước 9; các phần Bước 1–8 giữ bối cảnh lịch sử, kết quả mới nhất ở mục Bước 9 cuối tệp. Word chỉ cập nhật khi người dùng yêu cầu rõ ràng, hiện giữ bản Bước 6.
 
 Bằng chứng máy đọc được: [source_audit.json](../outputs/runs/source_audit_20261019_162917_245445/source_audit.json). Tệp ghi thời điểm, phiên bản mã, tình trạng thay đổi chưa commit, cách đọc, từng kiểm tra và mã băm. Dùng Python standard library để đọc/kiểm tra trực tiếp, không thêm pipeline hoặc thư viện mới. Không có thao tác ngẫu nhiên nên seed không áp dụng.
 
@@ -231,3 +231,105 @@ Run [representations_20261024](../outputs/runs/representations_20261024/metrics.
 [Kiểm tra độc lập](../outputs/runs/representations_20261024/verification.json) dùng Arrow records, math.log2, tự nội suy trên danh sách sắp xếp và đối chiếu từng tọa độ/giá trị sparse, không gọi hàm biến đổi production. Xác nhận bảo toàn đủ mọi cặp/count/chỉ số, đúng log/binary/điểm, mapping không đổi, nguồn thô/clean/split giữ nguyên. Chạy lại cho chín tệp dữ liệu/mapping/biến đổi trùng hash; run representations_20261024_final_recheck dùng mã sau kiểm tra kiểu cũng cho cùng chín hash. Run có seed kế thừa 42, config, Git SHA/trạng thái, hash input/output, runtime và snapshot mã; phép biến đổi không phát sinh ngẫu nhiên mới.
 
 Bản [báo cáo Bước 5, V14](reports/V14/33_BaoCaoKhoaLuan_CaoTrongNguyen_LeKhacGiaKhang_24-10-2026.docx) kế thừa bản Bước 4, cập nhật mục 3.5.3 và công việc còn lại, giữ công thức và đề cương Chương 4–5. Chưa học popularity, similarity, TF–IDF, xây evaluator hoặc huấn luyện. Bước tiếp theo là Bước 6 kiểm chứng evaluator trên ví dụ tính tay khi được phép.
+
+## Bước 6 kiểm chứng bộ đánh giá ngày 25/10/2026
+
+Đã hoàn thiện [evaluator dùng chung](../src/musicrec/evaluation/ranking.py), [kiểm thử](../tests/unit/test_ranking.py), [cấu hình](../configs/evaluation.yaml) và [CLI kiểm chứng tổng hợp](../scripts/evaluate.py). Dữ liệu đầu vào ví dụ nhỏ được lưu ngay trong run; không đọc Parquet HetRec, chấm baseline hoặc mở chỉ số test thật. Run [evaluator_20261025](../outputs/runs/evaluator_20261025/metrics.json) có đầu vào, kết quả từng user/từng K, đáp án tính tay, cấu hình, seed, Git SHA/diff hash và snapshot mã. Ba JSON dữ liệu/kết quả trùng hash ở run chạy lại `evaluator_20261025_recheck`.
+
+Quy tắc đã kiểm tra: full ranking catalog train trừ lịch sử, hòa điểm theo mapping train; validation lọc train, test lọc train + validation nhưng thống kê/hồ sơ học vẫn chỉ từ train. Đích lấy giao catalog; báo đích ngoài catalog và user không còn đích. Danh sách trùng/seen/ngoài catalog bị từ chối. Precision chia K dù trả thiếu; user còn đích nhưng danh sách rỗng nhận 0 trong macro Precision/Recall/NDCG. IDCG dùng min(K, số đích hợp lệ), không giảm theo số mục thực trả.
+
+Coverage/Gini dùng danh sách của cùng cohort đủ điều kiện; Gini giữ mọi artist kể cả tần suất 0 và không chuẩn hóa thêm theo kích thước hữu hạn. ARP dùng số người nghe phân biệt train; Novelty dùng `-log2((listeners + 1) / sum_catalog(listeners + 1))` theo công thức báo cáo V14. Hai chỉ số lấy trung bình trên các vị trí thực trả. ILD dùng cosine tương tác nhị phân train, lấy trung bình user có ít nhất hai mục. Báo mẫu số, số danh sách thiếu/rỗng, tỷ lệ đủ K và null cho chỉ số không xác định. Không coi đồng nghe là giống âm thanh hoặc thể loại. RMSE tách riêng, chỉ cho dự đoán cùng điểm đại diện 1–5 và không tự cắt dự đoán.
+
+| Kiểm tra tính tay | Kết quả đã đối chiếu |
+| --- | --- |
+| Đích {A,C}, danh sách [B,A,C], K=3 | Precision 2/3; Recall 1; NDCG 0,6934264036 |
+| Đích {A,C}, danh sách [A,B,C], K=5 | Precision 0,4; không chia 3 |
+| Danh mục 4 mục, tần suất [2,1,1,0] | Coverage 3/4; Gini 0,375 |
+| Ví dụ tổng hợp 4 user, 6 artist, K=3 | 3 user đủ điều kiện; Precision 1/3, Recall 2/3, NDCG 0,6399069297 |
+| Cùng ví dụ, 4 vị trí thực trả | Coverage 0,5; Gini 7/12; ARP 1,25; Novelty 2,6611142969 bit; ILD 2/3, 1 user đóng góp |
+
+Căn cứ: công thức mục 2.2 và ví dụ Phụ lục B của V14; đối chiếu [Recommenders evaluation](https://recommenders-team.github.io/recommenders/evaluation.html) và [scikit-learn NDCG](https://scikit-learn.org/stable/modules/generated/sklearn.metrics.ndcg_score.html). Bộ kiểm thử so NDCG với scikit-learn trên 20 ví dụ seed 42 × 4 cutoff. Chính sách catalog, lọc lịch sử, cohort và làm trơn Novelty là lựa chọn đã chốt của nhóm; không khẳng định tái hiện chính xác toàn bộ evaluator của thư viện hay bài báo nào.
+
+[Báo cáo mới ngày 25/10](reports/33_BaoCaoKhoaLuan_CaoTrongNguyen_LeKhacGiaKhang_25-10-2026.docx) kế thừa đầy đủ V14, cập nhật mục 2.2.9, 3.10, Phụ lục B/C và giữ đề cương Chương 4–5. Các số minh họa chỉ xác nhận logic evaluator; chưa có kết quả chất lượng mô hình. Bước tiếp theo là Bước 7 Random seed 42 trên validation, cần cho phép riêng.
+
+## Bước 7 Random trên validation ngày 25/10/2026
+
+Run [random_validation_20261025](../outputs/runs/random_validation_20261025/metrics.json) đọc train/validation/mapping có hash từ Bước 4; không mở `test.parquet` kể cả để băm. [RandomRecommender](../src/musicrec/recommenders/random.py) giữ giao diện fit/predict/recommend; [CLI](../scripts/run_random.py) điều phối, [cấu hình](../configs/models/random.yaml) cố định seed 42. Fit chỉ ghi catalog và user đã biết, không dùng count hoặc sở thích học được. Danh mục gồm 15.398 artist theo ID số tăng dần; mỗi user có RNG mới từ chuỗi `musicrec-random-v1:42:{user_id}`. Xáo trộn toàn catalog, lọc train rồi lấy tối đa 20; K=5/10 lấy prefix cùng thứ tự. Score là hạng hoán vị giảm dần, không phải rating hoặc xác suất. User mới nhận cùng baseline với reason cold-start riêng.
+
+Đây là baseline Random theo kế hoạch/báo cáo hiện hành; cách gắn seed theo user và quy tắc score là lựa chọn hiện thực của nhóm, không khẳng định tái hiện đúng generator của một bài báo. Kết quả độc lập thứ tự train, thứ tự yêu cầu và count; runtime Python ghi trong run để tái lập. Không chọn seed tốt nhất sau khi xem kết quả.
+
+Cả 1.877 user nhận đủ 20 mục, tổng 37.540 dòng; không trùng, chứa lịch sử hoặc ngoài catalog. Đánh giá dùng đúng evaluator Bước 6 trên 1.865 user có 8.142 đích hợp lệ. Báo riêng 1.121/9.263 đích ngoài catalog và 12 user không còn đích; các danh sách của 12 user này không tham gia chỉ số. Không có danh sách thiếu/rỗng trong cohort đủ điều kiện; tỷ lệ đủ K bằng 1 tại cả ba cutoff.
+
+| K | Precision | Recall | NDCG | Coverage | Gini | ARP (listener) | Novelty (bit) | ILD |
+| ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| 5 | 0.0001072386 | 0.0001072386 | 0.0000909277 | 0.4543447201 | 0.6330935566 | 4.5358713137 | 14.8222849311 | 0.9984875796 |
+| 10 | 0.0003217158 | 0.0006970509 | 0.0003721497 | 0.7060007793 | 0.4807439704 | 4.5472922252 | 14.8212885902 | 0.9984051271 |
+| 20 | 0.0001876676 | 0.0008042895 | 0.0004212940 | 0.9102480842 | 0.3548336001 | 4.6212064343 | 14.8231095788 | 0.9983697832 |
+
+Tổng lượt tìm trúng tại K=5/10/20 lần lượt là 1/6/7. Đây là một seed validation làm mốc ngẫu nhiên, chưa phải kết luận chọn mô hình hoặc kết quả test. Coverage/ILD cao đi cùng khả năng tìm lại đích rất thấp; không suy ra chất lượng cá nhân hóa chỉ từ đa dạng/bao phủ. Không tính RMSE cho điểm thứ hạng Random.
+
+Lần chạy đầu: fit 0,018829 giây (chỉ thu catalog/user ID); recommend toàn bộ 9,631595 giây, trung bình 5,131377 ms/user và phân vị 95% 6,167540 ms; evaluator 1,307155 giây. Đây là số đo riêng lần chạy trên môi trường hiện tại, không phải cam kết độ trễ API hoặc đo hiệu năng tổng quát. Chi phí đọc dữ liệu, ghi tệp và provenance không nằm trong thời gian fit/recommend.
+
+Run lưu `recommendations.csv` gồm ID/thứ hạng/score/reason, `evaluation.json` từng user và cohort, `metrics.csv`, `model.json` catalog/config/user, mapping nguyên byte, config, thời gian, hash input/output, Git SHA/trạng thái/diff và snapshot mã. [Kiểm tra độc lập](../outputs/runs/random_validation_20261025/verification.json) tái dựng toàn bộ hoán vị/score từ trạng thái đã lưu mà không gọi class production; tính lại P/R/NDCG bằng vector chiết khấu NumPy, ILD bằng Gram của ma trận nhị phân thưa, Gini/ARP/Novelty bằng tần suất. Tất cả khớp với sai số tối đa 1e-12. Run `random_validation_20261025_recheck` cho năm tệp dự đoán/chỉ số/trạng thái/mapping trùng hash. Kiểm thử còn xác nhận không đọc test, không ghi đè, phát hiện hash sai và thư mục output nằm trong input.
+
+Theo yêu cầu mới nhất của người dùng, **chỉ sửa Word khi được yêu cầu rõ ràng**, không tự sửa sau mỗi bước hoặc khi chạy hết mô hình. Đã giữ nguyên mọi bản Word; bản gần nhất vẫn phản ánh Bước 6, chưa có các số liệu Random này. Bước tiếp theo là Bước 8 Popularity tổng log-count train, cần cho phép riêng.
+
+## Bước 8 Popularity tổng log-count trên validation ngày 25/10/2026
+
+Run [popularity_validation_20261025](../outputs/runs/popularity_validation_20261025/metrics.json) dùng đúng train/validation/mapping và evaluator của Random; hash đầu vào và cấu hình đánh giá giống nhau. [PopularityRecommender](../src/musicrec/recommenders/popularity.py) nhận count gốc từ 74.275 cặp train, tính riêng log2(1 + count) của từng cặp rồi cộng theo artist. Tổng dùng fsum trên các giá trị đã sắp để không phụ thuộc thứ tự dòng; không biến đổi log lần hai. [Cấu hình](../configs/models/popularity.yaml) ghi rõ công thức, fit train-only và hòa điểm theo ID số tăng dần. Model xác định, seed 42 chỉ truy vết split, không tạo ba seed giả lập hoặc chọn cấu hình mới sau kết quả.
+
+Căn cứ là biến thể Popularity theo cường độ nghe đã chốt ở công thức (3.3) của báo cáo và kế hoạch hiện hành. Tổng log-count là lựa chọn của nhóm, không tuyên bố tái hiện đúng một bài báo hoặc xem Popularity theo listener count là cùng phương pháp. **Score Popularity khác listener count**: ARP/Novelty vẫn đếm số user phân biệt trên train bằng evaluator dùng chung; không lấy tổng log-count làm mức phổ biến trong hai chỉ số này.
+
+Ví dụ kiểm tra: artist 2 có count 3 từ hai user, điểm bằng log2(4) + log2(4) = 4; artist 10 có một user count 15, điểm cũng bằng 4. Hai artist hòa điểm nên 2 đứng trước 10; listener count tương ứng là 2 và 1. Nếu cộng count rồi lấy log, artist 2 chỉ nhận log2(7), sai quy tắc đã chọn. Kiểm thử xác nhận thứ tự/predict/recommend nhất quán, không trùng/seen, prefix giữa các K, lạnh user có reason riêng, giữ fallback thứ tự từ vựng cho ID chữ ở khung API cũ, từ chối count không hữu hạn và trùng cặp.
+
+[CLI Popularity](../scripts/run_popularity.py) và CLI Random dùng chung [runner I/O](../scripts/run_baseline.py); không sao chép logic kiểm tra nguồn hoặc đổi evaluator. Mỗi lệnh chỉ chạy một model và một cấu hình được phép. Run mới nằm ngoài input, không ghi đè; chỉ đọc train/validation/mapping, không mở test kể cả để băm. Fit sắp toàn catalog một lần, recommend lọc lịch sử rồi lấy prefix. `model.json` lưu score của đủ 15.398 artist, catalog, config và user đã biết; điểm toàn cục không phải sao thật hoặc xác suất thích.
+
+Đủ 1.877 user nhận 20 mục, tổng 37.540 dòng; evaluator dùng đúng 1.865 user với 8.142 đích hợp lệ như Random. Báo riêng 1.121 đích ngoài catalog và 12 user không còn đích. Không có mục trùng/seen/ngoài catalog, danh sách thiếu hoặc rỗng; tỷ lệ đủ K bằng 1.
+
+| K | Precision | Recall | NDCG | Coverage | Gini | ARP (listener) | Novelty (bit) | ILD |
+| ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| 5 | 0.0408579088 | 0.0439142091 | 0.0470971045 | 0.0012339265 | 0.9995396289 | 385.9477747989 | 7.8666909028 | 0.5972177835 |
+| 10 | 0.0339410188 | 0.0731903485 | 0.0623622664 | 0.0018184180 | 0.9991467922 | 351.8289544236 | 8.0066170799 | 0.6647826606 |
+| 20 | 0.0259785523 | 0.1113583557 | 0.0784329643 | 0.0027276270 | 0.9984083968 | 297.1026541555 | 8.2728787595 | 0.7220508006 |
+
+Tìm trúng tổng cộng 381/633/969 cặp đích tại K=5/10/20, so với 1/6/7 của Random seed 42. NDCG@10 tăng từ 0.0003721497 lên 0.0623622664 trên validation hiện tại; không xem đây là kiểm định thống kê, kết quả test hoặc bằng chứng mô hình tốt nhất. Coverage@5/10/20 chỉ gồm 19/28/42 artist; Coverage@10 bằng 28/15.398 ≈ 0,1818418%, trong khi Random phủ 70,6000779%. ARP@10 tăng từ 4,5473 lên 351,8290, ILD giảm từ 0,9984051 xuống 0,6647827. Baseline này tìm lại đích tốt hơn trong phép thử nhưng tập trung mạnh vào artist nhiều người nghe. Không tính RMSE trên điểm xếp hạng hoặc tự chạy đối chứng Popularity listener count.
+
+Lần chạy đầu: fit 0,063455 giây, recommend tổng 0,015147 giây, trung bình 0,008070 ms/user, phân vị 95% 0,009100 ms; evaluator 6,445057 giây. Fit gồm tổng hợp và sắp trước catalog; recommend là phép lọc/lấy prefix từ trạng thái trong RAM. Số đo không gồm đọc/ghi dữ liệu hoặc provenance, không phải cam kết độ trễ API hay benchmark môi trường kiểm soát.
+
+[Kiểm tra độc lập](../outputs/runs/popularity_validation_20261025/verification.json) dùng NumPy log2 + bincount trên train, sai khác lớn nhất của điểm so với fsum là 2.7284841053e-12 do số thực. Tái dựng mọi danh sách và score từ model.json mà không gọi class production; tính lại từng user và mọi chỉ số bằng vector chiết khấu, tần suất và Gram của ma trận nhị phân thưa, khớp trong 1e-12. Run `popularity_validation_20261025_recheck` trùng hash năm tệp dự đoán/chỉ số/trạng thái/mapping. Toàn bộ kiểm thử gồm cả hồi quy CLI Random đều đạt; dữ liệu, run cũ và 11 bản Word giữ nguyên.
+
+Word chưa cập nhật các kết quả Bước 7–8 theo yêu cầu người dùng. Bước tiếp theo là Bước 9 UserCF tại một cấu hình L=40, shrinkage=0; cần cho phép riêng, chưa chạy lưới tinh chỉnh.
+
+## Bước 9 UserCF một cấu hình L bằng 40 và shrinkage bằng 0
+
+Run chốt: [user_cf_l40_s0_validation_20261025_checked](../outputs/runs/user_cf_l40_s0_validation_20261025_checked/metrics.json). [UserCFRecommender](../src/musicrec/recommenders/user_cf.py) dùng train proxy_score đã lưu ở Bước 5, không học lại phân vị hoặc dùng count thay điểm. [Interaction](../src/musicrec/data/contracts.py) có thêm trường proxy_score tùy chọn để giữ riêng count gốc; Random/Popularity vẫn dùng hợp đồng cũ với giá trị mặc định None. [CLI](../scripts/run_user_cf.py) dùng chung runner, chỉ đọc train/validation/mapping/transform có hash; không mở test kể cả để băm. So với Bước 7–8, từng cặp/count/chỉ số và cohort giữ nguyên.
+
+Cosine lấy tích vô hướng trên toàn vector proxy và chuẩn toàn vector, vị trí thiếu bằng 0 khi tính tương đồng; không coi vị trí thiếu là điểm 0 quan sát thật khi tính mean hoặc dự đoán. Bỏ chính user, giữ tương đồng dương với ít nhất một artist chung; co rút định nghĩa là cosine × n_common/(n_common + shrinkage), ở lượt này shrinkage=0. Chọn tối đa L=40 láng giềng toàn user trước, rồi từng item chỉ nhận đóng góp từ các láng giềng đã nghe item. Không đổi thành chọn top-40 riêng trong nhóm người nghe từng artist.
+
+Dự đoán bằng mean của các quan sát train của user cộng trung bình có trọng số các độ lệch r_vi − mean_v. Thiếu đóng góp dùng mean user; user chưa có trong train dùng mean chung và reason riêng, chưa phải M2 hoặc bằng chứng đã xử lý tốt cold-start. Predict/recommend không cắt điểm về 1–5; artist ngoài catalog bị từ chối. Recommend loại cả lịch sử train đã biết và lịch sử bổ sung, full ranking cùng catalog với các baseline. Khóa sắp láng giềng và item làm tròn 12 chữ số rồi theo mapping số để ổn định hòa điểm; trọng số và dự đoán gốc vẫn dùng để tính score/RMSE.
+
+Thiết kế theo công thức UserCF trừ mean trong báo cáo hiện hành. Đối chiếu công thức dự đoán và mean fallback với [Surprise KNNWithMeans](https://surprise.readthedocs.io/en/stable/knn_inspired.html); không tuyên bố tái hiện thư viện. [Cosine của Surprise](https://surprise.readthedocs.io/en/stable/similarities.html) chỉ tính chuẩn trên phần đồng quan sát, khác chuẩn toàn vector mà nhóm đã chốt. Biểu diễn proxy, chọn láng giềng toàn cục, co rút và quy tắc số học là lựa chọn hiện thực của nhóm.
+
+Ví dụ tay: user 1 có {artist 1:3, 2:5}, mean=4; user 2 có {1:1, 2:3, 3:5}, mean=3; user 3 có {1:5, 2:3, 4:1}, mean=3; user 4 chỉ có {5:2}. Cosine user 1 với user 2 và 3 lần lượt là 18/sqrt(34×35) và 30/sqrt(34×35). Dự đoán artist 3 là 4+(5−3)=6, artist 4 là 4+(1−3)=2, artist 5 là fallback 4. L=1 chỉ chọn user 3 nên artist 3 trở về 4, không tự thay bằng user 2. Các kiểm thử L=1/shrinkage=10 chỉ là ví dụ nhỏ kiểm tra logic, không phải lượt tinh chỉnh trên dữ liệu thật.
+
+Run ban đầu `user_cf_l40_s0_validation_20261025` được giữ cùng audit.json, không dùng báo cáo: kiểm tra độc lập phát hiện 12 user có lựa chọn ở ngưỡng L bị nhiễu cosine khoảng 3,33e-16, làm tie không luôn theo ID. Đã bổ sung kiểm thử hồi quy với hai cosine cùng bằng 0,15 và ổn định khóa sort ở 12 chữ số. Run checked và run recheck cùng L=40/shrinkage=0 là kết quả sau sửa lỗi; không chọn hyperparameter hoặc đổi seed từ chất lượng validation. Precision/Recall/NDCG không đổi qua sửa lỗi; một số chỉ số tần suất thay đổi nhỏ do ID được chọn khi hòa.
+
+Đủ 1.877 user nhận 20 mục, tổng 37.540 dòng; đánh giá trên cùng 1.865 user, 8.142 đích hợp lệ, báo riêng 1.121 đích ngoài catalog và 12 user không còn đích. Không có mục trùng/seen/ngoài catalog hoặc danh sách thiếu/rỗng.
+
+| K | Precision | Recall | NDCG | Coverage | Gini | ARP (listener) | Novelty (bit) | ILD |
+| ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| 5 | 0.0028954424 | 0.0032171582 | 0.0031049848 | 0.0689050526 | 0.9730097952 | 30.2454691689 | 12.8677122201 | 0.9583425993 |
+| 10 | 0.0057372654 | 0.0129490617 | 0.0080787555 | 0.1030653332 | 0.9587138401 | 31.3817694370 | 12.8405979410 | 0.9669347051 |
+| 20 | 0.0076943700 | 0.0338069705 | 0.0166469445 | 0.1486556696 | 0.9385312392 | 33.5601608579 | 12.7778560535 | 0.9722169032 |
+
+Tìm trúng 27/107/287 cặp tại K=5/10/20. Cấu hình UserCF đầu có NDCG@10 0.0080787555 cao hơn Random 0.0003721497, thấp hơn Popularity 0.0623622664. Coverage@10 10,3065% cao hơn Popularity 0,1818%; ARP thấp hơn và ILD cao hơn. Chưa kết luận UserCF nói chung kém hơn, hoặc chọn mô hình cuối: đây mới là một cấu hình validation, chưa kiểm định hay mở test.
+
+RMSE bổ sung của proxy = 0.9326875842 trên 8.142 cặp, không dùng chọn ranking. Có 1.840 cặp đích dùng mean fallback và 707 dự đoán held-out nằm ngoài 1–5 được giữ nguyên. Mỗi user có từ 2 đến 40 láng giềng; không user nào hoàn toàn thiếu láng giềng. Trên 28.827.771 ứng viên chưa nghe của toàn bộ user, 27.616.017 không nhận đóng góp trực tiếp từ top-L; tuy vậy, không vị trí Top-5/10/20 nào của cohort đánh giá dùng fallback. Vì thế, không thể chỉ từ lượng fallback mà kết luận nguyên nhân của chất lượng ranking thấp.
+
+Lần chạy checked: fit 0,299661 giây, recommend tổng 4,873055 giây, trung bình 2,596194 ms/user, phân vị 95% 3,403740 ms; evaluator 1,410670 giây. RMSE riêng 3,913492 giây; nạp/đối chiếu mọi danh sách 5,553119 giây. Số đo chỉ của môi trường/lần chạy hiện tại, không gồm đọc/ghi nguồn trong thời gian fit/recommend và không phải cam kết độ trễ API. Predict từng cặp hiện tính cả catalog để dùng chung logic; chưa tối ưu batch do bước này ưu tiên kiểm chứng.
+
+Artifact gồm CSR proxy và láng giềng trong model/ratings.npz, model/neighbors.npz; model/state.json giữ ID/mean/tham số/hash. Load kiểm tra checksum, kích thước, giá trị và mapping, khôi phục láng giềng đã lưu mà không fit hoặc tính similarity mới. Đã nạp lại và khớp đủ 1.877 danh sách/score/reason; chín tệp dữ liệu/model/transform trùng hash trong run recheck. Mỗi run lưu config, seed nguồn split, hash đầu vào/đầu ra, Git SHA/trạng thái/diff và snapshot mã.
+
+[Kiểm tra độc lập](../outputs/runs/user_cf_l40_s0_validation_20261025_checked/verification.json) không gọi model/evaluator production: dựng Gram của CSR proxy từ train, kiểm tra top-40 của mọi user, cộng đóng góp bằng dictionary theo từng láng giềng, tái dựng mọi danh sách/score/reason; tính lại RMSE, từng metric user, Coverage/Gini/ARP/Novelty và ILD nhị phân train. Score tái dựng trùng hoàn toàn; chỉ số khớp trong 1e-12. candidate_diagnostics.csv lưu số láng giềng và mức fallback. **47 tests đạt**, gồm hồi quy hai CLI trước, kiểm tra save/load không gọi fit và checksum sai; lint/format/mypy phần mới đạt. Mọi artifact baseline cũ và 11 Word giữ nguyên.
+
+Word chưa cập nhật các kết quả Bước 7–9 theo yêu cầu người dùng. Bước tiếp theo là Bước 10 ItemCF một cấu hình L=40/shrinkage=0, cần cho phép riêng. Tinh chỉnh UserCF là điểm dừng riêng, chưa chạy lưới 12 cấu hình.

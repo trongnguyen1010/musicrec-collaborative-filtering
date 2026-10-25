@@ -11,7 +11,7 @@
 7. Thay đổi code phải có test tương ứng. Sửa bug phải có regression test khi khả thi.
 8. Trước PR: chạy `uv run ruff check .`, `uv run ruff format --check .`, `uv run mypy src`, `uv run pytest`.
 9. Không merge trực tiếp vào `main`; PR cần CI xanh và review chéo.
-10. Quyết định ảnh hưởng dataset, split, metric, model interface hoặc API contract phải được giải thích trong cuộc trò chuyện và ghi trong cấu hình thực nghiệm; cập nhật báo cáo khi nội dung không còn phù hợp. Không bắt buộc tạo ADR hoặc tài liệu mới.
+10. Quyết định ảnh hưởng dataset, split, metric, model interface hoặc API contract phải được giải thích trong cuộc trò chuyện và ghi trong cấu hình thực nghiệm. Chỉ cập nhật báo cáo Word khi người dùng yêu cầu rõ ràng; không tự cập nhật theo bước hoặc sau khi chạy hết mô hình. Không bắt buộc tạo ADR hoặc tài liệu mới.
 
 ## Quy ước mã nguồn
 
@@ -49,7 +49,7 @@
 2. Chỉ thực hiện bước người dùng đang cho phép. Đồng ý kế hoạch tổng thể không đồng nghĩa cho phép chạy toàn bộ kế hoạch. Hoàn thành một bước phải giải thích kết quả rồi dừng, chờ người dùng cho chuyển bước.
 3. Tách riêng kiểm tra nguồn, EDA, làm sạch, chia tập, biểu diễn đầu vào, bộ đánh giá và từng mô hình. Không huấn luyện trong bước dữ liệu hoặc tự chạy test set trong lúc tinh chỉnh.
 4. Với UserCF, ItemCF, SVD có độ lệch và PureSVD, chạy một cấu hình và tinh chỉnh là hai điểm dừng riêng. Chỉ làm M1/M2 sau các mô hình nền; trình bày thiết kế từng mô-đun trước khi chạy.
-5. Cuối mỗi bước, giải thích: việc đã làm và tệp đã đổi; kết quả thật; bài báo làm căn cứ và lựa chọn riêng của nhóm; ý nghĩa và giới hạn; hai hoặc ba câu hỏi bảo vệ kèm câu trả lời ngắn; báo cáo có cần cập nhật hay không. Bước quản lý mã nguồn không cần gán một bài báo làm căn cứ.
+5. Cuối mỗi bước, giải thích: việc đã làm và tệp đã đổi; kết quả thật; bài báo làm căn cứ và lựa chọn riêng của nhóm; ý nghĩa và giới hạn; hai hoặc ba câu hỏi bảo vệ kèm câu trả lời ngắn. Ghi rõ nội dung mới đang lưu trong run/tài liệu làm việc; chỉ sửa Word khi người dùng yêu cầu rõ ràng. Bước quản lý mã nguồn không cần gán một bài báo làm căn cứ.
 6. Giải thích đủ để người dùng hiểu đầu vào, đầu ra, lý do lựa chọn, cách kiểm chứng và giới hạn kết luận; không bắt buộc trình bày đầy đủ phép suy diễn toán học. Nêu rõ cả kết quả không cải thiện.
 7. Không tạo thêm tài liệu kế hoạch hoặc báo cáo tiến độ Word/Markdown. Trao đổi nằm trong chat; kết quả kỹ thuật nằm trong run riêng và không ghi đè run cũ.
 
@@ -60,7 +60,8 @@
    Hai tệp được đổi tên ngày 20/10/2026 theo yêu cầu người dùng; ngày trên tên lấy từ lần lưu sửa trong metadata Word, nội dung và mã băm giữ nguyên. V1/V2 trong tài liệu là nhãn lịch sử. Đọc bản mới nhất đã bàn giao trước khi cập nhật; giữ văn phong và cấu trúc hiện có nhưng sửa phương pháp hoặc nội dung sai khi có căn cứ.
    Bản mới nhất trước Bước 3 là `docs/reports/V12/33_BaoCaoKhoaLuan_CaoTrongNguyen_LeKhacGiaKhang_20-10-2026.docx`; người dùng xác nhận đã gửi tài liệu cho cô, chưa có xác nhận GVHD duyệt. Sau Bước 3, bản nội dung mới là `docs/reports/V13/33_BaoCaoKhoaLuan_CaoTrongNguyen_LeKhacGiaKhang_21-10-2026.docx`, kế thừa V12. Sau Bước 4, bản mới nhất là `docs/reports/33_BaoCaoKhoaLuan_CaoTrongNguyen_LeKhacGiaKhang_24-10-2026.docx`, kế thừa V13, cập nhật chia tập/ánh xạ, giữ công thức và đề cương Chương 4–5. Đây là bản để người dùng đọc và tự gửi; không ghi đè các bản cũ hoặc quay lại bản cũ khi cập nhật lần sau.
    Sau Bước 5, bản mới nhất là `docs/reports/V14/33_BaoCaoKhoaLuan_CaoTrongNguyen_LeKhacGiaKhang_24-10-2026.docx`, kế thừa bản Bước 4 cùng ngày, bổ sung bốn biểu diễn/ngưỡng train, giữ công thức và đề cương Chương 4–5. Đây là bản hiện hành để đọc/cập nhật tiếp; các bản kể trên là lịch sử và giữ nguyên.
-2. Sau mỗi bước, đối chiếu phương pháp, số liệu và trạng thái triển khai với báo cáo. Khi báo cáo không còn phù hợp, tạo một bản khóa luận đầy đủ mới trong `docs/reports/`; không bắt buộc tạo bản mới nếu chưa cần sửa nội dung.
+   Sau Bước 6, bản hiện hành là `docs/reports/33_BaoCaoKhoaLuan_CaoTrongNguyen_LeKhacGiaKhang_25-10-2026.docx`, kế thừa V14, cập nhật evaluator và ví dụ kiểm chứng. Chưa có kết quả chất lượng mô hình; giữ nguyên các phiên bản trước.
+2. Theo yêu cầu mới nhất ngày 25/10/2026, chỉ cập nhật hoặc tạo bản Word khi người dùng yêu cầu rõ ràng. Không tự sửa Word sau mỗi bước, khi có kết quả mới hoặc khi chạy xong tất cả mô hình. Lưu bằng chứng trong run và cập nhật tài liệu làm việc hiện có; báo cáo Word giữ ở trạng thái lần bàn giao gần nhất cho đến khi được yêu cầu. Khi được yêu cầu, kế thừa bản mới nhất và xuất một bản khóa luận đầy đủ mới trong `docs/reports/`.
 3. Giữ nguyên nội dung V1 và mọi bản đã bàn giao, kể cả tệp chưa commit. Không ghi đè; chỉ đổi tên, di chuyển hoặc xóa đầu ra khi người dùng yêu cầu rõ ràng. Khi đổi tên theo yêu cầu mới, cập nhật liên kết và xác minh mã băm không đổi.
 4. Bản nội dung mới dùng ngày tạo bản thực tế tại Việt Nam (`Asia/Saigon`) theo mẫu ở mục 1, ví dụ `33_BaoCaoKhoaLuan_CaoTrongNguyen_LeKhacGiaKhang_20-10-2026.docx`. Tạo tệp độc quyền; nếu cùng ngày đã có tệp trùng tên, lưu bản mới trong thư mục con `docs/reports/Vn/` với số phiên bản kế tiếp chưa tồn tại, giữ đúng mẫu tên tệp và cập nhật đường dẫn bàn giao. Không đổi ngày chỉ để tránh trùng tên.
 5. Đồng bộ các chương liên quan, tóm tắt, bảng/hình và tài liệu tham khảo. Phân biệt thiết kế, ví dụ minh họa, phần đã triển khai và kết quả đã kiểm chứng; không biến mục tiêu kỳ vọng thành số đo hoặc ghi GVHD đã duyệt khi chưa có xác nhận.
