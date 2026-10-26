@@ -28,7 +28,10 @@ src/musicrec/
 | tests/ | Kiểm tra phù hợp với thay đổi và ví dụ tính tay; không chạy thực nghiệm ngoài phạm vi để kiểm tra tài liệu. |
 | outputs/runs/ | Vị trí dự kiến cho run riêng: cấu hình, dự đoán, metric và thời gian; không ghi đè. |
 | artifacts/releases/ | Artifact được chọn để demo sau thực nghiệm; không phải mọi lần thử đều là release. |
-| docs/reports/ | Các bản Word đầy đủ đã bàn giao; tên `33_BaoCaoKhoaLuan_CaoTrongNguyen_LeKhacGiaKhang_DD-MM-YYYY.docx`, giữ nguyên nội dung bản cũ. Bản mới trùng ngày lưu trong thư mục con Vn theo DEVELOPMENT_RULES.md. |
+| docs/bao-cao/ | Báo cáo khóa luận Word; tên `33_BaoCaoKhoaLuan_CaoTrongNguyen_LeKhacGiaKhang_vNN_DD-MM-YYYY.docx`, mỗi phiên bản ghi vào `docs/bao-cao/README.md`. |
+| docs/de-cuong/ | Đề cương chi tiết và mô tả đề tài. |
+| docs/huong-dan-gvhd/ | Hướng dẫn từng bước và mẫu báo cáo của GVHD. |
+| docs/tai-lieu-tham-khao/ | Bài báo nền, nghiên cứu 2021–2025, tài liệu lý thuyết, khóa luận mẫu và bản tổng quan `TONG_QUAN.md`. |
 | docs/adr/ | Quyết định kiến trúc đã có; không bắt buộc tạo thêm ADR. |
 
 ## Luồng nghiên cứu dự kiến

@@ -2,7 +2,7 @@
 
 **Đề tài Khóa luận:** Xây dựng hệ thống khuyến nghị nghệ sĩ âm nhạc dựa trên lọc cộng tác  
 *(MusicRec: A Collaborative Filtering-based Music Artist Recommendation System)*  
-**Cơ sở đối chiếu:** [DeCuongChiTiet_KLTN_XayDungHeThongKhuyenNghiAmNhac_ThamKhao.docx](file:///c:/Users/Admin/Desktop/musicrec-collaborative-filtering/docs/DeCuongChiTiet_KLTN_XayDungHeThongKhuyenNghiAmNhac_ThamKhao.docx) và [Khao sat TQ.docx](file:///c:/Users/Admin/Desktop/musicrec-collaborative-filtering/docs/Khao%20sat%20TQ.docx) cùng thư mục tài liệu gốc [docs/TLTK/](file:///c:/Users/Admin/Desktop/musicrec-collaborative-filtering/docs/TLTK/).
+**Cơ sở đối chiếu:** [DeCuongChiTiet_KLTN_XayDungHeThongKhuyenNghiAmNhac_ThamKhao.docx](khoa-luan-mau/DeCuongChiTiet_KLTN_XayDungHeThongKhuyenNghiAmNhac_ThamKhao.docx) và [Khao sat TQ.docx](ly-thuyet/Khao%20sat%20TQ.docx) cùng thư mục tài liệu gốc [docs/TLTK/](bai-bao-nen).
 
 ---
 
@@ -25,7 +25,7 @@ Bổ sung hiện hành: [Khảo sát mô hình mở rộng ngày 24/10/2026](#kh
 
 **Thiết kế riêng của nhóm, đóng băng trước kết quả:** chia numeric user IDs bằng Python random seed 42 (floor 80% học, floor 10% tinh chỉnh, còn lại để dành), chỉ học từ learning train; thẻ đúng cặp user–artist train; normalize casefold/whitespace, TF distinct learner/artist/tag, min artist df=2 và smooth IDF/L2. Hồ sơ train lồng nhau theo seed từng user, trọng số log2-count; CF proxy chuẩn hóa (s−1)/4, nội dung cosine, pop tổng log2-count/max. Công thức V1 `w*CF+(1-w)*fallback`, w=min(1,N/ngưỡng), fallback α*content+(1−α)*pop, xử lý thiếu theo artist. Chín cặp α/ngưỡng chọn bằng mean NDCG@10 N=1/3/5; N=0 là Pop. Không bài nào xác nhận trước grid hay mức cải thiện của thiết kế này.
 
-Run validation chọn α=0.75/ngưỡng10, mean NDCG@10 0.0454919147 so Pop 0.0288284384 cùng protocol. [Data card](data-card.md) ghi đủ cả ItemCF đơn lẻ thấp hơn Pop, 8.493 artist thiếu thẻ, đánh đổi với nội dung, một split/một mẫu hồ sơ và nhiều user hòa 0. Chưa dùng 189 user để dành, test hoặc kiểm định cuối; không tuyên bố giải quyết item cold-start, cải thiện trải nghiệm người dùng hoặc so với bảng warm-start. Burke 2002 tiếp tục là trích dẫn lịch sử về kết hợp, không làm căn cứ thực nghiệm chính cho quyết định mới. Word giữ nguyên.
+Run validation chọn α=0.75/ngưỡng10, mean NDCG@10 0.0454919147 so Pop 0.0288284384 cùng protocol. [Data card](../data-card.md) ghi đủ cả ItemCF đơn lẻ thấp hơn Pop, 8.493 artist thiếu thẻ, đánh đổi với nội dung, một split/một mẫu hồ sơ và nhiều user hòa 0. Chưa dùng 189 user để dành, test hoặc kiểm định cuối; không tuyên bố giải quyết item cold-start, cải thiện trải nghiệm người dùng hoặc so với bảng warm-start. Burke 2002 tiếp tục là trích dẫn lịch sử về kết hợp, không làm căn cứ thực nghiệm chính cho quyết định mới. Word giữ nguyên.
 
 <a id="doi-chieu-m1-20261026"></a>
 
@@ -40,7 +40,7 @@ Run validation chọn α=0.75/ngưỡng10, mean NDCG@10 0.0454919147 so Pop 0.02
 
 **Phần tự thiết kế của nhóm, được đóng băng trước kết quả:** công thức `λ*r - (1-λ)*max_cosine - β*p`, min-max score trên cùng Top-100, cosine cột user nhị phân train, log-normalized listener popularity, tie-break theo base rank, 12 tổ hợp và giới hạn giảm NDCG@10 5%. Chọn seed 42 theo ARP thấp nhất trong full đạt gate, rồi ILD/NDCG; cố định tham số/ablation khi xác nhận 43/44, không mở rộng grid. Ngưỡng 5% là mức chấp nhận nghiên cứu của nhóm, không phải chuẩn chung do hai bài xác nhận. MMR 1998 và các nguồn cũ vẫn giữ trong tổng quan lịch sử.
 
-M1 chọn λ=0.75/β=0.5 và đạt gate @10 cả ba seed/mean; NDCG giảm trong khi ARP/ILD/coverage cải thiện. Không vì đạt gate mà kết luận tốt hơn ở mọi K: @5 giảm mean 6,2175%. [Data card](data-card.md) giữ số đo thật, các cấu hình thất bại, ablation và chi phí; các seed dùng chung split/validation nên không phải ba phép đánh giá độc lập trên dữ liệu mới. Chưa mở test, khảo sát người dùng hoặc sửa Word.
+M1 chọn λ=0.75/β=0.5 và đạt gate @10 cả ba seed/mean; NDCG giảm trong khi ARP/ILD/coverage cải thiện. Không vì đạt gate mà kết luận tốt hơn ở mọi K: @5 giảm mean 6,2175%. [Data card](../data-card.md) giữ số đo thật, các cấu hình thất bại, ablation và chi phí; các seed dùng chung split/validation nên không phải ba phép đánh giá độc lập trên dữ liệu mới. Chưa mở test, khảo sát người dùng hoặc sửa Word.
 
 <a id="doi-chieu-als-20261026"></a>
 
@@ -84,7 +84,7 @@ M1 chọn λ=0.75/β=0.5 và đạt gate @10 cả ba seed/mean; NDCG giảm tron
 
 ## Khảo sát mô hình mở rộng ngày 24/10/2026
 
-**Trạng thái:** đã đối chiếu phương pháp, thiết lập và bảng kết quả của ba bài dưới đây cùng nguồn nền tảng ALS/BPR/SLIM. Ưu tiên khảo sát implicit ALS và BPR-MF, dự phòng SLIM; chưa triển khai, chưa có kết quả validation/test và chưa bổ sung mô hình vào báo cáo Word. Sáu baseline và M1/M2 hiện hành giữ nguyên. Ngân sách và điều kiện thử nằm ở [kế hoạch thực hiện](WEEKLY_IMPLEMENTATION_PLAN.md#thực-nghiệm-bổ-sung-có-giới-hạn), không phải cấu hình được bài báo chứng minh tối ưu cho dữ liệu nhóm.
+**Trạng thái:** đã đối chiếu phương pháp, thiết lập và bảng kết quả của ba bài dưới đây cùng nguồn nền tảng ALS/BPR/SLIM. Ưu tiên khảo sát implicit ALS và BPR-MF, dự phòng SLIM; chưa triển khai, chưa có kết quả validation/test và chưa bổ sung mô hình vào báo cáo Word. Sáu baseline và M1/M2 hiện hành giữ nguyên. Ngân sách và điều kiện thử nằm ở [kế hoạch thực hiện](../WEEKLY_IMPLEMENTATION_PLAN.md#thực-nghiệm-bổ-sung-có-giới-hạn), không phải cấu hình được bài báo chứng minh tối ưu cho dữ liệu nhóm.
 
 ### Bài báo đã dùng những mô hình nào?
 
@@ -122,7 +122,7 @@ Hai bài đồ thị cùng ghi Last.fm sau xử lý 1.808 user và 12.212 item n
 | Dự phòng | SLIM | Có căn cứ từ nghiên cứu âm nhạc và khác ItemCF về cách học; chỉ xét sau ALS/BPR nếu còn thời gian, trần 4 cấu hình sau kiểm tra chi phí. |
 | Chưa thử trong đợt này | LightGCN, LFGCF, BoxGNN, VAE và các hướng KG/đa phương thức/hội thoại | Không mở thêm kiến trúc hoặc tín hiệu dữ liệu trong nhánh 2–3 mô hình nhẹ. Các bài này phục vụ đối chiếu, chưa được chọn để triển khai. |
 
-Ưu tiên NDCG@10 validation ổn định hơn baseline mạnh nhất trong sáu mô hình, đồng thời công bố độ phủ, phổ biến, đa dạng và chi phí. Giữ split/catalog/evaluator, kiểm tra seed 42/43/44 theo [kế hoạch](WEEKLY_IMPLEMENTATION_PLAN.md#thực-nghiệm-bổ-sung-có-giới-hạn), không so điểm test của bài báo với validation của nhóm. Nếu đổi nền M1 phải đánh giá lại M1/ablation; M2 giữ ItemCF. Chỉ test sau khóa cấu hình để xác nhận; không dùng test đã xem để chọn lại mô hình.
+Ưu tiên NDCG@10 validation ổn định hơn baseline mạnh nhất trong sáu mô hình, đồng thời công bố độ phủ, phổ biến, đa dạng và chi phí. Giữ split/catalog/evaluator, kiểm tra seed 42/43/44 theo [kế hoạch](../WEEKLY_IMPLEMENTATION_PLAN.md#thực-nghiệm-bổ-sung-có-giới-hạn), không so điểm test của bài báo với validation của nhóm. Nếu đổi nền M1 phải đánh giá lại M1/ablation; M2 giữ ItemCF. Chỉ test sau khóa cấu hình để xác nhận; không dùng test đã xem để chọn lại mô hình.
 
 Khảo sát này chưa tạo kết quả chất lượng mô hình. Chỉ khi có bằng chứng thật mới cân nhắc bổ sung vào báo cáo đầy đủ; khi cần chỗ, rút gọn diễn giải hoặc chuyển chi tiết xuống phụ lục và giữ bảng kết quả mọi mô hình đã chạy. Không sửa Word hay tạo báo cáo tiến độ song song ở lượt này.
 
@@ -134,7 +134,7 @@ Khảo sát này chưa tạo kết quả chất lượng mô hình. Chỉ khi c�
 
 ### 1. Resnick et al. (1994)
 - **Tên bài báo:** *GroupLens: An Open Architecture for Collaborative Filtering of Netnews* (CSCW 1994)
-- **Tập tin tài liệu:** [Resnick et al. 1994 (GroupLens).pdf](file:///c:/Users/Admin/Desktop/musicrec-collaborative-filtering/docs/TLTK/Resnick%20et%20al.%201994%20(GroupLens).pdf)
+- **Tập tin tài liệu:** [Resnick et al. 1994 (GroupLens).pdf](bai-bao-nen/Resnick%20et%20al.%201994%20(GroupLens).pdf)
 - **Đóng góp chính của bài báo:**
   - Khởi xướng hệ thống "GroupLens", đặt nền móng lịch sử cho kỹ thuật Lọc cộng tác dựa trên người dùng (**User-based Collaborative Filtering**).
   - Đưa ra giả định cốt lõi: *những người dùng từng có quan điểm/hành vi tương đồng trong quá khứ sẽ có xu hướng tiếp tục đồng thuận trong tương lai*.
@@ -156,7 +156,7 @@ Khảo sát này chưa tạo kết quả chất lượng mô hình. Chỉ khi c�
 
 ### 2. Sarwar et al. (2001)
 - **Tên bài báo:** *Item-Based Collaborative Filtering Recommendation Algorithms* (WWW 2001)
-- **Tập tin tài liệu:** [Sarwar et al. 2001.pdf](file:///c:/Users/Admin/Desktop/musicrec-collaborative-filtering/docs/TLTK/Sarwar%20et%20al.%202001.pdf)
+- **Tập tin tài liệu:** [Sarwar et al. 2001.pdf](bai-bao-nen/Sarwar%20et%20al.%202001.pdf)
 - **Đóng góp chính của bài báo:**
   - Đề xuất giải thuật Lọc cộng tác dựa trên sản phẩm (**Item-based Collaborative Filtering**), giải quyết triệt để nút thắt cổ chai về khả năng mở rộng (scalability) và tốc độ phản hồi thời gian thực của User-based CF khi số người dùng tăng vọt.
   - Đưa ra độ đo tương đồng cosine điều chỉnh (**Adjusted Cosine Similarity**) trừ đi điểm trung bình của người dùng để triệt tiêu độ lệch thang đo đánh giá chủ quan.
@@ -178,7 +178,7 @@ Khảo sát này chưa tạo kết quả chất lượng mô hình. Chỉ khi c�
 
 ### 3. Koren, Bell, Volinsky (2009)
 - **Tên bài báo:** *Matrix Factorization Techniques for Recommender Systems* (IEEE Computer 2009)
-- **Tập tin tài liệu:** [KorenBellVolinsky2009.pdf](file:///c:/Users/Admin/Desktop/musicrec-collaborative-filtering/docs/TLTK/KorenBellVolinsky2009.pdf)
+- **Tập tin tài liệu:** [KorenBellVolinsky2009.pdf](bai-bao-nen/KorenBellVolinsky2009.pdf)
 - **Đóng góp chính của bài báo:**
   - Tổng kết có hệ thống các kỹ thuật Phân rã ma trận (**Matrix Factorization - MF**) giúp đội ngũ chiến thắng giải thưởng 1 triệu USD Netflix Prize.
   - Mô hình hóa sở thích người dùng và đặc tính sản phẩm vào một không gian nhân tử tiềm ẩn chung (*latent factor space*) bằng tích vô hướng vector $p_u^T q_i$, đồng thời tích hợp các số hạng thiên lệch hệ thống (*global mean, user bias, item bias*).
@@ -202,7 +202,7 @@ Khảo sát này chưa tạo kết quả chất lượng mô hình. Chỉ khi c�
 
 ### 4. Hu, Koren, Volinsky (2008)
 - **Tên bài báo:** *Collaborative Filtering for Implicit Feedback Datasets* (ICDM 2008)
-- **Tập tin tài liệu:** [Hu, Koren, Volinsky 2008.pdf](file:///c:/Users/Admin/Desktop/musicrec-collaborative-filtering/docs/TLTK/Hu,%20Koren,%20Volinsky%202008.pdf)
+- **Tập tin tài liệu:** [Hu, Koren, Volinsky 2008.pdf](bai-bao-nen/Hu,%20Koren,%20Volinsky%202008.pdf)
 - **Đóng góp chính của bài báo:**
   - Thiết lập khung lý thuyết chuẩn tắc cho bài toán lọc cộng tác trên dữ liệu phản hồi ngầm (**implicit feedback**).
   - Chỉ ra 3 đặc trưng cốt lõi: không có phản hồi âm rõ ràng, dữ liệu nhiều nhiễu, và số lượt nghe phản ánh độ tin cậy (*confidence*) chứ không tỷ lệ tuyến tính với độ yêu thích.
@@ -222,7 +222,7 @@ Khảo sát này chưa tạo kết quả chất lượng mô hình. Chỉ khi c�
 
 ### 5. Herlocker et al. (2004)
 - **Tên bài báo:** *Evaluating Collaborative Filtering Recommender Systems* (ACM TOIS 2004)
-- **Tập tin tài liệu:** [Herlocker et al. 2004.pdf](file:///c:/Users/Admin/Desktop/musicrec-collaborative-filtering/docs/TLTK/Herlocker%20et%20al.%202004.pdf)
+- **Tập tin tài liệu:** [Herlocker et al. 2004.pdf](bai-bao-nen/Herlocker%20et%20al.%202004.pdf)
 - **Đóng góp chính của bài báo:**
   - Khảo sát kinh điển và toàn diện nhất đặt ra các nguyên tắc, chuẩn mực và phương pháp luận đánh giá hệ thống lọc cộng tác.
   - Phân loại rõ ràng các tác vụ người dùng và tương ứng với từng nhóm độ đo (đo sai số dự đoán điểm như MAE/RMSE so với độ đo xếp hạng như Precision, Recall, ROC).
@@ -243,7 +243,7 @@ Khảo sát này chưa tạo kết quả chất lượng mô hình. Chỉ khi c�
 
 ### 6. Cremonesi, Koren, Turrin (2010)
 - **Tên bài báo:** *Performance of Recommender Algorithms on Top-N Recommendation Tasks* (ACM RecSys 2010)
-- **Tập tin tài liệu:** [Cremonesi et al. 2010.pdf](file:///c:/Users/Admin/Desktop/musicrec-collaborative-filtering/docs/TLTK/Cremonesi%20et%20al.%202010.pdf)
+- **Tập tin tài liệu:** [Cremonesi et al. 2010.pdf](bai-bao-nen/Cremonesi%20et%20al.%202010.pdf)
 - **Đóng góp chính của bài báo:**
   - Phát hiện bước ngoặt: **Tối ưu hóa RMSE không đồng nghĩa với cải thiện chất lượng xếp hạng Top-N**.
   - Chỉ ra hiện tượng các thuật toán không cá nhân hóa (*Popularity baseline*) có thể đánh bại hoặc đạt độ chính xác gần bằng các mô hình phức tạp nếu đánh giá Top-N bị chi phối bởi các mục phổ biến.
@@ -265,7 +265,7 @@ Khảo sát này chưa tạo kết quả chất lượng mô hình. Chỉ khi c�
 
 ### 7. Kowald, Schedl, Lex (2020)
 - **Tên bài báo:** *The Unfairness of Popularity Bias in Music Recommendation: A Reproducibility Study* (ECIR 2020)
-- **Tập tin tài liệu:** [Kowald, Schedl, Lex 2020.pdf](file:///c:/Users/Admin/Desktop/musicrec-collaborative-filtering/docs/TLTK/Kowald,%20Schedl,%20Lex%202020.pdf)
+- **Tập tin tài liệu:** [Kowald, Schedl, Lex 2020.pdf](bai-bao-nen/Kowald,%20Schedl,%20Lex%202020.pdf)
 - **Đóng góp chính của bài báo:**
   - Tái lập và kiểm chứng hiện tượng thiên lệch phổ biến (**Popularity Bias**) và sự đối xử bất công thuật toán trong **miền âm nhạc** trên tập dữ liệu Last.fm quy mô lớn (LFM-1b).
   - Phân nhóm người dùng theo mức độ thị hiếu chính thống (*mainstreaminess*) thành 3 nhóm: *low-mainstream*, *medium-mainstream*, và *high-mainstream*.
@@ -288,7 +288,7 @@ Khảo sát này chưa tạo kết quả chất lượng mô hình. Chỉ khi c�
 
 ### 8. Ji et al. (2023)
 - **Tên bài báo:** *A Critical Study on Data Leakage in Recommender System Offline Evaluation* (ACM TOIS 2023)
-- **Tập tin tài liệu:** [Ji et al. 2023.pdf](file:///c:/Users/Admin/Desktop/musicrec-collaborative-filtering/docs/TLTK/Ji%20et%20al.%202023.pdf)
+- **Tập tin tài liệu:** [Ji et al. 2023.pdf](bai-bao-nen/Ji%20et%20al.%202023.pdf)
 - **Đóng góp chính của bài báo:**
   - Nghiên cứu phản biện về vấn đề **rò rỉ dữ liệu (data leakage)** trong đánh giá ngoại tuyến (offline evaluation).
   - Chỉ ra rằng các chiến lược chia tập không tuân thủ dòng thời gian toàn cục (*global timeline*) – chẳng hạn chia ngẫu nhiên – khiến mô hình vô tình học trước tương lai, làm sai lệch thứ hạng tương đối giữa các mô hình.
@@ -315,7 +315,7 @@ Khảo sát này chưa tạo kết quả chất lượng mô hình. Chỉ khi c�
 
 ### 1. Song, Dixon, Pearce (2012)
 **Tên bài báo:** *A Survey of Music Recommendation Systems and Future Perspectives* (CMMR 2012)  
-**Tập tin tài liệu:** [A_Survey_of_Music_Recommendation_Systems_and_Future_Perspectives.pdf](file:///c:/Users/Admin/Desktop/musicrec-collaborative-filtering/docs/TLTK/A_Survey_of_Music_Recommendation_Systems_and_Future_Perspectives.pdf)
+**Tập tin tài liệu:** [A_Survey_of_Music_Recommendation_Systems_and_Future_Perspectives.pdf](bai-bao-nen/A_Survey_of_Music_Recommendation_Systems_and_Future_Perspectives.pdf)
 
 #### a. Phương pháp
 - **Định nghĩa trực quan:** Bài báo tổng hợp bức tranh toàn cảnh về cách các cỗ máy nghe nhạc thấu hiểu con người qua 4 góc độ: bạn bè nghe gì (Lọc cộng tác), bài hát nghe như thế nào (Phân tích âm thanh - giai điệu, tiết tấu), người nghe đang ở đâu/làm gì (Ngữ cảnh), và người nghe đang vui hay buồn (Cảm xúc). Tác giả đề xuất mô hình mới dựa trên "Động cơ" (*Motivation-based*): hiểu lý do tại sao người ta bật nhạc (để tập gym, để ngủ, hay để giải tỏa căng thẳng).
@@ -365,7 +365,7 @@ Bảng 2: Đặc trưng âm thanh bài hát (Audio Features - MIREX / MSD)
 
 ### 2. Schedl, Zamani, Chen, Deldjoo, Elahi (2018)
 **Tên bài báo:** *Current Challenges and Visions in Music Recommender Systems Research* (IJMIR 2018)  
-**Tập tin tài liệu:** [Current_Challenges_and_Visions_in_Music_Recommender_Systems_Research.pdf](file:///c:/Users/Admin/Desktop/musicrec-collaborative-filtering/docs/TLTK/Current_Challenges_and_Visions_in_Music_Recommender_Systems_Research.pdf)
+**Tập tin tài liệu:** [Current_Challenges_and_Visions_in_Music_Recommender_Systems_Research.pdf](bai-bao-nen/Current_Challenges_and_Visions_in_Music_Recommender_Systems_Research.pdf)
 
 #### a. Phương pháp
 - **Định nghĩa trực quan:** Khảo sát định hình lộ trình phát triển của ngành, chỉ ra âm nhạc rất khác phim ảnh hay mua sắm trực tuyến: một bài hát chỉ kéo dài vài phút, người ta có thói quen nghe đi nghe lại một bài hàng chục lần (*repeat consumption*), và thường nghe liền một danh sách phát (*playlist*). Bài báo tập trung vào bài toán: làm sao để tự động tiếp nối danh sách phát (bạn bật 3 bài đầu, máy tự chọn mượt mà 10 bài tiếp theo).
@@ -407,7 +407,7 @@ Bảng: Cấu trúc Playlist (Spotify Million Playlist Dataset)
 
 ### 3. Schedl, Knees, McFee, Bogdanov, Kaminskas (2015)
 **Tên bài báo:** *Music Recommender Systems* (Chương 13, Recommender Systems Handbook, 2nd Edition, Springer, 2015)  
-**Tập tin tài liệu:** [RecSysHandbook2015_ch13_musicrec.pdf](file:///c:/Users/Admin/Desktop/musicrec-collaborative-filtering/docs/TLTK/RecSysHandbook2015_ch13_musicrec.pdf)
+**Tập tin tài liệu:** [RecSysHandbook2015_ch13_musicrec.pdf](bai-bao-nen/RecSysHandbook2015_ch13_musicrec.pdf)
 
 #### a. Phương pháp
 - **Định nghĩa trực quan:** Cuốn cẩm nang toàn thư về kỹ thuật tạo danh sách nhạc tự động và trích xuất đặc trưng âm thanh. Hệ thống giải quyết bài toán: Khi một bài hát mới phát hành chưa ai nghe (chưa có dữ liệu cộng tác), máy tính sẽ tự "lắng nghe" file âm thanh MP3 để phân tích sóng nhạc (tiếng trống, giọng hát, giai điệu), từ đó biết bài này giống bài nào để gợi ý.
@@ -455,7 +455,7 @@ Bảng 2: Lịch sử phản hồi ngầm (MSD Taste Profile / Last.fm 360K)
 
 ### 4. Deldjoo, Schedl, Knees (2021)
 **Tên bài báo:** *Content-driven Music Recommendation: Evolution, State of the Art, and Challenges* (arXiv 2021)  
-**Tập tin tài liệu:** [Content-driven_Music_Recommendation_Evolution_State_of_the_Art_and_Challenges.pdf](file:///c:/Users/Admin/Desktop/musicrec-collaborative-filtering/docs/TLTK/Content-driven_Music_Recommendation_Evolution_State_of_the_Art_and_Challenges.pdf)
+**Tập tin tài liệu:** [Content-driven_Music_Recommendation_Evolution_State_of_the_Art_and_Challenges.pdf](bai-bao-nen/Content-driven_Music_Recommendation_Evolution_State_of_the_Art_and_Challenges.pdf)
 
 #### a. Phương pháp
 - **Định nghĩa trực quan:** Khảo sát các mô hình khuyến nghị âm nhạc dựa trên nội dung hiện đại, mô hình hóa âm nhạc như một "củ hành" nhiều lớp (**Onion Model**): lớp lõi là sóng âm thanh, lớp thứ hai là bản nhạc MIDI, lớp thứ ba là lời bài hát và thể loại, lớp thứ tư là hình ảnh bìa album, và lớp ngoài cùng là ngữ cảnh người nghe. Khảo sát dành một chương riêng phân tích **Mạng nơ-ron đồ thị (GNN)**: biến toàn bộ bài hát, nghệ sĩ, danh sách phát, và thể loại thành các "nút" trên một mạng nhện khổng lồ để AI học mối quan hệ đan xen.
@@ -497,7 +497,7 @@ Bảng: Thuộc tính âm thanh cấp cao trích xuất bằng Deep Learning (Sp
 
 ### 5. Lacic et al. (2024)
 **Tên bài báo:** *Hybrid music recommendation with graph neural networks* (User Modeling and User-Adapted Interaction - UMAI 2024)  
-**Tập tin tài liệu:** [Hybrid_music_recommendation_with_graph_neural_networks.pdf](file:///c:/Users/Admin/Desktop/musicrec-collaborative-filtering/docs/TLTK/Hybrid_music_recommendation_with_graph_neural_networks.pdf)
+**Tập tin tài liệu:** [Hybrid_music_recommendation_with_graph_neural_networks.pdf](bai-bao-nen/Hybrid_music_recommendation_with_graph_neural_networks.pdf)
 
 #### a. Phương pháp
 - **Định nghĩa trực quan:** Áp dụng mô hình mạng nơ-ron đồ thị quy mô lớn **PinSage** (thuật toán từng làm nên tên tuổi của mạng xã hội hình ảnh Pinterest) vào việc gợi ý bài hát liên quan trên Spotify. Thuật toán kết hợp cả đồ thị bài hát cùng xuất hiện trong các playlist với các đặc trưng âm thanh được nén bằng mạng nơ-ron sâu (**MusicNN, VGGish, L3-Net**).
@@ -547,7 +547,7 @@ Bảng 2: Vector nhúng âm thanh học sâu (Deep Audio Embeddings)
 
 ### 6. Ziaoddini et al. (2025)
 **Tên bài báo:** *Socially Aware Music Recommendation: A Multi-Modal Graph Neural Networks for Collaborative Music Consumption and Community-Based Engagement* (arXiv 2025)  
-**Tập tin tài liệu:** [Socially_Aware_Music_Recommendation_A_Multi-Modal_Graph_Neural_Networks_for_Collaborative_Music_Consumption_and_Community-Based_Engagement.pdf](file:///c:/Users/Admin/Desktop/musicrec-collaborative-filtering/docs/TLTK/Socially_Aware_Music_Recommendation_A_Multi-Modal_Graph_Neural_Networks_for_Collaborative_Music_Consumption_and_Community-Based_Engagement.pdf)
+**Tập tin tài liệu:** [Socially_Aware_Music_Recommendation_A_Multi-Modal_Graph_Neural_Networks_for_Collaborative_Music_Consumption_and_Community-Based_Engagement.pdf](bai-bao-nen/Socially_Aware_Music_Recommendation_A_Multi-Modal_Graph_Neural_Networks_for_Collaborative_Music_Consumption_and_Community-Based_Engagement.pdf)
 
 #### a. Phương pháp
 - **Định nghĩa trực quan:** Đề xuất mô hình **MM-GNN** khai thác sức mạnh của mạng xã hội trong việc nghe nhạc. Chúng ta thường có xu hướng nghe nhạc theo bạn bè hoặc cộng đồng có cùng sở thích. Mô hình dựng nên một mạng đồ thị liên kết: người dùng kết bạn với nhau, người dùng nghe bài hát, và bài hát thì gắn liền với âm thanh, lời bài hát (lyrics) và ảnh bìa album (cover art).
@@ -597,7 +597,7 @@ Bảng 2: Dữ liệu đa phương thức của bài hát (Multimodal Song Attri
 
 ### 7. Ferraro et al. (2022)
 **Tên bài báo:** *Fairness in Music Recommender Systems: A Stakeholder-Centered Mini Review* (Frontiers in Big Data 2022)  
-**Tập tin tài liệu:** [Fairness_in_Music_Recommender_Systems_A_Stakeholder-Centered_Mini_Review.pdf](file:///c:/Users/Admin/Desktop/musicrec-collaborative-filtering/docs/TLTK/Fairness_in_Music_Recommender_Systems_A_Stakeholder-Centered_Mini_Review.pdf)
+**Tập tin tài liệu:** [Fairness_in_Music_Recommender_Systems_A_Stakeholder-Centered_Mini_Review.pdf](bai-bao-nen/Fairness_in_Music_Recommender_Systems_A_Stakeholder-Centered_Mini_Review.pdf)
 
 #### a. Phương pháp
 - **Định nghĩa trực quan:** Tổng quan mini-review xem xét tính công bằng của các thuật toán âm nhạc dưới góc nhìn đa bên liên quan: Không chỉ người nghe cần được đối xử công bằng (người thích nhạc ngách cũng phải được gợi ý chuẩn như người thích nhạc thị trường), mà cả người nghệ sĩ cũng cần được đối xử công bằng (các nghệ sĩ nữ, nghệ sĩ trẻ độc lập không bị chèn ép lượt hiển thị so với các ngôi sao lớn).
@@ -637,7 +637,7 @@ Bảng: Thuộc tính Nghệ sĩ và Nhóm đối tượng (LFM-1b Artist Metada
 
 ### 8. Shakespeare et al. (2020)
 **Tên bài báo:** *Exploring Artist Gender Bias in Music Recommendation* (2020)  
-**Tập tin tài liệu:** [Exploring_Artist_Gender_Bias_in_Music_Recommendation.pdf](file:///c:/Users/Admin/Desktop/musicrec-collaborative-filtering/docs/TLTK/Exploring_Artist_Gender_Bias_in_Music_Recommendation.pdf)
+**Tập tin tài liệu:** [Exploring_Artist_Gender_Bias_in_Music_Recommendation.pdf](bai-bao-nen/Exploring_Artist_Gender_Bias_in_Music_Recommendation.pdf)
 
 #### a. Phương pháp
 - **Định nghĩa trực quan:** Nghiên cứu thực nghiệm chứng minh rằng các thuật toán lọc cộng tác (CF) đang âm thầm "học thói quen thiên vị giới tính" từ người dùng và khuếch đại sự thiên vị đó lên gấp nhiều lần. Nhóm tác giả so sánh tỷ lệ nghệ sĩ nam/nữ trong lịch sử nghe nhạc thực tế với tỷ lệ nghệ sĩ nam/nữ mà máy tính gợi ý ra.
@@ -686,7 +686,7 @@ Bảng 2: Thông tin giới tính đối soát (Artist Gender Metadata)
 
 ### 9. Doh, Choi, Nam (2025)
 **Tên bài báo:** *TalkPlay: Multimodal Music Recommendation with Large Language Models* (arXiv 2025)  
-**Tập tin tài liệu:** [TalkPlay_Multimodal_Music_Recommendation_with_Large_Language_Models.pdf](file:///c:/Users/Admin/Desktop/musicrec-collaborative-filtering/docs/TLTK/TalkPlay_Multimodal_Music_Recommendation_with_Large_Language_Models.pdf)
+**Tập tin tài liệu:** [TalkPlay_Multimodal_Music_Recommendation_with_Large_Language_Models.pdf](bai-bao-nen/TalkPlay_Multimodal_Music_Recommendation_with_Large_Language_Models.pdf)
 
 #### a. Phương pháp
 - **Định nghĩa trực quan:** Đề xuất hệ thống **TALKPLAY**, biến bài toán khuyến nghị âm nhạc thành một cuộc trò chuyện tự nhiên với Mô hình ngôn ngữ lớn (tương tự như ChatGPT phiên bản chuyên gia âm nhạc). Bài toán được mô hình hóa thành việc **dự đoán từ tiếp theo trong câu nói**: máy tính vừa trò chuyện tâm tình, giải thích lý do, vừa đưa ra đúng mã bài hát phù hợp nhất với yêu cầu bằng lời nói tự nhiên của bạn.
