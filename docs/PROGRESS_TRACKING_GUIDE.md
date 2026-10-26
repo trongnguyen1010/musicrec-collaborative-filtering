@@ -1,6 +1,6 @@
 # Phối hợp và giải thích tiến độ khóa luận
 
-Cập nhật ngày 19/10/2026 theo [hướng dẫn của GVHD](Hướng%20dẫn%20từng%20bước%20hoàn%20thành%20khóa%20luận.docx), [kế hoạch từng bước](WEEKLY_IMPLEMENTATION_PLAN.md) và [quy tắc phát triển](../DEVELOPMENT_RULES.md). Tài liệu này thay quy trình quản lý 12 tuần có ngày cố định trước đây.
+Cập nhật ngày 19/10/2026 theo [hướng dẫn của GVHD](huong-dan-gvhd/H%C6%B0%E1%BB%9Bng%20d%E1%BA%ABn%20t%E1%BB%ABng%20b%C6%B0%E1%BB%9Bc%20ho%C3%A0n%20th%C3%A0nh%20kh%C3%B3a%20lu%E1%BA%ADn.docx), [kế hoạch từng bước](WEEKLY_IMPLEMENTATION_PLAN.md) và [quy tắc phát triển](../DEVELOPMENT_RULES.md). Tài liệu này thay quy trình quản lý 12 tuần có ngày cố định trước đây.
 
 Mục tiêu là biết đã làm gì, kết quả ở đâu và vì sao chọn cách đó, đồng thời bảo đảm cả hai thành viên hiểu để bảo vệ. Không bắt buộc thiết lập GitHub Projects, MLflow, tự động hóa báo cáo hoặc hệ thống chấm điểm tiến độ.
 
@@ -36,7 +36,7 @@ Với UserCF, ItemCF, SVD có độ lệch và PureSVD, cấu hình đầu và t
 
 ### Nhánh khảo sát mở rộng ngày 24/10/2026
 
-- Đã khảo sát implicit ALS và BPR-MF là hai ứng viên ưu tiên, SLIM là dự phòng; chưa có kết quả mô hình hoặc thay đổi sáu baseline chính. Thiết kế lượt đầu, trần 8/8/4 cấu hình và tiêu chí giữ nằm trong [kế hoạch hiện hành](WEEKLY_IMPLEMENTATION_PLAN.md#thực-nghiệm-bổ-sung-có-giới-hạn); nguồn ở [khảo sát tài liệu](TONG_QUAN_TAI_LIEU_THAM_KHAO.md#khao-sat-mo-rong-20261024).
+- Đã khảo sát implicit ALS và BPR-MF là hai ứng viên ưu tiên, SLIM là dự phòng; chưa có kết quả mô hình hoặc thay đổi sáu baseline chính. Thiết kế lượt đầu, trần 8/8/4 cấu hình và tiêu chí giữ nằm trong [kế hoạch hiện hành](WEEKLY_IMPLEMENTATION_PLAN.md#thực-nghiệm-bổ-sung-có-giới-hạn); nguồn ở [khảo sát tài liệu](tai-lieu-tham-khao/TONG_QUAN.md#khao-sat-mo-rong-20261024).
 - Chỉ xét thử sau khi sáu baseline có validation hợp lệ, trước chốt nền M1 và khóa test, nếu không ảnh hưởng M1/M2 hoặc mốc 15/11. Trễ mốc baseline 08/11 hoặc thiếu thời gian thì chuyển nhánh phụ sau demo; giữ mốc 22/11, 27/11 và quỹ dự phòng.
 - Với từng ứng viên, tách cho phép triển khai/lượt chạy đầu → giải thích số đo và chi phí → cho phép tinh chỉnh → kiểm tra cấu hình được chọn. Đồng ý khảo sát không cho phép tự cài thư viện, tạo config hoặc train.
 - Đổi nền M1 cần đánh giá lại M1 cùng ablation; M2 vẫn dùng ItemCF theo thiết kế riêng. Test đã mở không dùng để chọn lại mô hình của đợt đã khóa.

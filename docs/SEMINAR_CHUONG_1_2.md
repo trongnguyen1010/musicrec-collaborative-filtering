@@ -1,6 +1,6 @@
 # Tài liệu chuẩn bị seminar MusicRec: Chương 1–2, dữ liệu và nghiên cứu liên quan
 
-Ngày cập nhật phạm vi và phương pháp: 19/10/2026, theo [hướng dẫn của GVHD](Hướng%20dẫn%20từng%20bước%20hoàn%20thành%20khóa%20luận.docx) và [kế hoạch từng bước](WEEKLY_IMPLEMENTATION_PLAN.md). Đã có kiểm tra nguồn Bước 1 và EDA Bước 2 chạy lại từ dữ liệu gốc, xem [data card](data-card.md) và [metrics EDA](../outputs/runs/raw_eda_20261019_verified/metrics.json). Những thống kê seminar trước đây vẫn có nguồn thời điểm riêng; kết quả mô hình chưa có và các lựa chọn nghiên cứu chưa được xem là đã có GVHD duyệt.
+Ngày cập nhật phạm vi và phương pháp: 19/10/2026, theo [hướng dẫn của GVHD](huong-dan-gvhd/H%C6%B0%E1%BB%9Bng%20d%E1%BA%ABn%20t%E1%BB%ABng%20b%C6%B0%E1%BB%9Bc%20ho%C3%A0n%20th%C3%A0nh%20kh%C3%B3a%20lu%E1%BA%ADn.docx) và [kế hoạch từng bước](WEEKLY_IMPLEMENTATION_PLAN.md). Đã có kiểm tra nguồn Bước 1 và EDA Bước 2 chạy lại từ dữ liệu gốc, xem [data card](data-card.md) và [metrics EDA](../outputs/runs/raw_eda_20261019_verified/metrics.json). Những thống kê seminar trước đây vẫn có nguồn thời điểm riêng; kết quả mô hình chưa có và các lựa chọn nghiên cứu chưa được xem là đã có GVHD duyệt.
 
 ## 1. Điều cần nói rõ trong 60 giây
 
@@ -363,7 +363,7 @@ Nếu chưa kiểm tra bảng kết quả, nói luận điểm định tính đ�
 | Đề cương dùng lẫn bài hát/nghệ sĩ, track/artist | Với HetRec này, nói **artist recommendation** xuyên suốt. Track/playlist chỉ là tác vụ tham khảo hoặc hướng phát triển. |
 | Có RMSE cùng Top-K nhưng chưa khóa mục tiêu chính | Đề xuất ranking là chính, NDCG@10 chọn model; P/R hỗ trợ. Nếu giữ RMSE phải ghi target/thang đo. |
 | “SVD” dễ bị hiểu lẫn với PureSVD/ALS/BPR | MF có bias học điểm đại diện 1–5 bằng SGD; PureSVD phân rã ma trận; implicit ALS học preference/confidence; BPR-MF học thứ tự theo cặp. ALS/BPR-MF mới là ứng viên mở rộng đã khảo sát, chưa triển khai hoặc có kết quả. |
-| `TONG_QUAN_TAI_LIEU_THAM_KHAO.md` ghi bài GNN 2024 là Lacic et al. | PDF gốc/nhà xuất bản ghi **Matej Bevec, Marko Tkalčič, Matevž Pesek**. |
+| `tai-lieu-tham-khao/TONG_QUAN.md` ghi bài GNN 2024 là Lacic et al. | PDF gốc/nhà xuất bản ghi **Matej Bevec, Marko Tkalčič, Matevž Pesek**. |
 | Bản tổng hợp ghi mini review fairness là Ferraro et al. | PDF gốc/nhà xuất bản ghi **Karlijn Dinnissen, Christine Bauer**. |
 | Bản tổng hợp gán công thức/bảng/mục chi tiết cho đề cương | Kiểm tra lại: đề cương đang có nghiên cứu liên quan ở 2.8, công cụ ở 2.9; một số số mục/công thức trong tổng hợp không khớp file thực tế. |
 | Dữ liệu ghi GroupLens/Kaggle/Last.fm tương đương | Chốt đúng HetRec Last.fm 2K Version 1.0; LFM-1b và Last.fm 360K là các dataset khác. |
@@ -371,7 +371,7 @@ Nếu chưa kiểm tra bảng kết quả, nói luận điểm định tính đ�
 
 ### 7.1. Khảo sát mở rộng để chuẩn bị bảo vệ
 
-Đối chiếu ngày 24/10/2026 ở [khảo sát tài liệu](TONG_QUAN_TAI_LIEU_THAM_KHAO.md#khao-sat-mo-rong-20261024): ưu tiên implicit ALS → BPR-MF, dự phòng SLIM, chưa thay sáu baseline chính. Lượt chạy đầu và tinh chỉnh chỉ thực hiện sau baseline khi được phép, trước chốt nền M1/test nếu còn thời gian; không ảnh hưởng M1/M2 hoặc mốc 15/11.
+Đối chiếu ngày 24/10/2026 ở [khảo sát tài liệu](tai-lieu-tham-khao/TONG_QUAN.md#khao-sat-mo-rong-20261024): ưu tiên implicit ALS → BPR-MF, dự phòng SLIM, chưa thay sáu baseline chính. Lượt chạy đầu và tinh chỉnh chỉ thực hiện sau baseline khi được phép, trước chốt nền M1/test nếu còn thời gian; không ảnh hưởng M1/M2 hoặc mốc 15/11.
 
 - **Vì sao thêm ALS/BPR khi đã có MF/PureSVD?** Chúng kiểm tra các mục tiêu học khác nhau: confidence trên phản hồi ngầm và xếp hạng theo cặp. Chưa thể nói mô hình nào tốt hơn nếu chưa chạy cùng protocol.
 - **SLIM khác ItemCF ở đâu?** ItemCF dùng similarity định trước; SLIM học trọng số item–item với phạt L1/L2, không âm và đường chéo 0. Học sparse không bảo đảm train nhanh; cần đo cả chi phí và hội tụ.
