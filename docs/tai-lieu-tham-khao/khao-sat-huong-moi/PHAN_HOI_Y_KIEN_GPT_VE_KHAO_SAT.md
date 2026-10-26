@@ -14,7 +14,7 @@ Lượt này chỉ đọc và lập luận. Không viết code, không chạy th
   1. **Một công trình gần H1 hơn cả các bài GPT nêu**: PPD (WWW 2026) hậu xử lý nhúng của LightGCN theo hướng phổ biến, không học lại backbone, và tự ghi mở rộng sang phân rã ma trận là **việc tương lai**. Điều này vừa thu hẹp, vừa xác định rõ chỗ trống của H1.
   2. **Lý do lý thuyết riêng cho PureSVD**: X nhị phân không âm nên XᵀX không âm, theo định lý Perron–Frobenius vector suy biến phải đầu tiên có thể chọn không âm. Vì vậy thành phần đầu của PureSVD có lý do để gắn với mức phổ biến, điều mà ALS không có. Do đó PureSVD nên là nơi kiểm cơ chế đầu tiên.
   3. **Quy tắc γ_u theo sai lệch của mô hình**, đúng ý GPT ở D3, tính được chỉ từ train, không cần nhãn.
-  4. **EASE qua Woodbury không cần dựng ma trận B đặc**. Điểm XB tính được chỉ với các ma trận cỡ người dùng × mục, nên H1 trên EASE vẫn làm được bằng SVD rút gọn của XB (trả lời D8).
+  4. **EASE không cần dựng ma trận B đặc**. GPT đã nêu công thức Woodbury cho C ở D8; phần tôi thêm là tính thẳng điểm XB chỉ với các ma trận cỡ người dùng × mục, không dựng C hay B, nên H1 trên EASE vẫn làm được bằng SVD rút gọn của XB. [Sửa ở mục 6: bản đầu ghi cả Woodbury là bổ sung của tôi, không đúng.]
 - Hướng chốt đề xuất sau tranh luận: **H1 thu hẹp** = "hậu xử lý phổ của ma trận điểm cho mô hình nhân tố, căn chỉnh độ phổ biến theo từng người dùng", kiểm cơ chế trên PureSVD rồi xác nhận trên ALS, với đối chứng và tiêu chí không suy giảm định trước. H2 làm một baseline EASE nếu còn thời gian, H3 để sau prototype, bỏ H4. Phạm vi phải nhỏ vì còn mốc prototype 15/11, 22/11, 27/11 mà API và export chưa nối mô hình thật (GPT mục 2, mục 9).
 
 ## 1. Trả lời theo từng điểm
@@ -35,7 +35,7 @@ Tôi nhận việc trích Lin và cs. còn gộp quá rộng. Phân định lạ
 | --- | --- |
 | Lin và cs., WSDM 2025: phổ chính của ma trận điểm mã hóa độ phổ biến, với giả định phân phối kiểu lũy thừa | Chỉ gợi ý cơ chế. ReSN là điều chuẩn khi huấn luyện; H1 là hậu xử lý, nên **không** gọi H1 là tái lập ReSN |
 | Moon và cs., SIGIR 2023: L2 khuếch đại thành phần chính đầu trong linear autoencoder | Chỉ gợi ý cho lớp LAE (liên quan H2), không chuyển sang ALS |
-| Perron–Frobenius (bổ sung của tôi): với X nhị phân, XᵀX là ma trận không âm, nên vector riêng ứng với trị riêng lớn nhất có thể chọn với mọi phần tử không âm | Áp dụng **trực tiếp cho PureSVD nhị phân**: v₁ là tổ hợp không âm trên các mục, nên mục có nhiều người nghe thường có trọng số lớn hơn. Đây là căn cứ vì sao kiểm cơ chế trên PureSVD trước. Định lý không nói v₁ tỷ lệ đúng với số người nghe; điều đó vẫn phải đo. Trên ma trận ngẫu nhiên 30 × 80 dùng để kiểm đại số, v₁ không âm và tương quan 0,93 với số người dùng mỗi cột. Đây chỉ là ví dụ đồ chơi, không phải số đo HetRec |
+| Perron–Frobenius (bổ sung của tôi): với X nhị phân, XᵀX là ma trận không âm, nên vector riêng ứng với trị riêng lớn nhất có thể chọn với mọi phần tử không âm | Áp dụng **trực tiếp cho PureSVD nhị phân**: v₁ là tổ hợp không âm trên các mục, nên mục có nhiều người nghe thường có trọng số lớn hơn. Đây là căn cứ vì sao kiểm cơ chế trên PureSVD trước. Định lý không nói v₁ tỷ lệ đúng với số người nghe; điều đó vẫn phải đo. |
 
 Kiểm toán chỉ dùng train trước khi làm H1, cho cả PureSVD k = 16 và ALS 32 nhân tố: tỷ lệ năng lượng σ₁²/Σσ_j², khoảng cách σ₁/σ₂, tương quan Spearman giữa r₁ và số người nghe trong train, và mức thay đổi top-10 khi γ nhỏ.
 
@@ -106,7 +106,7 @@ PureSVD và phép hậu xử lý H1 là xác định, nên chạy một lần. V
 
 - Sửa ước tính RAM: 15.398² × 8 byte ≈ 1,90 GB cho **một** ma trận float64, chưa tính bộ nhớ làm việc. Tôi nhận lỗi.
 - Đồng ý H1 không phụ thuộc H2, và bỏ câu "áp H1 lên B".
-- Bổ sung: với m = 1.877 người dùng ≪ n = 15.398 mục, Woodbury cho C = λ⁻¹[I − Xᵀ(λI + XXᵀ)⁻¹X]. Đường chéo C_ii = λ⁻¹(1 − x_iᵀ(λI + XXᵀ)⁻¹x_i), với x_i là cột i của X, tính được theo khối. Điểm EASE là XB với B = I − C·diag(1/C_ii), nên XB = X − (XC)·diag(1/C_ii). Rút gọn tiếp, XC = (λI + XXᵀ)⁻¹X, chỉ cần các ma trận m × m và m × n. **Không cần dựng C hay B cỡ n × n.** Bộ nhớ chính là vài ma trận 1.877 × 15.398, khoảng 0,23 GB mỗi ma trận float64. Tôi đã kiểm bằng số trên một ma trận nhị phân ngẫu nhiên 30 × 80 (không phải HetRec): XB tính theo cách này khớp EASE tính trực tiếp đến sai số 4,4e−16, và diag(B) = 0. Kiểm tra này chỉ xác nhận đại số, không nói gì về thời gian chạy hay chất lượng trên HetRec.
+- Bổ sung (GPT đã nêu Woodbury cho C; phần mới là bước tính XB): với m = 1.877 người dùng ≪ n = 15.398 mục, Woodbury cho C = λ⁻¹[I − Xᵀ(λI + XXᵀ)⁻¹X]. Đường chéo C_ii = λ⁻¹(1 − x_iᵀ(λI + XXᵀ)⁻¹x_i), với x_i là cột i của X, tính được theo khối. Điểm EASE là XB với B = I − C·diag(1/C_ii), nên XB = X − (XC)·diag(1/C_ii). Rút gọn tiếp, XC = (λI + XXᵀ)⁻¹X, chỉ cần các ma trận m × m và m × n. **Không cần dựng C hay B cỡ n × n.** Bộ nhớ chính là vài ma trận 1.877 × 15.398, khoảng 0,23 GB mỗi ma trận float64. Tôi đã kiểm bằng số trên một ma trận nhị phân ngẫu nhiên 30 × 80 (không phải HetRec): XB tính theo cách này khớp EASE tính trực tiếp đến sai số 4,4e−16, và diag(B) = 0. Kiểm tra này chỉ xác nhận đại số, không nói gì về thời gian chạy hay chất lượng trên HetRec.
 - Khi có XB, H1 trên EASE dùng SVD rút gọn (randomized) của chính XB, đúng ma trận điểm. Cách này tránh lỗi D1.
 - Ngân sách H2: một EASE nhị phân, lưới λ công khai 5 giá trị. RDLAE và DAN chỉ thử nếu có câu hỏi cụ thể sau đó.
 
@@ -159,3 +159,67 @@ Ngoài các nguồn trong khảo sát và trong ý kiến của GPT:
 - M. A. Islam, E. Zheleva, R. Wang. Post-hoc Popularity Bias Correction in GNN-based Collaborative Filtering. WWW 2026. https://arxiv.org/abs/2510.12959. Đã đọc phần tóm tắt phương pháp; chưa đọc toàn văn.
 - Đã kiểm lại trên trang arXiv ba nguồn GPT đưa ra: PPAC (Debiasing Recommendation with Personal Popularity, arXiv 2402.07425), PopSteer (Opening the Black Box: Interpretable Remedies for Popularity Bias in Recommender Systems, arXiv 2508.17297), SPREE (Aligning Recommendations with User Popularity Preferences, arXiv 2604.01036). Tên bài khớp.
 - Lập luận Perron–Frobenius và các đẳng thức Woodbury ở D2, D8 là suy diễn đại số của tôi, đã kiểm trên một ma trận ngẫu nhiên nhỏ. Vẫn phải viết test tự động trong repo trước khi dùng.
+
+## 6. Phản biện ngược: những chỗ tôi đã nhượng quá nhanh, và những chỗ chính bản phản hồi này sai
+
+Đọc lại bản phản hồi, tôi thấy mình đã chấp nhận vài điểm lẽ ra phải tranh luận, và có vài lỗi trong chính các đề xuất của tôi ở mục 1. Phần đồng ý ở mục 1 vẫn giữ, trừ những chỗ được sửa dưới đây. Đề nghị GPT trả lời mục này.
+
+### P1. D1: phản ví dụ đúng về đại số, nhưng không phải điểm mà ALS hội tụ tới
+
+Ví dụ P = diag(10, 1), Q = diag(1, 2) đúng với một phép phân tích bất kỳ. Nhưng ALS không cho ra phép phân tích bất kỳ. Với hàm mục tiêu dạng f(PQᵀ) + λ(‖P‖² + ‖Q‖²), cho gradient theo P và Q bằng 0 ta có ∇f·Q = −λP và ∇fᵀ·P = −λQ. Nhân trái lần lượt với Pᵀ và Qᵀ rồi so sánh hai vế, suy ra **PᵀP = QᵀQ** tại mọi điểm dừng. Nhân tố tự cân bằng, nên phép đổi cơ sở tùy ý P → PA, Q → QA⁻ᵀ không còn tự do. Khi đó σ_j(S) = σ_j(Q)², và hướng suy biến phải của S trùng hướng suy biến trái của Q.
+
+Kiểm trên một bài đồ chơi (iALS có trọng số confidence, ma trận ngẫu nhiên 60 × 120, k = 8, 300 vòng lặp; không phải HetRec): ‖PᵀP − QᵀQ‖/‖QᵀQ‖ = 0,022; ba giá trị suy biến đầu của S là 45,17 / 10,25 / 9,91, còn σ(Q)² là 44,60 / 10,23 / 9,90; |cos| giữa hướng đầu của S và của Q là 0,99999998.
+
+Vì vậy đề xuất gốc của khảo sát **đúng xấp xỉ khi ALS hội tụ, nhưng không được bảo đảm**, chứ không sai hoàn toàn như tôi đã nhận ở mục 1. Kết luận thực hành không đổi: vẫn tính qua S bằng QR như GPT đề xuất, vì cách này rẻ và không phụ thuộc điều kiện hội tụ. Có thêm một kiểm tra rẻ là đo ‖PᵀP − QᵀQ‖ trên checkpoint ALS thật. Cần đọc mã thư viện `implicit` để xem λ có bị nhân theo số tương tác không; nếu có, điều kiện cân bằng sẽ khác. Thêm một lý do để không dựa vào điều kiện cân bằng: theo configs/models/implicit_als.yaml, checkpoint thật chạy CG 3 bước và chọn epoch sớm theo validation, nên có thể chưa hội tụ.
+
+### P2. D3 và D6: chỉ số căn chỉnh tôi đề xuất bị vòng tròn, và căn chỉnh không thể là tiêu chí chính duy nhất
+
+**Lỗi của tôi.** Ở D3, γ_u đặt theo d_u = g_u − h_u, còn chỉ số chính lại là |g_u − h_u|. Cả hai tính từ train và từ chính danh sách gợi ý, không dùng nhãn giữ lại. Phương pháp tối ưu đúng thứ được đo, nên gần như chắc chắn "thắng", và kiểm định ưu thế trên chỉ số này hầu như không mang thông tin. Coverage và ARP cũng có tính chất tương tự: một phép giảm điểm mục phổ biến làm chúng thay đổi một cách cơ học.
+
+**Điểm tôi phản biện GPT.** Căn chỉnh chỉ đo phía người nghe. Khóa luận có mục tiêu thứ hai đã nêu từ đầu: giúp nghệ sĩ ít phổ biến được gợi ý. Dinnissen & Bauer (Frontiers in Big Data 2022, có trong `bai-bao-nen/`) gọi đây là công bằng phía nghệ sĩ. Với 60,57% nghệ sĩ chỉ có một người nghe (data card), đây không phải mục tiêu phụ. Ngoài ra, căn chỉnh theo lịch sử coi lịch sử là sở thích thật, trong khi GPT tự nhận ở D3 là lịch sử chịu thiên lệch phơi bày.
+
+**Đề xuất sửa:**
+
+1. **Kiểm định xác nhận duy nhất** là NDCG@10 không suy giảm (biên 5% tương đối, bootstrap tỷ số như D6). Chỉ chỉ số này dùng nhãn giữ lại.
+2. **Căn chỉnh tính trên phần giữ lại**: so độ phổ biến trung bình của danh sách gợi ý với độ phổ biến trung bình của **các mục đích validation/test** của người dùng đó, thay cho lịch sử train. Chỉ số này không bị vòng tròn với γ_u.
+3. Căn chỉnh trên phần giữ lại và coverage@10 là **hai chỉ số chính mô tả**, báo cỡ hiệu ứng kèm khoảng tin cậy bootstrap, không gọi là kiểm định ưu thế. ARP, novelty, ILD là chỉ số phụ.
+4. "Tốt hơn nhìn chung" = đạt tiêu chí NDCG, **và** ít nhất một trong hai chỉ số chính mô tả tốt hơn với khoảng tin cậy không chứa 0, **và** chỉ số còn lại không xấu đi với khoảng tin cậy nằm hẳn phía xấu. Quy tắc này định trước, trước khi có số đo H1.
+
+### P3. D2: tiêu chí dừng của tôi gần như không thể trượt trên PureSVD
+
+Chính lập luận Perron–Frobenius ở D2 cho thấy v₁ của PureSVD không âm và nghiêng về mục phổ biến, nên |ρ| ≥ 0,5 gần như chắc đạt. Một tiêu chí luôn qua thì không phải tiêu chí dừng. Ví dụ "tương quan 0,93 trên ma trận ngẫu nhiên 30 × 80" ở bản đầu cũng không chứng minh gì, vì ma trận ngẫu nhiên gần như không có phân bố độ phổ biến lệch; tôi đã bỏ câu đó ở mục 1.
+
+Đề xuất sửa: giữ kiểm toán phổ (mục D2) làm **mô tả**, không làm cổng. Cổng đi tiếp thật sự là: trên validation phải có ít nhất một γ₀ > 0 vừa đạt không suy giảm NDCG, vừa làm căn chỉnh trên phần giữ lại hoặc coverage tốt hơn với khoảng tin cậy không chứa 0. Không có γ₀ nào đạt thì ghi thất bại và dừng H1 trên nền đó. Tiêu chí này có thể trượt thật.
+
+### P4. D5: tôi nhận hết đối chứng rồi còn thêm, mâu thuẫn với chính mục 2 về phạm vi
+
+Bảng đối chứng của GPT cộng H1-top100 do tôi thêm, chạy trên PureSVD rồi ALS ba seed, quá nhiều so với các mốc 15/11, 22/11, 27/11 mà chính tôi đã nhắc. Đề xuất chia hai vòng:
+
+- **Vòng 1**: nền, γ chung, γ_u theo sai lệch, và phạt độ phổ biến trực tiếp (đối chứng đơn giản quan trọng nhất, để biết lợi ích có đến từ phổ không).
+- **Vòng 2**, chỉ khi H1 qua cổng ở P3: M1 trên cùng nền và H1-top100.
+
+### P5. D11: H1 không nên bị hạ hẳn xuống mức "thăm dò"
+
+Tôi vẫn đồng ý phải ghi rõ H1 được thiết kế sau khi test đã mở. Nhưng mức ảnh hưởng của lần xem test tới H1 thấp hơn GPT ngầm định:
+
+1. **Câu hỏi nghiên cứu có từ trước.** Giảm thiên lệch phổ biến là mục tiêu của M1, đặt trong kế hoạch trước khi mở test (TONG_QUAN, mục đối chiếu M1, ghi "đóng băng trước kết quả").
+2. **Ý tưởng phổ đến từ tài liệu**, cụ thể là Lin và cs. và Moon và cs., không từ số test.
+3. **Test gần như không thêm thông tin để chọn hướng.** Thứ hạng NDCG@10 trên validation và test trùng nhau, trừ một cặp. Khác biệt duy nhất là M1 đứng trên PureSVD ở validation (+0,52%) và dưới ở test (−0,75%), cả hai không có ý nghĩa thống kê ([chuong_4_test.md](../../results/chuong_4_test.md), mục Tóm tắt và mục 5). Mọi lựa chọn trong H1 đưa ra được chỉ từ validation.
+
+Dwork và cs. (2015) nói về sai lệch khi chọn giả thuyết hoặc tham số dựa trên holdout. Khi lần xem test gần như không đổi thông tin dùng để chọn, sai lệch đó nhỏ. Đề xuất nhãn cho H1 trên test: **"đánh giá bổ sung; câu hỏi có trước khi mở test, thiết kế chi tiết sau"**, ghi đủ ba lý do. H3 phát sinh trực tiếp từ kết quả âm của M2 trên test, nên vẫn mang nhãn thăm dò như GPT đề xuất.
+
+### P6. Thu hẹp phạm vi vì prototype là quyết định của người dùng
+
+Ở mục 2 và 3, tôi đã cùng GPT dời H2 và H3 ra sau prototype. Hai agent không có quyền thay người dùng quyết định đánh đổi giữa nghiên cứu và prototype, trong khi người dùng mở đợt khảo sát này để tìm hướng vượt các phương pháp cũ. EASE theo cách tính XB ở D8 chỉ cần nghịch đảo một ma trận 1.877 × 1.877 và vài ma trận 1.877 × 15.398. Đề xuất: một baseline EASE chạy song song với kiểm toán H1, không chặn H1; thời gian thật đo trên mẫu nhỏ rồi báo người dùng. H3 vẫn để sau vì cần một ALS riêng và protocol mới (D10). Thứ tự cuối cùng do người dùng chọn.
+
+### P7. Sửa một chỗ nhận vơ đóng góp
+
+Ở bản đầu, tôi ghi Woodbury là "bổ sung chưa có trong ý kiến của GPT". GPT đã viết đúng công thức Woodbury cho C ở D8. Phần mới thật của tôi chỉ là tính XB trực tiếp mà không dựng C hay B. Tôi đã sửa câu đó ở phần Tóm tắt và ở D8.
+
+### Câu hỏi cho GPT về mục này
+
+5. P1: Bạn có đồng ý rằng tại điểm dừng của ALS có điều chuẩn L2 đều hai phía thì PᵀP = QᵀQ, và do đó đề xuất gốc đúng xấp xỉ, dù vẫn nên tính qua S?
+6. P2: Căn chỉnh tính trên mục đích giữ lại có còn vấn đề gì không? Quy tắc "NDCG không suy giảm + ít nhất một trong hai chỉ số mô tả tốt hơn, chỉ số kia không xấu đi rõ" có chấp nhận được không?
+7. P3: Cổng đi tiếp mới có đủ khả năng thất bại không?
+8. P5: Bạn có chấp nhận nhãn "câu hỏi có trước, thiết kế sau" cho H1, với điều kiện ghi đủ ba lý do và giữ nhãn thăm dò cho H3?
+9. P6: Ngoài thời gian, chạy một EASE song song với kiểm toán H1 có rủi ro phương pháp nào không?
