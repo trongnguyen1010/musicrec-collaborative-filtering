@@ -1,0 +1,632 @@
+[
+  {
+    "section": "3.4.2",
+    "claim": "Người dùng gốc",
+    "report_v15": 1892,
+    "rerun": 1892.0,
+    "tolerance": 0,
+    "match": true,
+    "source": "raw_eda:users"
+  },
+  {
+    "section": "3.4.2",
+    "claim": "Nghệ sĩ gốc",
+    "report_v15": 17632,
+    "rerun": 17632.0,
+    "tolerance": 0,
+    "match": true,
+    "source": "raw_eda:artists"
+  },
+  {
+    "section": "3.4.2",
+    "claim": "Cặp tương tác phân biệt",
+    "report_v15": 92834,
+    "rerun": 92834.0,
+    "tolerance": 0,
+    "match": true,
+    "source": "raw_eda:unique_pairs"
+  },
+  {
+    "section": "3.4.2",
+    "claim": "Số vị trí ma trận",
+    "report_v15": 33359744,
+    "rerun": 33359744.0,
+    "tolerance": 0,
+    "match": true,
+    "source": "raw_eda:possible_pairs"
+  },
+  {
+    "section": "3.4.2",
+    "claim": "Tỷ lệ quan sát (%)",
+    "report_v15": 0.2783,
+    "rerun": 0.2782815119924182,
+    "tolerance": 5e-05,
+    "match": true,
+    "source": "raw_eda:density*100"
+  },
+  {
+    "section": "3.4.2",
+    "claim": "Độ thưa (%)",
+    "report_v15": 99.7217,
+    "rerun": 99.72171848800758,
+    "tolerance": 5e-05,
+    "match": true,
+    "source": "raw_eda:sparsity*100"
+  },
+  {
+    "section": "3.4.2",
+    "claim": "Lịch sử trung bình",
+    "report_v15": 49.07,
+    "rerun": 49.06659619450317,
+    "tolerance": 0.005,
+    "match": true,
+    "source": "raw_eda:distributions.user_history.mean"
+  },
+  {
+    "section": "3.4.2",
+    "claim": "Người dùng có đúng 50 nghệ sĩ",
+    "report_v15": 1829,
+    "rerun": 1829.0,
+    "tolerance": 0,
+    "match": true,
+    "source": "raw_eda:history.exactly_50_artists"
+  },
+  {
+    "section": "3.4.2",
+    "claim": "Số người nghe TB/nghệ sĩ",
+    "report_v15": 5.27,
+    "rerun": 5.265086206896552,
+    "tolerance": 0.005,
+    "match": true,
+    "source": "raw_eda:distributions.artist_listeners.mean"
+  },
+  {
+    "section": "3.4.2",
+    "claim": "Trung vị người nghe/nghệ sĩ",
+    "report_v15": 1,
+    "rerun": 1.0,
+    "tolerance": 0,
+    "match": true,
+    "source": "raw_eda:distributions.artist_listeners.50%"
+  },
+  {
+    "section": "3.4.3",
+    "claim": "Cặp trùng",
+    "report_v15": 0,
+    "rerun": 0.0,
+    "tolerance": 0,
+    "match": true,
+    "source": "raw_eda:interaction_quality.duplicate_pair_extra_rows"
+  },
+  {
+    "section": "3.4.3",
+    "claim": "Liên kết ảnh trống",
+    "report_v15": 444,
+    "rerun": 444.0,
+    "tolerance": 0,
+    "match": true,
+    "source": "raw_eda:@pictureURL_blank"
+  },
+  {
+    "section": "3.4.3",
+    "claim": "Dòng gán thẻ ngoài danh mục",
+    "report_v15": 1538,
+    "rerun": 1538.0,
+    "tolerance": 0,
+    "match": true,
+    "source": "raw_eda:tags.outside_catalog_rows"
+  },
+  {
+    "section": "3.4.3",
+    "claim": "Mã nghệ sĩ ngoài danh mục",
+    "report_v15": 390,
+    "rerun": 390.0,
+    "tolerance": 0,
+    "match": true,
+    "source": "raw_eda:tags.outside_catalog_artist_ids"
+  },
+  {
+    "section": "3.4.3",
+    "claim": "Người dùng bị loại (<5)",
+    "report_v15": 15,
+    "rerun": 15.0,
+    "tolerance": 0,
+    "match": true,
+    "source": "raw_eda:history.below_5_users"
+  },
+  {
+    "section": "3.4.3",
+    "claim": "Tương tác bị loại (<5)",
+    "report_v15": 33,
+    "rerun": 33.0,
+    "tolerance": 0,
+    "match": true,
+    "source": "raw_eda:history.pairs_at_below_5_users"
+  },
+  {
+    "section": "3.4.3",
+    "claim": "Người dùng sau lọc",
+    "report_v15": 1877,
+    "rerun": 1877.0,
+    "tolerance": 0,
+    "match": true,
+    "source": "cleaning:after.users"
+  },
+  {
+    "section": "3.4.3",
+    "claim": "Nghệ sĩ có tương tác sau lọc",
+    "report_v15": 17617,
+    "rerun": 17617.0,
+    "tolerance": 0,
+    "match": true,
+    "source": "cleaning:after.interaction_artists"
+  },
+  {
+    "section": "3.4.3",
+    "claim": "Cặp sau lọc",
+    "report_v15": 92801,
+    "rerun": 92801.0,
+    "tolerance": 0,
+    "match": true,
+    "source": "cleaning:after.interactions"
+  },
+  {
+    "section": "3.4.3",
+    "claim": "Nghệ sĩ <5 người nghe",
+    "report_v15": 14804,
+    "rerun": 14804.0,
+    "tolerance": 0,
+    "match": true,
+    "source": "raw_eda:long_tail.below_5_listener_artists"
+  },
+  {
+    "section": "3.4.3",
+    "claim": "Tương tác ở nghệ sĩ <5 người nghe",
+    "report_v15": 21408,
+    "rerun": 21408.0,
+    "tolerance": 0,
+    "match": true,
+    "source": "raw_eda:long_tail.pairs_at_below_5_listener_artists"
+  },
+  {
+    "section": "3.4.3",
+    "claim": "Danh mục giữ nguyên",
+    "report_v15": 17632,
+    "rerun": 17632.0,
+    "tolerance": 0,
+    "match": true,
+    "source": "cleaning:after.catalog_artists"
+  },
+  {
+    "section": "3.5.1",
+    "claim": "Tổng lượt nghe sau lọc",
+    "report_v15": 69138727,
+    "rerun": 69138727.0,
+    "tolerance": 0,
+    "match": true,
+    "source": "cleaning:after.total_listens"
+  },
+  {
+    "section": "3.5.1",
+    "claim": "Count lớn nhất",
+    "report_v15": 352698,
+    "rerun": 352698.0,
+    "tolerance": 0,
+    "match": true,
+    "source": "cleaning:after.max_listening_count"
+  },
+  {
+    "section": "3.5.1",
+    "claim": "Giá trị thẻ ngoài ASCII/UTF-8",
+    "report_v15": 8,
+    "rerun": 8.0,
+    "tolerance": 0,
+    "match": true,
+    "source": "raw_eda:text_encoding.tags.dat.invalid_utf8_text_rows"
+  },
+  {
+    "section": "3.5.1",
+    "claim": "Dòng gán thẻ đầu vào",
+    "report_v15": 186479,
+    "rerun": 186479.0,
+    "tolerance": 0,
+    "match": true,
+    "source": "cleaning:tags.input_assignments"
+  },
+  {
+    "section": "3.5.1",
+    "claim": "Dòng gán thẻ giữ lại",
+    "report_v15": 184941,
+    "rerun": 184941.0,
+    "tolerance": 0,
+    "match": true,
+    "source": "cleaning:tags.retained_assignments"
+  },
+  {
+    "section": "3.5.1",
+    "claim": "Nghệ sĩ chưa có thẻ",
+    "report_v15": 5499,
+    "rerun": 5499.0,
+    "tolerance": 0,
+    "match": true,
+    "source": "cleaning:tags.catalog_artists_without_tags"
+  },
+  {
+    "section": "3.5.1",
+    "claim": "Nghệ sĩ chưa có thẻ còn tương tác",
+    "report_v15": 5493,
+    "rerun": 5493.0,
+    "tolerance": 0,
+    "match": true,
+    "source": "cleaning:tags.active_artists_without_tags"
+  },
+  {
+    "section": "3.5.1",
+    "claim": "Dòng gán thẻ của user bị loại",
+    "report_v15": 202,
+    "rerun": 202.0,
+    "tolerance": 0,
+    "match": true,
+    "source": "cleaning:tags.assignments_by_excluded_users_retained_for_later_protocol_filtering"
+  },
+  {
+    "section": "3.5.2",
+    "claim": "Tương tác train",
+    "report_v15": 74275,
+    "rerun": 74275.0,
+    "tolerance": 0,
+    "match": true,
+    "source": "split:splits.train.interactions"
+  },
+  {
+    "section": "3.5.2",
+    "claim": "Tương tác validation",
+    "report_v15": 9263,
+    "rerun": 9263.0,
+    "tolerance": 0,
+    "match": true,
+    "source": "split:splits.validation.interactions"
+  },
+  {
+    "section": "3.5.2",
+    "claim": "Tương tác test",
+    "report_v15": 9263,
+    "rerun": 9263.0,
+    "tolerance": 0,
+    "match": true,
+    "source": "split:splits.test.interactions"
+  },
+  {
+    "section": "3.5.2",
+    "claim": "Người dùng mỗi tập",
+    "report_v15": 1877,
+    "rerun": 1877.0,
+    "tolerance": 0,
+    "match": true,
+    "source": "split:splits.test.users"
+  },
+  {
+    "section": "3.5.2",
+    "claim": "Nghệ sĩ trong ánh xạ train",
+    "report_v15": 15398,
+    "rerun": 15398.0,
+    "tolerance": 0,
+    "match": true,
+    "source": "split:splits.train.artists"
+  },
+  {
+    "section": "3.5.2",
+    "claim": "Đích validation ngoài danh mục",
+    "report_v15": 1121,
+    "rerun": 1121.0,
+    "tolerance": 0,
+    "match": true,
+    "source": "split:targets.validation.outside_catalog"
+  },
+  {
+    "section": "3.5.2",
+    "claim": "Tỷ lệ ngoài danh mục validation (%)",
+    "report_v15": 12.1,
+    "rerun": 12.101910828025478,
+    "tolerance": 0.005,
+    "match": true,
+    "source": "split:targets.validation.outside_catalog_fraction*100"
+  },
+  {
+    "section": "3.5.2",
+    "claim": "Đích validation hợp lệ",
+    "report_v15": 8142,
+    "rerun": 8142.0,
+    "tolerance": 0,
+    "match": true,
+    "source": "split:targets.validation.in_catalog"
+  },
+  {
+    "section": "3.5.2",
+    "claim": "User validation có đích",
+    "report_v15": 1865,
+    "rerun": 1865.0,
+    "tolerance": 0,
+    "match": true,
+    "source": "split:targets.validation.users_with_valid_targets"
+  },
+  {
+    "section": "3.5.2",
+    "claim": "Đích test ngoài danh mục",
+    "report_v15": 1203,
+    "rerun": 1203.0,
+    "tolerance": 0,
+    "match": true,
+    "source": "split:targets.test.outside_catalog"
+  },
+  {
+    "section": "3.5.2",
+    "claim": "Tỷ lệ ngoài danh mục test (%)",
+    "report_v15": 12.99,
+    "rerun": 12.987153190111195,
+    "tolerance": 0.005,
+    "match": true,
+    "source": "split:targets.test.outside_catalog_fraction*100"
+  },
+  {
+    "section": "3.5.2",
+    "claim": "Đích test hợp lệ",
+    "report_v15": 8060,
+    "rerun": 8060.0,
+    "tolerance": 0,
+    "match": true,
+    "source": "split:targets.test.in_catalog"
+  },
+  {
+    "section": "3.5.2",
+    "claim": "User test có đích",
+    "report_v15": 1855,
+    "rerun": 1855.0,
+    "tolerance": 0,
+    "match": true,
+    "source": "split:targets.test.users_with_valid_targets"
+  },
+  {
+    "section": "3.5.2",
+    "claim": "User validation không còn đích",
+    "report_v15": 12,
+    "rerun": 12.0,
+    "tolerance": 0,
+    "match": true,
+    "source": "split:targets.validation.users_without_valid_targets"
+  },
+  {
+    "section": "3.5.2",
+    "claim": "User test không còn đích",
+    "report_v15": 22,
+    "rerun": 22.0,
+    "tolerance": 0,
+    "match": true,
+    "source": "split:targets.test.users_without_valid_targets"
+  },
+  {
+    "section": "3.5.3",
+    "claim": "Ngưỡng 1",
+    "report_v15": 6.392317,
+    "rerun": 6.392317422778761,
+    "tolerance": 5e-07,
+    "match": true,
+    "source": "representations:transform.thresholds.0"
+  },
+  {
+    "section": "3.5.3",
+    "claim": "Ngưỡng 2",
+    "report_v15": 7.562242,
+    "rerun": 7.562242424221073,
+    "tolerance": 5e-07,
+    "match": true,
+    "source": "representations:transform.thresholds.1"
+  },
+  {
+    "section": "3.5.3",
+    "claim": "Ngưỡng 3",
+    "report_v15": 8.491853,
+    "rerun": 8.491853096329674,
+    "tolerance": 5e-07,
+    "match": true,
+    "source": "representations:transform.thresholds.2"
+  },
+  {
+    "section": "3.5.3",
+    "claim": "Ngưỡng 4",
+    "report_v15": 9.579316,
+    "rerun": 9.579315937580015,
+    "tolerance": 5e-07,
+    "match": true,
+    "source": "representations:transform.thresholds.3"
+  },
+  {
+    "section": "3.5.3",
+    "claim": "Train mức 1",
+    "report_v15": 14989,
+    "rerun": 14989.0,
+    "tolerance": 0,
+    "match": true,
+    "source": "representations:splits.train.score_counts.1"
+  },
+  {
+    "section": "3.5.3",
+    "claim": "Train mức 2",
+    "report_v15": 14805,
+    "rerun": 14805.0,
+    "tolerance": 0,
+    "match": true,
+    "source": "representations:splits.train.score_counts.2"
+  },
+  {
+    "section": "3.5.3",
+    "claim": "Train mức 3",
+    "report_v15": 14819,
+    "rerun": 14819.0,
+    "tolerance": 0,
+    "match": true,
+    "source": "representations:splits.train.score_counts.3"
+  },
+  {
+    "section": "3.5.3",
+    "claim": "Train mức 4",
+    "report_v15": 14818,
+    "rerun": 14818.0,
+    "tolerance": 0,
+    "match": true,
+    "source": "representations:splits.train.score_counts.4"
+  },
+  {
+    "section": "3.5.3",
+    "claim": "Train mức 5",
+    "report_v15": 14844,
+    "rerun": 14844.0,
+    "tolerance": 0,
+    "match": true,
+    "source": "representations:splits.train.score_counts.5"
+  },
+  {
+    "section": "3.5.3",
+    "claim": "Số ô quan sát ma trận train",
+    "report_v15": 74275,
+    "rerun": 74275.0,
+    "tolerance": 0,
+    "match": true,
+    "source": "representations:transform.matrix_nnz"
+  },
+  {
+    "section": "3.10.2",
+    "claim": "Tỷ lệ user gốc có đúng 50 nghệ sĩ (%)",
+    "report_v15": 96.67,
+    "rerun": 96.67019027484143,
+    "tolerance": 0.005,
+    "match": true,
+    "source": "raw_eda:history.exactly_50_artists/users*100"
+  },
+  {
+    "section": "PL B.1",
+    "claim": "Precision ví dụ 1",
+    "report_v15": 0.6666666666666666,
+    "rerun": 0.6666666666666666,
+    "tolerance": 1e-12,
+    "match": true,
+    "source": "evaluator:appendix.appendix_precision"
+  },
+  {
+    "section": "PL B.1",
+    "claim": "Recall ví dụ 1",
+    "report_v15": 1,
+    "rerun": 1.0,
+    "tolerance": 1e-12,
+    "match": true,
+    "source": "evaluator:appendix.appendix_recall"
+  },
+  {
+    "section": "PL B.1",
+    "claim": "NDCG ví dụ 1",
+    "report_v15": 0.6934,
+    "rerun": 0.6934264036172708,
+    "tolerance": 5e-05,
+    "match": true,
+    "source": "evaluator:appendix.appendix_ndcg"
+  },
+  {
+    "section": "PL B.1",
+    "claim": "Precision@5 danh sách ngắn",
+    "report_v15": 0.4,
+    "rerun": 0.4,
+    "tolerance": 1e-12,
+    "match": true,
+    "source": "evaluator:appendix.short_precision_at_5"
+  },
+  {
+    "section": "PL B.1",
+    "claim": "NDCG khi chỉ trả A (tính độc lập)",
+    "report_v15": 0.61315,
+    "rerun": 0.6131471927654584,
+    "tolerance": 5e-06,
+    "match": true,
+    "source": "@ndcg_single_hit"
+  },
+  {
+    "section": "PL B.2",
+    "claim": "Gini 4 nghệ sĩ",
+    "report_v15": 0.375,
+    "rerun": 0.375,
+    "tolerance": 1e-12,
+    "match": true,
+    "source": "evaluator:appendix.appendix_gini"
+  },
+  {
+    "section": "PL B.2",
+    "claim": "Precision@3 tổng hợp",
+    "report_v15": 0.3333333333333333,
+    "rerun": 0.3333333333333333,
+    "tolerance": 1e-12,
+    "match": true,
+    "source": "evaluator:expected_at_3.precision"
+  },
+  {
+    "section": "PL B.2",
+    "claim": "Recall@3 tổng hợp",
+    "report_v15": 0.6666666666666666,
+    "rerun": 0.6666666666666666,
+    "tolerance": 1e-12,
+    "match": true,
+    "source": "evaluator:expected_at_3.recall"
+  },
+  {
+    "section": "PL B.2",
+    "claim": "NDCG@3 tổng hợp",
+    "report_v15": 0.63991,
+    "rerun": 0.6399069297160626,
+    "tolerance": 5e-06,
+    "match": true,
+    "source": "evaluator:expected_at_3.ndcg"
+  },
+  {
+    "section": "PL B.2",
+    "claim": "Độ bao phủ",
+    "report_v15": 0.5,
+    "rerun": 0.5,
+    "tolerance": 1e-12,
+    "match": true,
+    "source": "evaluator:expected_at_3.catalog_coverage"
+  },
+  {
+    "section": "PL B.2",
+    "claim": "Gini tổng hợp",
+    "report_v15": 0.5833333333333334,
+    "rerun": 0.5833333333333334,
+    "tolerance": 1e-12,
+    "match": true,
+    "source": "evaluator:expected_at_3.gini"
+  },
+  {
+    "section": "PL B.2",
+    "claim": "ARP",
+    "report_v15": 1.25,
+    "rerun": 1.25,
+    "tolerance": 1e-12,
+    "match": true,
+    "source": "evaluator:expected_at_3.arp"
+  },
+  {
+    "section": "PL B.2",
+    "claim": "Novelty (bit)",
+    "report_v15": 2.66111,
+    "rerun": 2.661114296877315,
+    "tolerance": 5e-06,
+    "match": true,
+    "source": "evaluator:expected_at_3.novelty"
+  },
+  {
+    "section": "PL B.2",
+    "claim": "ILD",
+    "report_v15": 0.6666666666666666,
+    "rerun": 0.6666666666666666,
+    "tolerance": 1e-12,
+    "match": true,
+    "source": "evaluator:expected_at_3.ild"
+  }
+]
