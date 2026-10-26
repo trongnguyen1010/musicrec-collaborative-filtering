@@ -4,13 +4,13 @@ Ngày lập: 26/10/2026. Đây là tài liệu **nghiên cứu**. Chưa viết c
 
 ## Tóm tắt
 
-- Đã đọc lại 10 bài 2021–2025 trong [nghien-cuu-2021-2025](nghien-cuu-2021-2025/README.md), các bài nền mới trong [bai-bao-nen](bai-bao-nen/) và các mục đối chiếu gần nhất trong [TONG_QUAN.md](TONG_QUAN.md). Sau đó tìm thêm khoảng 35 bài 2021–2025 về lọc cộng tác phản hồi ngầm, thiên lệch phổ biến, người dùng mới, đồ thị/contrastive và LLM. Mọi bài bổ sung đều đã mở trang arXiv, ACM hoặc trang nhà xuất bản để kiểm tra tên, tác giả và nơi đăng (mục 9).
+- Đã đọc lại 10 bài 2021–2025 trong [nghien-cuu-2021-2025](../nghien-cuu-2021-2025/README.md), các bài nền mới trong [bai-bao-nen](../bai-bao-nen/) và các mục đối chiếu gần nhất trong [TONG_QUAN.md](../TONG_QUAN.md). Sau đó tìm thêm khoảng 35 bài 2021–2025 về lọc cộng tác phản hồi ngầm, thiên lệch phổ biến, người dùng mới, đồ thị/contrastive và LLM. Mọi bài bổ sung đều đã mở trang arXiv, ACM hoặc trang nhà xuất bản để kiểm tra tên, tác giả và nơi đăng (mục 9).
 - Khoảng trống lớn nhất của các bài hiện có, xét theo đúng bài toán của nhóm, là: (1) các bài tag-aware/đồ thị trên HetRec dùng **tương tác gán thẻ** chứ không phải lịch sử nghe, chia ngẫu nhiên, và không báo độ phủ hay độ phổ biến; (2) các bài về thiên lệch phổ biến trong âm nhạc **chỉ đo**, ít bài vừa giảm thiên lệch vừa giữ độ chính xác; (3) các cách giảm thiên lệch dùng **một mức phạt chung cho mọi người dùng**, trong khi người nghe ít phổ biến (LowPop) là nhóm bị gợi ý kém nhất; (4) **đồ thị bạn bè `user_friends.dat` chưa được dùng** trong nhánh lịch sử nghe, kể cả cho người dùng mới.
 - Đề xuất chính (H1): **giảm thiên lệch phổ biến theo phổ, có mức điều chỉnh riêng cho từng người dùng**, đặt trên nền mạnh nhất (ALS, hoặc EASE nếu H2 thắng). Căn cứ là hai kết quả lý thuyết 2023–2025: độ phổ biến nằm chủ yếu ở thành phần suy biến đầu tiên của ma trận điểm. Hướng này sửa đúng điểm yếu của M1 hiện tại (phạt chung, chỉ tái xếp hạng sau).
 - Hai hướng hỗ trợ: H2 thêm **nền tuyến tính mạnh** (EASE, RDLAE, chuẩn hóa DAN của SIGIR 2025), rẻ trên CPU; H3 làm lại **M2 có dùng bạn bè**, để người dùng N = 0 nhận gợi ý cá nhân thay vì Popularity.
 - Không khuyến nghị đưa LLM, đồ thị tri thức hay đa phương thức vào khóa luận lần này, vì HetRec không có âm thanh hay văn bản mô tả, máy chỉ có GPU 4 GB, và đã có bài cho thấy LLM cũng thiên lệch phổ biến (mục 4.5).
 - Một lưu ý về phương pháp: **tập test đã mở**. Mọi mô hình mới phải ghi rõ là thực nghiệm bổ sung, chọn trên validation, khóa cấu hình trước khi chấm test.
-- Một lỗi trích dẫn tìm thấy trong tài liệu sẵn có: [TONG_QUAN.md](TONG_QUAN.md#5-lacic-et-al-2024) ghi bài "Hybrid music recommendation with graph neural networks" là của **Lacic et al. (2024)**, nhưng trang đầu PDF trong `bai-bao-nen/` ghi tác giả là **Matej Bevec, Marko Tkalčič, Matevž Pesek**, UMUAI 34:1891–1928, DOI 10.1007/s11257-024-09410-4. Cần sửa ở báo cáo nếu đã trích như vậy.
+- Một lỗi trích dẫn tìm thấy trong tài liệu sẵn có: [TONG_QUAN.md](../TONG_QUAN.md#5-lacic-et-al-2024) ghi bài "Hybrid music recommendation with graph neural networks" là của **Lacic et al. (2024)**, nhưng trang đầu PDF trong `bai-bao-nen/` ghi tác giả là **Matej Bevec, Marko Tkalčič, Matevž Pesek**, UMUAI 34:1891–1928, DOI 10.1007/s11257-024-09410-4. Cần sửa ở báo cáo nếu đã trích như vậy.
 
 ## 1. Phạm vi và cách làm
 
@@ -20,7 +20,7 @@ Ngày lập: 26/10/2026. Đây là tài liệu **nghiên cứu**. Chưa viết c
 
 ## 2. Điểm xuất phát: kết quả hiện tại của nhóm
 
-Nguồn: [chuong_4_test.md](../results/chuong_4_test.md) mục 3–5, bảng test K = 10, seed 42.
+Nguồn: [chuong_4_test.md](../../results/chuong_4_test.md) mục 3–5, bảng test K = 10, seed 42.
 
 | Mô hình | NDCG@10 | Coverage | ARP | Ghi chú |
 | --- | --- | --- | --- | --- |
@@ -32,13 +32,13 @@ Nguồn: [chuong_4_test.md](../results/chuong_4_test.md) mục 3–5, bảng tes
 | UserCF | 0,0189 | 0,1220 | 47,93 | Thấp hơn Popularity |
 | ItemCF | 0,0175 | 0,2457 | 50,77 | Thấp hơn Popularity |
 
-M2 (người dùng mới, [chuong_4_m2.md](../results/chuong_4_m2.md)): trên 189 người để dành, M2 thua Popularity ở N = 1, 3, 5 về NDCG@10 (N = 3: −0,0087, p Holm 0,857), nhưng tăng coverage@10 từ 0,0009 lên 0,0555 và giảm ARP từ 294,9 xuống 129,1.
+M2 (người dùng mới, [chuong_4_m2.md](../../results/chuong_4_m2.md)): trên 189 người để dành, M2 thua Popularity ở N = 1, 3, 5 về NDCG@10 (N = 3: −0,0087, p Holm 0,857), nhưng tăng coverage@10 từ 0,0009 lên 0,0555 và giảm ARP từ 294,9 xuống 129,1.
 
 Ba điều rút ra cho việc chọn hướng mới:
 
 - Nền tốt nhất hiện có (ALS) đã có ARP thấp hơn và coverage cao hơn M1. Vì vậy một phương pháp giảm thiên lệch mới **phải đặt trên ALS** (hoặc nền tốt hơn) mới có ý nghĩa, không thể chỉ so với PureSVD.
 - M1 chỉ tái xếp hạng top-100 với một cặp (λ, β) chung. Độ phủ tăng ít (1,86% lên 2,94%).
-- Người dùng N = 0 hiện chỉ nhận Popularity. Trong khi đó data card ghi `user_friends.dat` có 25.434 dòng, mọi đầu quan hệ đều thuộc tập người dùng, và **"Bảng bạn bè chưa dùng trong baseline"** ([data-card.md](../data-card.md), dòng về `user_friends.dat`).
+- Người dùng N = 0 hiện chỉ nhận Popularity. Trong khi đó data card ghi `user_friends.dat` có 25.434 dòng, mọi đầu quan hệ đều thuộc tập người dùng, và **"Bảng bạn bè chưa dùng trong baseline"** ([data-card.md](../../data-card.md), dòng về `user_friends.dat`).
 
 ## 3. Đọc lại các bài đã có trong docs
 
@@ -141,7 +141,7 @@ Ba điều rút ra cho việc chọn hướng mới:
 | G2 | Nghiên cứu âm nhạc chủ yếu **đo** thiên lệch, ít bài giảm thiên lệch mà vẫn giữ độ chính xác | Lesota 2021 (kết luận), Kowald 2020, 2021, 2025 |
 | G3 | Cách giảm thiên lệch hiện có dùng **một mức chung** cho mọi người, trong khi nhóm LowPop vừa bị gợi ý kém chính xác nhất vừa lệch chuẩn nhất | Kowald 2025; Abdollahpouri 2021; M1 của nhóm dùng (λ, β) chung |
 | G4 | Phương pháp giảm thiên lệch mạnh (MACR, PAAC, InvCF, điều chuẩn phổ) đều cần **huấn luyện lại** mô hình sâu; chưa thấy trong các bài đã đọc một cách không cần huấn luyện áp dụng trực tiếp lên PureSVD/ALS, dù lý thuyết phổ chỉ ra đúng chỗ cần sửa | Lin và cs. (phổ), Moon 2023, Park 2025 |
-| G5 | Đồ thị bạn bè có sẵn trong HetRec nhưng chỉ được dùng với k-NN; hướng người dùng mới thường dựa vào nội dung, mà nội dung (thẻ) của nhóm thiếu cho 8.493 nghệ sĩ | Sánchez-Moreno 2024; [chuong_4_m2.md](../results/chuong_4_m2.md) mục 1 |
+| G5 | Đồ thị bạn bè có sẵn trong HetRec nhưng chỉ được dùng với k-NN; hướng người dùng mới thường dựa vào nội dung, mà nội dung (thẻ) của nhóm thiếu cho 8.493 nghệ sĩ | Sánchez-Moreno 2024; [chuong_4_m2.md](../../results/chuong_4_m2.md) mục 1 |
 | G6 | Mô hình LLM/đa phương thức cần dữ liệu và tài nguyên mà bộ dữ liệu học thuật nhỏ không có, và vẫn thiên lệch phổ biến | TalkPlay, ColdLLM, Lichtenberg 2024 |
 
 Lưu ý: cụm "chưa thấy trong các bài đã đọc" ở G4 chỉ phản ánh phạm vi khảo sát này (khoảng 45 bài), không phải khẳng định chưa ai làm. Trước khi viết vào báo cáo là "đóng góp mới", cần tìm thêm một lượt có mục tiêu.
@@ -228,7 +228,7 @@ Câu hỏi cần bạn quyết định trước khi làm:
 
 ## 9. Danh mục tài liệu bổ sung đã kiểm chứng
 
-Kiểm tra ngày 26/10/2026 bằng cách mở trang arXiv hoặc trang nhà xuất bản. Các bài đã có trong `docs` xem [nghien-cuu-2021-2025/README.md](nghien-cuu-2021-2025/README.md) và [TONG_QUAN.md](TONG_QUAN.md).
+Kiểm tra ngày 26/10/2026 bằng cách mở trang arXiv hoặc trang nhà xuất bản. Các bài đã có trong `docs` xem [nghien-cuu-2021-2025/README.md](../nghien-cuu-2021-2025/README.md) và [TONG_QUAN.md](../TONG_QUAN.md).
 
 Mô hình phản hồi ngầm và so sánh công bằng
 
