@@ -117,7 +117,7 @@ So sánh với M1 trên nền ALS (run cũ, theo data card): NDCG@10 giảm 4,33
 
 ## 6. Cần bạn quyết định
 
-1. **Cấu hình tốt nhất nằm ở biên lưới.** UserCF và ItemCF có L = 20, PureSVD có k = 16, đều là giá trị nhỏ nhất của lưới. Kế hoạch ghi "không tăng lưới sau khi thấy kết quả". Có hai lựa chọn: (a) giữ nguyên và ghi là hạn chế; (b) mở rộng có báo trước, ví dụ L ∈ {5, 10}, k ∈ {4, 8}, và ghi rõ trong báo cáo là mở rộng sau khi xem kết quả. Mình đề xuất (a).
+1. **Cấu hình tốt nhất nằm ở biên lưới.** UserCF và ItemCF có L = 20, PureSVD có k = 16, đều là giá trị nhỏ nhất của lưới. Kế hoạch ghi "không tăng lưới sau khi thấy kết quả". **Đã chốt ngày 26/10/2026: giữ nguyên lưới, ghi là hạn chế trong báo cáo** (không thử thêm L ∈ {5, 10} hay k ∈ {4, 8}).
 2. **Khóa cấu hình và mở tập test (4.4–4.5).** Tập test chỉ được mở một lần, không làm lại được. Mình đề xuất chạy toàn bộ Chương 3 + 4 lần cuối trên máy Windows, khóa cấu hình theo đúng kết quả máy đó, rồi mới mở test.
 3. **Q5 (M2)** vẫn chờ trả lời trước khi viết lại mục 3.8 và chạy M2 trên 189 người dùng để dành.
 
