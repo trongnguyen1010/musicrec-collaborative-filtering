@@ -13,11 +13,12 @@ user_id = st.text_input("User ID (tùy chọn)")
 k = st.slider("Số gợi ý", min_value=1, max_value=20, value=10)
 
 if st.button("Tạo gợi ý"):
-    payload: dict[str, object] = {"k": k}
-    if user_id:
-        payload["user_id"] = user_id
-    else:
-        payload["history"] = [{"item_id": "seed_item_a", "listening_count": 1}]
-    response = requests.post(f"{API_URL}/recommend", json=payload, timeout=10)
+    response = requests.post(
+        f"{API_URL}/recommend",
+        json={"k": k, "user_id": user_id}
+        if user_id
+        else {"k": k, "history": [{"item_id": "seed_item_a", "listening_count": 1}]},
+        timeout=10,
+    )
     response.raise_for_status()
     st.json(response.json())

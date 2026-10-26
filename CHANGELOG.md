@@ -7,6 +7,17 @@ Mọi thay đổi đáng chú ý của MusicRec được ghi trong file này the
 
 ### Changed
 
+- 2026-10-26: Hoàn thành Bước 10 ItemCF L=40/shrinkage=0 trên validation:
+  cosine toàn cột proxy train, top-L theo artist đích rồi giao lịch sử user,
+  trung bình điểm có trọng số và mean fallback có reason. Tính từng khối 256
+  artist, lưu CSR/model và nạp lại không fit. NDCG@10 0.0074299548 thấp hơn
+  UserCF đầu/Popularity, Coverage@10 22.5029225% gồm 1.217 vị trí fallback;
+  RMSE proxy bổ sung 0.9796199383. Kiểm tra độc lập toàn 15.398 bộ láng giềng,
+  1.877 danh sách và metric, chín tệp chạy lại trùng hash. 53 tests đạt;
+  sửa lỗi style/import/type sẵn có và bỏ môi trường legacy khỏi quét lint để
+  ruff/format/mypy toàn dự án đạt. Chưa tuning, MF/PureSVD hoặc mở test;
+  giữ run cũ và mọi Word. Đồng bộ tài liệu làm việc, chưa chuyển Bước 11.
+
 - 2026-10-25: Hoàn thành Bước 9 UserCF một cấu hình L=40/shrinkage=0, cosine
   toàn vector proxy train, láng giềng toàn user rồi giao người nghe từng item,
   dự đoán trừ mean quan sát và mean fallback rõ ràng. Thêm proxy_score tùy chọn

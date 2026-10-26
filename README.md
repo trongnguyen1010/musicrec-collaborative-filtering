@@ -25,12 +25,12 @@ Các lệnh này không thay thế việc kiểm tra nguồn, EDA và xác minh 
 - [Kế hoạch từng bước](docs/WEEKLY_IMPLEMENTATION_PLAN.md): vận dụng hướng dẫn của cô, lộ trình dữ liệu → EDA → mô hình → thực nghiệm → prototype.
 - [Quy tắc phát triển](DEVELOPMENT_RULES.md): phạm vi được phép, giải thích cuối bước và lưu phiên bản báo cáo.
 - Đề tài **33**: [báo cáo mới nhất sau Bước 6, ngày 25/10/2026](docs/reports/33_BaoCaoKhoaLuan_CaoTrongNguyen_LeKhacGiaKhang_25-10-2026.docx), kế thừa V14 và giữ mọi bản cũ. Tên báo cáo theo mẫu `33_BaoCaoKhoaLuan_CaoTrongNguyen_LeKhacGiaKhang_DD-MM-YYYY.docx`.
-  Theo yêu cầu mới nhất, chỉ cập nhật Word khi người dùng yêu cầu rõ ràng, không tự cập nhật sau mỗi bước hoặc khi chạy hết mô hình. Kết quả Bước 7–9 nằm trong run và tài liệu làm việc, chưa đưa vào Word.
+  Theo yêu cầu mới nhất, chỉ cập nhật Word khi người dùng yêu cầu rõ ràng, không tự cập nhật sau mỗi bước hoặc khi chạy hết mô hình. Kết quả Bước 7–10 nằm trong run và tài liệu làm việc, chưa đưa vào Word.
 - [Data card](docs/data-card.md): thông tin nguồn và các mục còn chờ xác minh.
 - [Ôn tập và câu hỏi bảo vệ](docs/SEMINAR_CHUONG_1_2.md).
 - [Phối hợp và theo dõi](docs/PROGRESS_TRACKING_GUIDE.md), [cấu trúc dự kiến](PROJECT_STRUCTURE.md), [lịch sử thay đổi](CHANGELOG.md).
 
-Nguồn đối chiếu chính là [hướng dẫn của GVHD](docs/Hướng%20dẫn%20từng%20bước%20hoàn%20thành%20khóa%20luận.docx), kế hoạch và bằng chứng run hiện hành. Đã hoàn thành Bước 1–9: dữ liệu, evaluator, Random, Popularity và UserCF một cấu hình L=40/shrinkage=0 trên validation, xem [data card](docs/data-card.md). Dừng giải thích Bước 9; chưa tinh chỉnh UserCF, chạy ItemCF/MF, học thẻ hoặc đánh giá test. Dữ liệu gốc, các run trước và mọi bản Word đã bàn giao giữ nguyên.
+Nguồn đối chiếu chính là [hướng dẫn của GVHD](docs/Hướng%20dẫn%20từng%20bước%20hoàn%20thành%20khóa%20luận.docx), kế hoạch và bằng chứng run hiện hành. Đã hoàn thành Bước 1–10: dữ liệu, evaluator, Random, Popularity, UserCF và ItemCF; hai CF mới chạy một cấu hình L=40/shrinkage=0 trên validation, xem [data card](docs/data-card.md). Dừng giải thích Bước 10; chưa tinh chỉnh CF, chạy MF/PureSVD, học thẻ hoặc đánh giá test. Dữ liệu gốc, các run trước và mọi bản Word đã bàn giao giữ nguyên.
 
 ## Chạy lại EDA dữ liệu gốc
 
@@ -114,6 +114,18 @@ CLI chỉ chấp nhận cấu hình [UserCF hiện hành](configs/models/user_cf
 
 Run chốt là `outputs/runs/user_cf_l40_s0_validation_20261025_checked`: NDCG@10 **0.008078755530928147**, Precision@10 0.0057372654, Recall@10 0.0129490617 trên cùng 1.865 user như hai baseline trước. Thấp hơn Popularity về ranking ở cấu hình này, nhưng Coverage@10 **10.3065333%**, ILD@10 0.9669347, ARP@10 31.3817694. RMSE bổ sung trên 8.142 đích proxy hợp lệ = **0.9326875842**; không dùng RMSE chọn ranking. Có 1.840 đích dùng mean fallback; 707 dự đoán held-out ngoài 1–5 được giữ nguyên, không cắt.
 
-Lưu CSR proxy, láng giềng và means trong `model/`; nạp lại không fit hoặc tính similarity mới và khớp đủ 1.877 danh sách. Kiểm tra độc lập mọi top-40, điểm, chỉ số và fallback; chín tệp kết quả/model trùng hash ở run `_recheck`. Run không có hậu tố `_checked` là bản kiểm tra ban đầu bị loại vì nhiễu số thực ảnh hưởng hòa láng giềng ở 12 user, có `audit.json` và vẫn giữ nguyên; không dùng làm kết quả báo cáo. L/shrinkage không đổi, chưa tuning. Bước tiếp theo là **Bước 10 ItemCF, một cấu hình L=40/shrinkage=0**, cần cho phép riêng.
+Lưu CSR proxy, láng giềng và means trong `model/`; nạp lại không fit hoặc tính similarity mới và khớp đủ 1.877 danh sách. Kiểm tra độc lập mọi top-40, điểm, chỉ số và fallback; chín tệp kết quả/model trùng hash ở run `_recheck`. Run không có hậu tố `_checked` là bản kiểm tra ban đầu bị loại vì nhiễu số thực ảnh hưởng hòa láng giềng ở 12 user, có `audit.json` và vẫn giữ nguyên; không dùng làm kết quả báo cáo. L/shrinkage không đổi, chưa tuning. Kết quả Bước 10 nằm ở mục tiếp theo.
+
+## Chạy lại riêng Bước 10 ItemCF cấu hình đầu
+
+```powershell
+.venv/Scripts/python.exe -B scripts/run_item_cf.py --representations-run outputs/runs/representations_20261024 --output-dir outputs/runs/item_cf_new
+```
+
+Output phải chưa tồn tại và nằm ngoài nguồn Bước 5. CLI dùng chung runner và evaluator, chỉ đọc train/validation/mapping/transform có hash; không mở test. [Cấu hình ItemCF](configs/models/item_cf.yaml) chốt L=40, shrinkage=0, cosine toàn cột proxy train, chỉ tương đồng dương và bỏ chính artist. Chọn top-L toàn catalog cho từng artist đích rồi giao với lịch sử user; dự đoán là trung bình proxy đã nghe có trọng số, không trừ mean như UserCF. Thiếu đóng góp dùng mean user; user mới dùng mean chung và reason riêng, chưa phải M2. Khóa sort làm tròn 12 chữ số rồi theo mapping; score gốc không clip. Tính similarity từng khối 256 artist và chỉ lưu top-L, không tạo toàn ma trận item–item.
+
+Run `outputs/runs/item_cf_l40_s0_validation_20261026` trả đủ 20 mục cho 1.877 user, đánh giá cùng 1.865 user/8.142 đích hợp lệ như ba baseline trước. NDCG@10 **0.0074299548**, Precision@10 0.0040214477, Recall@10 0.0091331546; thấp hơn UserCF cấu hình đầu (0.0080787555) và Popularity (0.0623622664). Coverage@10 **3.465/15.398 = 22.5029225%**, ILD@10 0.8328794, ARP@10 34.4053083. Có 1.217/18.650 vị trí Top-10 dùng mean fallback, nên độ phủ này gồm cả fallback. RMSE proxy bổ sung **0.9796199383** trên 8.142 cặp; không dùng chọn ranking. Chưa tuning hoặc kết luận mô hình cuối.
+
+Nạp lại CSR/model không fit và khớp đủ 1.877 danh sách; kiểm tra độc lập toàn 15.398 bộ láng giềng, mọi danh sách/score/reason, RMSE và metric từng user/K. Chạy lại trùng hash chín tệp kết quả/model; guard kiểm toán chặn mở test.parquet. **53 tests đạt; ruff check, format và mypy toàn mã nguồn đạt**. Sửa nhỏ lỗi style/type cũ để các kiểm tra này chạy sạch; không triển khai thêm mô hình hoặc luồng prototype. Bằng chứng chi tiết và chi phí trong [data card](docs/data-card.md). Run/model/dataset giữ cục bộ theo .gitignore; Git chỉ lưu mã, cấu hình và tài liệu. Word giữ nguyên Bước 6. Dừng Bước 10; bước tiếp theo là **Bước 11 SVD có độ lệch**, cần cho phép riêng.
 
 `dvc.yaml`, `validate_data.py` và `scripts/train.py` còn là khung cũ, chưa nối các CLI hiện hành; `scripts/evaluate.py` chỉ kiểm chứng toy, không thay stage evaluate trong DVC. Không dùng `dvc repro` hoặc `scripts/train.py` để chạy toàn bộ nghiên cứu.

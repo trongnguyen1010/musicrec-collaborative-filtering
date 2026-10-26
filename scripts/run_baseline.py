@@ -19,16 +19,18 @@ import yaml
 from musicrec.data.contracts import Interaction
 from musicrec.evaluation.ranking import evaluate_ranking, proxy_rmse
 from musicrec.recommenders.base import Recommender
+from musicrec.recommenders.item_cf import ItemCFRecommender
 from musicrec.recommenders.popularity import PopularityRecommender
 from musicrec.recommenders.random import RandomRecommender
 from musicrec.recommenders.user_cf import UserCFRecommender
 
 
-def main(model_name: Literal["random", "popularity", "user_cf"]) -> None:
+def main(model_name: Literal["random", "popularity", "user_cf", "item_cf"]) -> None:
     """Verify source hashes, fit the train catalog and persist validation evidence."""
+    proxy_model = model_name in ("user_cf", "item_cf")
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
-        "--representations-run" if model_name == "user_cf" else "--split-run",
+        "--representations-run" if proxy_model else "--split-run",
         dest="source_run",
         type=Path,
         required=True,
@@ -48,10 +50,10 @@ def main(model_name: Literal["random", "popularity", "user_cf"]) -> None:
     metadata_hash = sha256(metadata_path)
     metadata = json.loads(metadata_path.read_text(encoding="utf-8"))
     names = ["train.parquet", "validation.parquet", "id_mappings.json"]
-    if model_name == "user_cf":
+    if proxy_model:
         names.append("transform.json")
     recorded = metadata.get("output_sha256", {})
-    source_step = 5 if model_name == "user_cf" else 4
+    source_step = 5 if proxy_model else 4
     if (
         metadata.get("step") != source_step
         or metadata.get("seed") != 42
@@ -102,6 +104,24 @@ def main(model_name: Literal["random", "popularity", "user_cf"]) -> None:
             "numeric_tie_decimals": 12,
             "fit_scope": "train_only",
         }
+    if model_name == "item_cf":
+        expected_config = {
+            "model": "item_cf",
+            "seed": 42,
+            "seed_role": "split_provenance_only",
+            "neighbors": 40,
+            "shrinkage": 0,
+            "similarity": "full_proxy_vector_cosine",
+            "minimum_common_users": 1,
+            "neighbor_selection": "global_target_top_l_then_history_filter",
+            "prediction": "similarity_weighted_observed_proxy_mean",
+            "known_user_fallback": "observed_user_mean",
+            "unknown_user_fallback": "observed_global_mean",
+            "score_clipping": "none",
+            "tie_break": "numeric_train_mapping_order",
+            "numeric_tie_decimals": 12,
+            "fit_scope": "train_only",
+        }
     if config != expected_config:
         raise ValueError(f"Expected the agreed {model_name} validation configuration")
     evaluation_config = yaml.safe_load(args.evaluation_config.read_text(encoding="utf-8"))
@@ -130,7 +150,7 @@ def main(model_name: Literal["random", "popularity", "user_cf"]) -> None:
             row.user_id,
             row.item_id,
             float(row.listening_count),
-            float(row.proxy_score) if model_name == "user_cf" else None,
+            float(row.proxy_score) if proxy_model else None,
         )
         for row in train.itertuples(index=False)
     ]
@@ -141,6 +161,8 @@ def main(model_name: Literal["random", "popularity", "user_cf"]) -> None:
     )
     if model_name == "user_cf":
         model = UserCFRecommender(neighbors=config["neighbors"], shrinkage=config["shrinkage"])
+    if model_name == "item_cf":
+        model = ItemCFRecommender(neighbors=config["neighbors"], shrinkage=config["shrinkage"])
     start = perf_counter()
     model.fit(interactions)
     fit_seconds = perf_counter() - start
@@ -165,7 +187,7 @@ def main(model_name: Literal["random", "popularity", "user_cf"]) -> None:
     result = evaluate_ranking(lists, targets, histories, ks=tuple(evaluation_config["ks"]))
     evaluator_seconds = perf_counter() - start
     supplementary = {}
-    if model_name == "user_cf":
+    if proxy_model:
         known_targets = validation[validation.item_index.notna()]
         start = perf_counter()
         predicted = [
@@ -202,16 +224,16 @@ def main(model_name: Literal["random", "popularity", "user_cf"]) -> None:
     if model_name == "popularity":
         state["learned_values"] = "per-artist sum of log2(1 + raw train count); no user factors"
         state["scores"] = {item: model.predict("offline", item) for item in state["catalog"]}
-    if isinstance(model, UserCFRecommender):
+    if isinstance(model, (UserCFRecommender, ItemCFRecommender)):
         model.save(out / "model")
         start = perf_counter()
-        restored = UserCFRecommender.load(out / "model")
+        restored = type(model).load(out / "model")
         for user in sorted(histories, key=int):
             if (
                 restored.recommend(user, max(evaluation_config["ks"]), histories[user])
                 != recorded_recommendations[user]
             ):
-                raise RuntimeError("UserCF reload changed validation recommendations")
+                raise RuntimeError(f"{model_name} reload changed validation recommendations")
         supplementary["reload_verified_users"] = len(histories)
         supplementary["reload_verification_seconds"] = perf_counter() - start
         state["learned_values"] = "train proxy CSR, observed means and top-L cosine neighbors"
@@ -242,7 +264,7 @@ def main(model_name: Literal["random", "popularity", "user_cf"]) -> None:
     write_json(
         "metrics.json",
         {
-            "step": {"random": 7, "popularity": 8, "user_cf": 9}[model_name],
+            "step": {"random": 7, "popularity": 8, "user_cf": 9, "item_cf": 10}[model_name],
             "scope": f"{model_name} on validation only; no tuning or test evaluation",
             "created_at_utc": datetime.now(UTC).isoformat(),
             "seed": config["seed"],
@@ -279,7 +301,7 @@ def main(model_name: Literal["random", "popularity", "user_cf"]) -> None:
                 "python": platform.python_version(),
                 **{
                     name: importlib.metadata.version(name)
-                    for name in ["pandas", "numpy", "pyarrow"]
+                    for name in ["pandas", "numpy", "pyarrow", "scipy"]
                 },
             },
             "command": sys.argv,

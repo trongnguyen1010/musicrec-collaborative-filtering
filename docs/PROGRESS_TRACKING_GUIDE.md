@@ -16,7 +16,7 @@ Lịch mục tiêu là 19/10–30/11/2026; ngày/giờ nộp chính xác chờ t
 
 ## Một bước làm việc
 
-Trạng thái sau Bước 9 ngày 25/10/2026: UserCF L=40/shrinkage=0 đã chạy một cấu hình validation, NDCG@10 0.0080787555; Random/Popularity lần lượt 0.0003721497 và 0.0623622664. Cùng 1.865 user đánh giá, UserCF đầu chưa vượt Popularity nhưng Coverage@10 cao hơn (10.3065% so 0.1818%). Có ví dụ tay, kiểm tra độc lập toàn láng giềng/điểm, sửa tie số thực, nạp lại và chạy lại khớp; [data card](data-card.md) ghi giới hạn/fallback. Chưa tuning UserCF, mở test, chạy ItemCF/MF hoặc học thẻ. Word vẫn Bước 6, chỉ sửa khi người dùng yêu cầu. Dừng Bước 9, Bước 10 cần cho phép riêng.
+Trạng thái sau Bước 10 ngày 26/10/2026: ItemCF L=40/shrinkage=0 đã chạy một cấu hình validation, NDCG@10 0.0074299548, thấp hơn UserCF đầu 0.0080787555 và Popularity 0.0623622664; Random 0.0003721497. Cùng 1.865 user đánh giá; Coverage@10 ItemCF 22.5029%, gồm 1.217/18.650 vị trí mean fallback. Có ví dụ tay, kiểm tra độc lập toàn 15.398 bộ láng giềng và 1.877 danh sách/điểm, nạp lại khớp và chín tệp chạy lại trùng hash; [data card](data-card.md) ghi giới hạn/fallback và chi phí. 53 tests, lint/format/mypy toàn mã nguồn đạt sau sửa nhỏ lỗi style/type cũ. Chưa tuning CF, mở test, chạy MF/PureSVD hoặc học thẻ. Word vẫn Bước 6, chỉ sửa khi người dùng yêu cầu. Dừng Bước 10; Bước 11 SVD có độ lệch cần cho phép riêng.
 
 1. Xác nhận bước được phép, mục tiêu, đầu vào, đầu ra và những việc chưa thuộc bước đó.
 2. Trước khi thực hiện, giải thích căn cứ tài liệu và lựa chọn riêng; chỉ cần kiến thức đủ để hiểu công việc sắp làm.

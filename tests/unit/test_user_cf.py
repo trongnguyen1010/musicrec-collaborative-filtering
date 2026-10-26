@@ -147,7 +147,10 @@ def test_equal_cosines_ignore_roundoff_before_global_top_l_selection() -> None:
     assert UserCFRecommender(neighbors=1).fit(reversed(rows)).recommend("1", 1, set()) == [result]
 
 
-def test_user_cf_cli_reads_step5_only_reloads_and_refuses_corruption(tmp_path: Path) -> None:
+@pytest.mark.parametrize(("model_name", "step"), [("user_cf", 9), ("item_cf", 10)])
+def test_proxy_cf_cli_reads_step5_only_reloads_and_refuses_corruption(
+    tmp_path: Path, model_name: str, step: int
+) -> None:
     source = tmp_path / "representations"
     source.mkdir()
     mappings = {
@@ -189,7 +192,7 @@ def test_user_cf_cli_reads_step5_only_reloads_and_refuses_corruption(tmp_path: P
     command = [
         sys.executable,
         "-B",
-        str(root / "scripts/run_user_cf.py"),
+        str(root / f"scripts/run_{model_name}.py"),
         "--representations-run",
         str(source),
         "--output-dir",
@@ -200,7 +203,7 @@ def test_user_cf_cli_reads_step5_only_reloads_and_refuses_corruption(tmp_path: P
         result = subprocess.run(command, cwd=root, capture_output=True, text=True)
         assert result.returncode == 0, result.stderr
         metrics = json.loads((out / "metrics.json").read_text(encoding="utf-8"))
-        assert metrics["step"] == 9 and metrics["test_file_read"] is False
+        assert metrics["step"] == step and metrics["test_file_read"] is False
         assert metrics["supplementary"]["reload_verified_users"] == 4
         assert metrics["supplementary"]["proxy_rmse_pairs"] == 3
         for name, expected in metrics["output_sha256"].items():

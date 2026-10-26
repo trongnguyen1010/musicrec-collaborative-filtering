@@ -1,8 +1,8 @@
 # Data card HetRec 2011 Last.fm 2K
 
-## Trạng thái sau Bước 9 ngày 25/10/2026
+## Trạng thái sau Bước 10 ngày 26/10/2026
 
-Đã hoàn thành Bước 1–9 theo yêu cầu người dùng. **Train có 74.275 cặp; validation và test mỗi tập 9.263 cặp; mapping gồm 1.877 user và 15.398 artist từ train.** Đã có evaluator và Random/Popularity/UserCF một cấu hình trên validation. Chưa tuning UserCF, chạy ItemCF/MF, học thẻ hoặc đánh giá test. Dừng Bước 9; các phần Bước 1–8 giữ bối cảnh lịch sử, kết quả mới nhất ở mục Bước 9 cuối tệp. Word chỉ cập nhật khi người dùng yêu cầu rõ ràng, hiện giữ bản Bước 6.
+Đã hoàn thành Bước 1–10 theo yêu cầu người dùng. **Train có 74.275 cặp; validation và test mỗi tập 9.263 cặp; mapping gồm 1.877 user và 15.398 artist từ train.** Đã có evaluator, Random/Popularity và hai CF mỗi mô hình một cấu hình L=40/shrinkage=0 trên validation. Chưa tuning CF, chạy MF/PureSVD, học thẻ hoặc đánh giá test. Dừng Bước 10; các phần Bước 1–9 giữ bối cảnh lịch sử, kết quả mới nhất ở mục Bước 10 cuối tệp. Word chỉ cập nhật khi người dùng yêu cầu rõ ràng, hiện giữ bản Bước 6.
 
 Bằng chứng máy đọc được: [source_audit.json](../outputs/runs/source_audit_20261019_162917_245445/source_audit.json). Tệp ghi thời điểm, phiên bản mã, tình trạng thay đổi chưa commit, cách đọc, từng kiểm tra và mã băm. Dùng Python standard library để đọc/kiểm tra trực tiếp, không thêm pipeline hoặc thư viện mới. Không có thao tác ngẫu nhiên nên seed không áp dụng.
 
@@ -332,4 +332,36 @@ Artifact gồm CSR proxy và láng giềng trong model/ratings.npz, model/neighb
 
 [Kiểm tra độc lập](../outputs/runs/user_cf_l40_s0_validation_20261025_checked/verification.json) không gọi model/evaluator production: dựng Gram của CSR proxy từ train, kiểm tra top-40 của mọi user, cộng đóng góp bằng dictionary theo từng láng giềng, tái dựng mọi danh sách/score/reason; tính lại RMSE, từng metric user, Coverage/Gini/ARP/Novelty và ILD nhị phân train. Score tái dựng trùng hoàn toàn; chỉ số khớp trong 1e-12. candidate_diagnostics.csv lưu số láng giềng và mức fallback. **47 tests đạt**, gồm hồi quy hai CLI trước, kiểm tra save/load không gọi fit và checksum sai; lint/format/mypy phần mới đạt. Mọi artifact baseline cũ và 11 Word giữ nguyên.
 
-Word chưa cập nhật các kết quả Bước 7–9 theo yêu cầu người dùng. Bước tiếp theo là Bước 10 ItemCF một cấu hình L=40/shrinkage=0, cần cho phép riêng. Tinh chỉnh UserCF là điểm dừng riêng, chưa chạy lưới 12 cấu hình.
+Đây là bằng chứng riêng Bước 9; kết quả ItemCF nằm ở mục Bước 10 bên dưới. Tinh chỉnh UserCF vẫn là điểm dừng riêng, chưa chạy lưới 12 cấu hình. Word giữ ở Bước 6.
+
+## Bước 10 ItemCF một cấu hình ngày 26/10/2026
+
+Run chốt: [item_cf_l40_s0_validation_20261026](../outputs/runs/item_cf_l40_s0_validation_20261026/metrics.json). [ItemCFRecommender](../src/musicrec/recommenders/item_cf.py), [CLI](../scripts/run_item_cf.py) và [cấu hình](../configs/models/item_cf.yaml) dùng train proxy_score từ Bước 5, không học lại ngưỡng hay dùng count thay điểm. Runner chung chỉ đọc train/validation/mapping/transform có hash, không mở test kể cả để băm; guard kiểm toán của lượt chạy và kiểm tra độc lập sẽ báo lỗi nếu có thao tác mở test.parquet. Không chạy tuning, MF/PureSVD hoặc M1/M2.
+
+Căn cứ là họ ItemCF và dự đoán trung bình có trọng số trong [Sarwar et al. (2001), Item-based collaborative filtering recommendation algorithms](https://experts.umn.edu/en/publications/item-based-collaborative-filtering-recommendation-algorithms/) và công thức ItemCF trong [tài liệu ôn tập](SEMINAR_CHUONG_1_2.md#34-item-based-cf). Không tuyên bố tái hiện nguyên bài báo: proxy 1–5, cosine thường trên toàn cột, L=40/shrinkage=0, chọn top-L toàn cục, fallback và khóa số học là lựa chọn của nhóm trên protocol hiện hành. Không gọi cosine này là adjusted cosine hoặc suy ra hai artist giống âm thanh/thể loại từ đồng nghe.
+
+Cosine lấy toàn cột proxy train, ô thiếu bằng 0 chỉ trong phép tính tương đồng. Giữ tương đồng dương, bỏ self, ít nhất một user chung; co rút khi dùng là cosine × n_common/(n_common + shrinkage), lượt này shrinkage=0. Với mỗi artist đích i, chọn tối đa 40 láng giềng toàn catalog trước, rồi giao với lịch sử user. Dự đoán = tổng sim(i,j) × r_uj chia tổng sim(i,j) trên phần giao; không trừ mean, không lấy tổng không chuẩn hóa, không thay bằng top-40 riêng trong lịch sử user. W có chiều target × neighbor; pruning có thể làm W không đối xứng. Tính theo khối 256 artist và chỉ lưu CSR top-L, không tạo toàn Gram item–item đặc hoặc thưa.
+
+Mẫu số bằng 0 dùng mean điểm quan sát train của user; user mới dùng mean chung và reason riêng, chưa phải M2. Artist ngoài catalog bị từ chối; recommend lọc cả train history và lịch sử truyền thêm. Khóa sort cosine/score làm tròn 12 chữ số rồi theo mapping ID số; score/trọng số gốc không clip, không dùng khóa đã làm tròn tính RMSE. Ô chưa nghe không trở thành điểm 0 thật trong trung bình dự đoán.
+
+Ví dụ tay dùng cùng bảng nhỏ Bước 9: cột artist 1 là [3,1,5,0], artist 2 là [5,3,3,0], artist 3 là [0,5,0,0]. sim(3,1)=1/sqrt(35), sim(3,2)=3/sqrt(43). User 1 có điểm 3 và 5 nên dự đoán artist 3 bằng (3/sqrt(35)+15/sqrt(43))/(1/sqrt(35)+3/sqrt(43)); artist 5 không có đóng góp nên dùng mean=4. Với L=1, artist 3 chỉ giữ artist 2 nên dự đoán là 5. Nếu user chỉ biết artist 1 và artist 5, không được thay láng giềng artist 2 bằng artist 1 sau khi giao lịch sử. Các kiểm thử L=1/shrinkage=10 và 259 artist chỉ xác minh logic, tie, ranh giới khối; không phải tuning dữ liệu thật.
+
+Đủ 1.877 user nhận 20 mục, tổng 37.540 dòng; evaluator dùng cùng 1.865 user/8.142 đích hợp lệ, báo riêng 12 user không còn đích và 1.121 đích ngoài catalog. Không có danh sách thiếu/rỗng hoặc mục trùng/đã nghe/ngoài catalog.
+
+| K | Precision | Recall | NDCG | Coverage | Gini | ARP (listener) | Novelty (bit) | ILD |
+| ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| 5 | 0.0046112601 | 0.0052010724 | 0.0053934554 | 0.1239771399 | 0.9609361127 | 36.0707774799 | 13.1875241660 | 0.8310732406 |
+| 10 | 0.0040214477 | 0.0091331546 | 0.0074299548 | 0.2250292246 | 0.9307386879 | 34.4053083110 | 13.2675603621 | 0.8328794020 |
+| 20 | 0.0032707775 | 0.0151027703 | 0.0097793148 | 0.3970645538 | 0.8793262591 | 29.3433512064 | 13.5249495852 | 0.8578593222 |
+
+Tìm trúng 43/75/122 đích tại K=5/10/20. NDCG@10 0.0074299548 cao hơn Random 0.0003721497, thấp hơn UserCF cấu hình đầu 0.0080787555 và Popularity 0.0623622664. Coverage@10 có 3.465 artist (22,5029%), cao hơn UserCF 10,3065% và Popularity 0,1818%; ILD thấp hơn UserCF (0,8328794 so 0,9669347), ARP cao hơn UserCF (34,4053 so 31,3818). Không kết luận ItemCF nói chung kém hơn hoặc chọn nền cuối từ một cấu hình validation; chưa kiểm định hay đánh giá test.
+
+RMSE proxy bổ sung = 0.9796199383 trên 8.142 cặp, trong đó 2.262 cặp dùng mean fallback; không dùng RMSE chọn ranking. Mỗi artist có 2–40 láng giềng, không artist nào hoàn toàn thiếu láng giềng; giao với lịch sử vẫn có thể rỗng. Trong 28.827.771 ứng viên chưa nghe của toàn user, 21.281.596 dùng mean fallback. Top-5/10/20 trên cohort đánh giá có 579/1.217/2.497 vị trí fallback; vì vậy, coverage bao gồm cả artist xếp theo mean và quy tắc hòa ID, không chứng minh toàn bộ độ phủ là gợi ý cá nhân hóa từ đồng nghe.
+
+Lần chạy đầu: fit 0,622397 giây; recommend tổng 5,739155 giây, trung bình 3,057621 ms/user, phân vị 95% 3,883440 ms; evaluator 1,480314 giây. RMSE riêng 6,638479 giây; nạp/đối chiếu đủ 1.877 danh sách 6,509215 giây. Ba tệp model chiếm 2.303.559 byte trên đĩa; không phải bộ nhớ đỉnh. Số đo không gồm I/O nguồn trong fit/recommend, chưa phải benchmark kiểm soát hoặc độ trễ API. Predict từng cặp hiện dùng lại logic chấm catalog, chưa tối ưu batch.
+
+Artifact gồm recommendations.csv có score/reason, metric tổng/từng user, config/seed/hash/Git SHA/trạng thái/diff, snapshot mã, mapping/transform và ba tệp model CSR/state. Load kiểm tra checksum/mapping/kích thước/giá trị, không fit hoặc tính similarity mới; khớp đủ 1.877 danh sách/score/reason. Run `_recheck` trùng hash **chín tệp** dự đoán/chỉ số/model/mapping/transform.
+
+[Kiểm tra độc lập](../outputs/runs/item_cf_l40_s0_validation_20261026/verification.json) không nhập recommender/evaluator production: dựng cosine từ tích vô hướng cột gốc chia chuẩn (khác cách chuẩn hóa trước trong model), kiểm tra cả 15.398 bộ top-40; tính lại điểm từ ma trận lịch sử × láng giềng để tái dựng mọi danh sách/score/reason, RMSE, từng metric user và mọi chỉ số tổng bằng NumPy/CSR. Sai khác trọng số tối đa 1,22125e-15, score 2,66454e-15; các chỉ số khớp trong 1e-12. Mã kiểm tra và guard được lưu cùng audit của run. **53 tests đạt; ruff check, ruff format --check và mypy toàn mã nguồn đạt** sau sửa nhỏ lỗi style/import/type đã có; .venv-legacy được bỏ khỏi quét qua .gitignore. Các sửa này không triển khai luồng prototype mới. Đối chiếu hash 36 tệp xác nhận mọi đầu ra baseline trước và cả 11 Word giữ nguyên.
+
+GitHub chỉ nhận mã/cấu hình/tài liệu theo quy tắc repository; dataset, model và run vẫn giữ cục bộ trong các đường dẫn bị ignore. Word chưa chứa kết quả Bước 7–10, vẫn giữ bản Bước 6. Dừng giải thích Bước 10; bước tiếp theo là Bước 11 SVD có độ lệch, cần cho phép riêng. Tinh chỉnh UserCF/ItemCF cũng là các điểm dừng riêng, chưa chạy lưới.
