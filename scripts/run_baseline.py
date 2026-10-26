@@ -30,6 +30,8 @@ from musicrec.recommenders.random import RandomRecommender
 from musicrec.recommenders.svd import SVDRecommender
 from musicrec.recommenders.user_cf import UserCFRecommender
 
+TUNING_CONFIG = Path(__file__).resolve().parents[1] / "configs/tuning.yaml"
+
 
 def main(
     model_name: Literal[
@@ -233,7 +235,18 @@ def main(
         }
         if importlib.metadata.version("implicit") != "0.7.3":
             raise ValueError("Expected the pinned implicit 0.7.3 implementation")
-    if config != expected_config:
+    tuned = {}
+    tuning = yaml.safe_load(TUNING_CONFIG.read_text(encoding="utf-8"))["models"]
+    if model_name in tuning:
+        space = tuning[model_name]
+        for key, allowed in space.get("grid", {}).items():
+            if config.get(key) != expected_config[key] and config.get(key) in allowed:
+                tuned[key] = config[key]
+        for key, (low, high) in space.get("log_uniform", {}).items():
+            value = config.get(key)
+            if value != expected_config[key] and isinstance(value, float) and low <= value <= high:
+                tuned[key] = value
+    if config != {**expected_config, **tuned}:
         raise ValueError(f"Expected the agreed {model_name} validation configuration")
     if model_name in ("random", "svd", "pure_svd", "implicit_als"):
         config["seed"] = args.model_seed
@@ -528,7 +541,10 @@ def main(
                 "pure_svd": 12 if representation == "proxy_score" else 13,
                 "implicit_als": "extension_als_first",
             }[model_name],
-            "scope": f"{model_name} on validation only; no tuning or test evaluation",
+            "scope": f"{model_name} tuning on validation only; no test evaluation"
+            if tuned
+            else f"{model_name} on validation only; no tuning or test evaluation",
+            "tuned_parameters": tuned,
             "created_at_utc": datetime.now(UTC).isoformat(),
             "seed": config["seed"],
             "source_run": str(source),

@@ -1,0 +1,39 @@
+# Chapter 4 tuning budget (agreed 26/10/2026: "Chạy đủ ngân sách").
+# Grids come from docs/WEEKLY_IMPLEMENTATION_PLAN.md and report v01 Table 4.3;
+# each budget counts the first configuration. Selection: NDCG@10 on validation,
+# seed 42; stochastic models confirm the winner on seeds 43 and 44 without retuning.
+# The runner rejects any value outside these grids, and every other config key
+# must still equal the first agreed configuration.
+selection_metric: ndcg_at_10_validation
+selection_seed: 42
+confirmation_seeds: [43, 44]
+models:
+  user_cf:
+    budget: 12
+    grid:
+      neighbors: [20, 40, 80, 120]
+      shrinkage: [0, 10, 50]
+  item_cf:
+    budget: 12
+    grid:
+      neighbors: [20, 40, 80, 120]
+      shrinkage: [0, 10, 50]
+  svd:
+    budget: 12
+    search: first_config_plus_11_random_seed_42
+    grid:
+      latent_factors: [16, 32, 64, 128]
+    log_uniform:
+      learning_rate: [0.001, 0.02]
+      regularization: [0.001, 0.1]
+  pure_svd:
+    budget: 4
+    representation: prepared_train_binary
+    grid:
+      latent_factors: [16, 32, 64, 128]
+  implicit_als:
+    budget: 8
+    grid:
+      latent_factors: [32, 64]
+      regularization: [0.01, 0.1]
+      confidence_scale: [1, 10]
