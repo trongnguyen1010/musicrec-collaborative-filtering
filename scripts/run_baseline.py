@@ -15,6 +15,7 @@ from pathlib import Path
 from time import perf_counter
 from typing import Literal
 
+import numpy as np
 import pandas as pd
 import yaml
 
@@ -73,6 +74,7 @@ def main(
         if sha256(source / name) != value:
             raise ValueError(f"Input checksum mismatch: {name}")
     config = yaml.safe_load(args.config.read_text(encoding="utf-8"))
+    representation = "proxy_score"
     expected_config = (
         {
             "model": "random",
@@ -157,12 +159,20 @@ def main(
             "fit_scope": "train_only_validation_selects_epoch",
         }
     if model_name == "pure_svd":
+        representations = {
+            "prepared_train_proxy_score": "proxy_score",
+            "prepared_train_binary": "binary",
+            "prepared_train_log_count": "log_count",
+        }
+        if config.get("representation") not in representations:
+            raise ValueError("Expected an agreed PureSVD train representation")
+        representation = representations[config["representation"]]
         expected_config = {
             "model": "pure_svd",
             "seed": 42,
             "seed_role": "arpack_start_vector",
             "latent_factors": 32,
-            "representation": "prepared_train_proxy_score",
+            "representation": config["representation"],
             "missing_entries": "algebraic_zero_not_observed_dislike",
             "centering": "none",
             "normalization": "none",
@@ -190,6 +200,14 @@ def main(
         raise ValueError("Expected the shared cutoffs 5, 10, 20")
     train = pd.read_parquet(source / "train.parquet")
     validation = pd.read_parquet(source / "validation.parquet")
+    if model_name == "pure_svd" and representation != "proxy_score":
+        values = (
+            np.ones(len(train))
+            if representation == "binary"
+            else np.log2(1.0 + train.listening_count.to_numpy(dtype=np.float64))
+        )
+        if not np.array_equal(train[representation].to_numpy(), values):
+            raise ValueError("Prepared train representation does not match the agreed transform")
     mappings = json.loads((source / "id_mappings.json").read_text(encoding="utf-8"))
     for column in ["user_id", "item_id"]:
         expected = {value: index for index, value in enumerate(sorted(set(train[column]), key=int))}
@@ -241,7 +259,8 @@ def main(
         )
     if model_name == "pure_svd":
         model = PureSVDRecommender(
-            **{name: config[name] for name in ["latent_factors", "seed", "tolerance", "max_iter"]}
+            **{name: config[name] for name in ["latent_factors", "seed", "tolerance", "max_iter"]},
+            representation=representation,
         )
     monitor_seconds = []
 
@@ -375,8 +394,10 @@ def main(
                 out / "learning_curve.csv", index=False, lineterminator="\n"
             )
         if isinstance(model, PureSVDRecommender):
+            label = "proxy" if representation == "proxy_score" else representation
             state["learned_values"] = (
-                "train proxy CSR, leading right singular vectors and projected histories; no biases"
+                f"train {label} CSR, leading right singular vectors "
+                "and projected histories; no biases"
             )
         state["artifact_directory"] = "model"
         shutil.copyfile(source / "transform.json", out / "transform.json")
@@ -411,7 +432,7 @@ def main(
                 "user_cf": 9,
                 "item_cf": 10,
                 "svd": 11,
-                "pure_svd": 12,
+                "pure_svd": 12 if representation == "proxy_score" else 13,
             }[model_name],
             "scope": f"{model_name} on validation only; no tuning or test evaluation",
             "created_at_utc": datetime.now(UTC).isoformat(),

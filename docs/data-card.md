@@ -1,8 +1,8 @@
 # Data card HetRec 2011 Last.fm 2K
 
-## Trạng thái sau Bước 12 ngày 26/10/2026
+## Trạng thái sau Bước 13 ngày 26/10/2026
 
-Đã hoàn thành Bước 1–12 theo yêu cầu người dùng. **Train có 74.275 cặp; validation và test mỗi tập 9.263 cặp; mapping gồm 1.877 user và 15.398 artist từ train.** Đã có evaluator và lượt chạy đầu của đủ sáu baseline trên validation. PureSVD 32 chiều/proxy/seed 42 đạt NDCG@10 0.1516922327; chưa chốt mô hình cuối. Chưa tuning, so sánh biểu diễn, học thẻ hoặc đánh giá test. Dừng Bước 12; các phần Bước 1–11 giữ bối cảnh lịch sử, kết quả mới nhất ở mục Bước 12 cuối tệp. Word chỉ cập nhật khi người dùng yêu cầu rõ ràng, hiện giữ bản Bước 6.
+Đã hoàn thành Bước 1–13 theo yêu cầu người dùng. **Train có 74.275 cặp; validation và test mỗi tập 9.263 cặp; mapping gồm 1.877 user và 15.398 artist từ train.** Đã có evaluator, lượt chạy đầu của đủ sáu baseline và so PureSVD nhị phân/log/proxy tại 32 chiều/seed 42. NDCG@10 lần lượt 0.1564272628/0.1545766607/0.1516922327; chưa chốt mô hình cuối. Chưa tuning số chiều/CF/MF, học thẻ hoặc đánh giá test. Dừng Bước 13; các phần Bước 1–12 giữ bối cảnh lịch sử, kết quả mới nhất ở mục Bước 13 cuối tệp. Số dòng test ở đây kế thừa Bước 4, không mở lại test trong Bước 13. Word chỉ cập nhật khi người dùng yêu cầu rõ ràng, hiện giữ bản Bước 6.
 
 Bằng chứng máy đọc được: [source_audit.json](../outputs/runs/source_audit_20261019_162917_245445/source_audit.json). Tệp ghi thời điểm, phiên bản mã, tình trạng thay đổi chưa commit, cách đọc, từng kiểm tra và mã băm. Dùng Python standard library để đọc/kiểm tra trực tiếp, không thêm pipeline hoặc thư viện mới. Không có thao tác ngẫu nhiên nên seed không áp dụng.
 
@@ -447,4 +447,38 @@ Artifact gồm train CSR trong model/ratings.npz; components V32.T, user_embeddi
 
 **63 tests đạt; ruff check, ruff format --check và mypy toàn mã nguồn đạt**. Kiểm thử dùng SVD đặc trên toy, kiểm score âm/không clip/masking/tie/cold-start, đảo thứ tự dòng/đổi count gốc không đổi kết quả, save/load không gọi fit hoặc svds, CLI 32 chiều không tính RMSE, hash và chống ghi đè/nguồn bị sửa. Hash **59 tệp** xác nhận các đầu ra năm baseline trước và cả 11 Word giữ nguyên. Dataset/model/run giữ cục bộ theo .gitignore; GitHub chỉ nhận mã/cấu hình/tài liệu. Word chưa chứa Bước 7–12, vẫn là bản Bước 6.
 
-Dừng giải thích Bước 12; Bước 13 so sánh nhị phân/log/proxy với cùng split/32 chiều/seed và tuning số chiều là các lần cho phép riêng, chưa chạy. Chưa học thẻ, M1/M2 hoặc đánh giá test.
+Dừng giải thích Bước 12 trước khi người dùng cho tiếp tục. Kết quả Bước 13 so sánh nhị phân/log/proxy nằm bên dưới; tuning số chiều vẫn cần cho phép riêng. Chưa học thẻ, M1/M2 hoặc đánh giá test.
+
+## Bước 13 so sánh biểu diễn PureSVD ngày 26/10/2026
+
+Câu hỏi thực nghiệm: thay giá trị các cặp đã nghe bằng nhị phân, log hoặc proxy ảnh hưởng thế nào đến ranking validation tại **cùng 32 chiều, seed 42**? Đối chứng là [run proxy Bước 12](../outputs/runs/pure_svd_k32_proxy_validation_20261026/metrics.json); hai run mới là [nhị phân](../outputs/runs/pure_svd_k32_binary_validation_step13_20261026/metrics.json) và [log](../outputs/runs/pure_svd_k32_log_validation_step13_20261026/metrics.json). Ghi trước câu hỏi, đối chứng, ngân sách và tiêu chí trong experiment.json thuộc audit cục bộ. Ngân sách gồm hai biểu diễn mới, một lần lặp mỗi biểu diễn và một lần lặp proxy: năm fit cố định, không tìm rank/seed/hyperparameter. Chỉ đo độ nhạy, chưa khóa lựa chọn cuối hoặc dùng test xác nhận.
+
+Căn cứ phép phân rã vẫn là Cremonesi, Koren, Turrin (2010), [DOI](https://doi.org/10.1145/1864708.1864721), mục 3.3.1/công thức 4–6 của [bản PDF](TLTK/Cremonesi%20et%20al.%202010.pdf). Việc so ba biểu diễn trên HetRec, ngưỡng proxy và cấu hình cố định là thiết kế của nhóm; không nói bài gốc chứng minh nhị phân tối ưu hoặc đang tái hiện nguyên protocol của bài báo.
+
+Giữ cùng 74.275 vị trí quan sát, split/mapping/catalog/evaluator, solver ARPACK/tolerance=1e-10/maxiter=10000, vector đầu PCG64(42), BLAS một luồng, không bias/centering/normalization. Chỉ đổi giá trị R: binary=1 cho mọi cặp; log=log2(1 + count), miền train 1 đến 18.42807796; proxy_score là 1–5 đã học ngưỡng trên train ở Bước 5. Runner đối chiếu chính xác cột binary/log đã chuẩn bị với phép biến đổi trước fit; model dùng cùng phép biến đổi cố định từ count gốc, không nhét giá trị log vào trường proxy hoặc nới contract điểm 1–5. Không học lại ngưỡng, không chuyển ô thiếu thành phản hồi tiêu cực và không dùng log làm confidence ALS.
+
+Các config [nhị phân](../configs/models/pure_svd_binary.yaml), [log](../configs/models/pure_svd_log.yaml) và [proxy](../configs/models/pure_svd.yaml) chỉ khác representation; CLI vẫn khóa 32 chiều/seed 42. Score R V32 V32.T không clip/hiệu chuẩn thành rating hoặc xác suất, không tính RMSE. ILD luôn dùng cosine hồ sơ nghe **nhị phân train**, ARP luôn dùng số user train đã nghe artist, relevance held-out vẫn nhị phân; không đổi thước đo theo biểu diễn model. Cả ba trả 20 mục cho 1.877 user và cùng cohort 1.865 user/8.142 đích hợp lệ, loại và báo riêng 12 user không có đích trong catalog/1.121 đích ngoài catalog. Không có duplicate/seen/unknown hoặc danh sách thiếu/rỗng.
+
+| Biểu diễn | K | Precision | Recall | NDCG | Coverage | ARP (listener) | ILD |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| Nhị phân | 5 | 0.1084182306 | 0.1181501340 | 0.1259680906 | 0.0180542928 | 161.7095978552 | 0.7811167805 |
+| Nhị phân | 10 | 0.0809651475 | 0.1758891868 | **0.1564272628** | 0.0238992077 | 145.3087935657 | 0.8172029176 |
+| Nhị phân | 20 | 0.0582573727 | 0.2550402145 | 0.1887078641 | 0.0337056761 | 128.2636729223 | 0.8543787909 |
+| Log | 5 | 0.1067024129 | 0.1159696157 | 0.1243521267 | 0.0178594623 | 159.7311528150 | 0.7815892562 |
+| Log | 10 | 0.0795174263 | 0.1732618409 | 0.1545766607 | 0.0242888687 | 143.4903485255 | 0.8184487864 |
+| Log | 20 | 0.0578284182 | 0.2529490617 | 0.1872587832 | 0.0340953371 | 126.1913941019 | 0.8548078003 |
+| Proxy 1–5 | 5 | 0.1053083110 | 0.1147363718 | 0.1228661940 | 0.0175996883 | 160.7062734584 | 0.7829309336 |
+| Proxy 1–5 | 10 | 0.0780160858 | 0.1694459339 | 0.1516922327 | 0.0235095467 | 143.9861662198 | 0.8189157312 |
+| Proxy 1–5 | 20 | 0.0571313673 | 0.2492850760 | 0.1844239434 | 0.0340953371 | 126.3793029491 | 0.8554517654 |
+
+Coverage là tỷ lệ trên 15.398 artist, không phải phần trăm trong bảng. Ở K=10, nhị phân/log/proxy tìm trúng 1.510/1.483/1.455 cặp và phủ 368/374/362 artist (2,3899%/2,4289%/2,3510%). Gini tương ứng 0.9895695447/0.9895790791/0.9896366681; novelty 9.5019819854/9.5217928426/9.5238269876 bit. Bảng CSV/JSON trong run giữ toàn bộ chỉ số và từng user/K.
+
+NDCG@10 nhị phân cao hơn proxy **0.0047350301 tuyệt đối, 3,1215% tương đối**; log cao hơn **0.0028844280 tuyệt đối, 1,9015% tương đối**. Nhị phân cao nhất NDCG ở cả ba K trong phép thử cố định này, nhưng ARP@10 cao hơn và ILD@10 thấp hơn hai biểu diễn còn lại; log phủ nhiều artist Top-10 nhất. So từng user với proxy, nhị phân có 507 tăng/440 giảm/918 hòa NDCG@10; log có 421 tăng/371 giảm/1.073 hòa (ngưỡng so sánh 1e-12). Không phải mọi user cùng cải thiện. Chưa có kiểm định ý nghĩa thống kê, nhiều seed/split, tuning rank hoặc test xác nhận; chưa kết luận một biểu diễn luôn tối ưu, nguyên nhân thắng hay nền M1 cuối. Tỷ lệ năng lượng Frobenius giữ lại (nhị phân 21,2626%, log 24,4498%, proxy 25,4974%) thuộc các ma trận khác nhau, không dùng để xếp hạng chất lượng giữa biểu diễn.
+
+Lần chạy đầu nhị phân: fit 0,128636 giây, recommend tổng 6,361797 giây, trung bình 3,389343 ms/user, p95 4,038860 ms; evaluator 3,407793 giây; ba tệp model 2.895.881 byte. Log: fit 0,129892 giây, recommend tổng 6,643907 giây, trung bình 3,539642 ms/user, p95 4,674000 ms; evaluator 3,178913 giây; model 4.656.213 byte. Các số này không phải benchmark kiểm soát, bộ nhớ đỉnh hoặc độ trễ API; không gồm I/O nguồn trong fit/recommend và không dùng chênh thời gian nhỏ để chọn biểu diễn.
+
+Kiểm tra độc lập [nhị phân](../outputs/runs/pure_svd_k32_binary_validation_step13_20261026/verification.json) và [log](../outputs/runs/pure_svd_k32_log_validation_step13_20261026/verification.json) đọc trực tiếp **cột biểu diễn đã chuẩn bị**, dựng Gram user–user rồi dùng eigh, không gọi model/svds/evaluator production. Đối chiếu đủ 32 singular values/không gian chiếu, mọi score ứng viên, 1.877 danh sách/score/reason và từng chỉ số user/K. Sai khác score toàn catalog tối đa 1,18794e-14 cho binary và 1,29674e-13 cho log; score trong 1e-10, metric trong 1e-12. Guard audit chặn mọi lần mở test.parquet, kể cả băm. Điểm ứng viên có thể âm: binary khoảng −0,52722 đến 1,30517, log −6,82941 đến 12,20125; vẫn giữ nguyên, không gọi là xác suất.
+
+Mỗi biểu diễn mới nạp lại không fit/phân rã và khớp đủ 1.877 danh sách. Mỗi run `_recheck` trùng hash **9 tệp** kết quả/model/mapping/transform. [Lặp đối chứng proxy bằng mã mới](../outputs/runs/pure_svd_k32_proxy_control_validation_step13_20261026/metrics.json) cũng khớp đúng 9 tệp đã ghi ở Bước 12, gồm state/model; artifact proxy cũ vẫn nạp được nhờ giá trị mặc định. Bản chụp mã/config/runtime/Git SHA/trạng thái/diff, experiment.json, mã kiểm tra/guard và hash bảo toàn được giữ trong audit cục bộ. Đối chiếu 113 tệp xác nhận đầu ra các bước trước và 11 Word giữ nguyên. Chưa tổng hợp/chốt validation Bước 14, tuning, học thẻ/M1/M2 hoặc đánh giá test. Word vẫn Bước 6; Git chỉ nhận mã, cấu hình và các tài liệu làm việc hiện có.
+
+[Tổng hợp máy đọc được của phép so Bước 13](../outputs/runs/pure_svd_representations_validation_20261026/metrics.json), [bảng đủ ba K](../outputs/runs/pure_svd_representations_validation_20261026/metrics.csv) và [NDCG@10 từng user theo cặp](../outputs/runs/pure_svd_representations_validation_20261026/paired_ndcg_at_10.csv) giữ liên kết/hash tới từng run, cấu hình và bằng chứng kiểm chứng. **67 tests đạt; ruff check, ruff format --check và mypy toàn mã nguồn đạt**. Kiểm thử mới so phân rã SVD đặc trên toy cho binary/log (log không nguyên và có thể lớn hơn 5), save/load, từ chối count không hữu hạn, CLI ba biểu diễn/khóa rank, sai transform dù hash được cập nhật, checksum và chống ghi đè. Không thêm thư viện hoặc tài liệu tiến độ mới.

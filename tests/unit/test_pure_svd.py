@@ -1,4 +1,4 @@
-"""Dense-SVD reference and CLI boundary checks for the single Step 12 configuration."""
+"""Dense-SVD references and CLI boundaries for fixed-rank representation checks."""
 
 import hashlib
 import json
@@ -98,6 +98,8 @@ def test_reproducible_counts_independence_reload_without_decomposition_and_check
 
 
 def test_invalid_parameters_missing_proxy_rank_and_inference_inputs() -> None:
+    with pytest.raises(ValueError, match="representation"):
+        PureSVDRecommender(representation="raw_count")
     for name in ["latent_factors", "max_iter"]:
         for value in [0, -1, True, 1.5]:
             with pytest.raises(ValueError):
@@ -125,8 +127,43 @@ def test_invalid_parameters_missing_proxy_rank_and_inference_inputs() -> None:
         model.predict("1", "unknown")
 
 
+@pytest.mark.parametrize("representation", ["binary", "log_count"])
+def test_binary_and_log_match_dense_svd_and_reload_without_proxy(
+    tmp_path: Path,
+    representation: str,
+) -> None:
+    rows = [
+        Interaction(row.user_id, row.item_id, float(7**index + 3))
+        for index, row in enumerate(sample_rows())
+    ]
+    model = PureSVDRecommender(latent_factors=1, representation=representation).fit(rows)
+    expected = np.zeros((4, 5))
+    items = ["1", "2", "3", "4", "10"]
+    for row in rows:
+        expected[int(row.user_id) - 1, items.index(row.item_id)] = (
+            1 if representation == "binary" else np.log2(1 + row.listening_count)
+        )
+    _, _, vectors = np.linalg.svd(expected, full_matrices=False)
+    expected = expected @ vectors[:1].T @ vectors[:1]
+    model.save(tmp_path / "model")
+    with patch.object(PureSVDRecommender, "fit", side_effect=AssertionError("load must not fit")):
+        restored = PureSVDRecommender.load(tmp_path / "model")
+    assert restored.representation == representation
+    for user in range(4):
+        for item, item_id in enumerate(items):
+            assert restored.predict(str(user + 1), item_id) == pytest.approx(
+                expected[user, item], abs=1e-10
+            )
+    if representation == "log_count":
+        for value in [float("nan"), float("inf")]:
+            with pytest.raises(ValueError, match="finite positive"):
+                model.fit([Interaction("1", "1", value), *rows[1:]])
+
+
+@pytest.mark.parametrize("representation", ["proxy_score", "binary", "log_count"])
 def test_cli_32_dimensions_validation_only_no_rmse_reloads_repeats_and_rejects_corruption(
     tmp_path: Path,
+    representation: str,
 ) -> None:
     source = tmp_path / "representations"
     source.mkdir()
@@ -158,6 +195,8 @@ def test_cli_32_dimensions_validation_only_no_rmse_reloads_repeats_and_rejects_c
     ]:
         frame["user_index"] = frame.user_id.map(mappings["user_id_to_index"]).astype("Int64")
         frame["item_index"] = frame.item_id.map(mappings["item_id_to_index"]).astype("Int64")
+        frame["binary"] = 1
+        frame["log_count"] = np.log2(1.0 + frame.listening_count.to_numpy(dtype=float))
         frame.to_parquet(source / f"{name}.parquet", index=False)
     (source / "id_mappings.json").write_text(json.dumps(mappings), encoding="utf-8")
     (source / "transform.json").write_text(
@@ -174,12 +213,15 @@ def test_cli_32_dimensions_validation_only_no_rmse_reloads_repeats_and_rejects_c
         encoding="utf-8",
     )
     root = Path(__file__).resolve().parents[2]
+    suffix = {"proxy_score": "", "binary": "_binary", "log_count": "_log"}[representation]
     command = [
         sys.executable,
         "-B",
         str(root / "scripts/run_pure_svd.py"),
         "--representations-run",
         str(source),
+        "--config",
+        str(root / f"configs/models/pure_svd{suffix}.yaml"),
         "--output-dir",
         str(tmp_path / "first"),
     ]
@@ -188,12 +230,14 @@ def test_cli_32_dimensions_validation_only_no_rmse_reloads_repeats_and_rejects_c
         result = subprocess.run(command, cwd=root, capture_output=True, text=True)
         assert result.returncode == 0, result.stderr
         metadata = json.loads((out / "metrics.json").read_text(encoding="utf-8"))
-        assert metadata["step"] == 12 and metadata["test_file_read"] is False
+        assert metadata["step"] == (12 if representation == "proxy_score" else 13)
+        assert metadata["test_file_read"] is False
         assert metadata["users_eligible"] == 33 and metadata["users_without_catalog_targets"] == 1
         assert metadata["supplementary"]["reload_verified_users"] == 34
         assert "proxy_rmse" not in metadata["supplementary"]
         assert "best_epoch" not in metadata["supplementary"]
         assert not (out / "learning_curve.csv").exists()
+        assert PureSVDRecommender.load(out / "model").representation == representation
         assert all(sha(out / name) == value for name, value in metadata["output_sha256"].items())
     assert all(
         sha(tmp_path / "first" / name) == sha(tmp_path / "second" / name)
@@ -203,6 +247,17 @@ def test_cli_32_dimensions_validation_only_no_rmse_reloads_repeats_and_rejects_c
     again = subprocess.run(command, cwd=root, capture_output=True, text=True)
     assert again.returncode != 0 and "new directory" in again.stderr
     assert (tmp_path / "second/metrics.json").read_bytes() == before
+    if representation != "proxy_score":
+        wrong = pd.read_parquet(source / "train.parquet")
+        wrong.loc[0, representation] += 1
+        wrong.to_parquet(source / "train.parquet", index=False)
+        provenance = json.loads((source / "metrics.json").read_text(encoding="utf-8"))
+        provenance["output_sha256"]["train.parquet"] = sha(source / "train.parquet")
+        (source / "metrics.json").write_text(json.dumps(provenance), encoding="utf-8")
+        command[-1] = str(tmp_path / "wrong-transform")
+        wrong_result = subprocess.run(command, cwd=root, capture_output=True, text=True)
+        assert wrong_result.returncode != 0 and "agreed transform" in wrong_result.stderr
+        assert not Path(command[-1]).exists()
     with (source / "transform.json").open("ab") as handle:
         handle.write(b"tampered")
     command[-1] = str(tmp_path / "tampered")

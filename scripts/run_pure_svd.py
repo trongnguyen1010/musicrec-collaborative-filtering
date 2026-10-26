@@ -1,4 +1,4 @@
-"""Run Step 12 only: one rank-32 PureSVD projection on validation, never test."""
+"""Run fixed rank-32 PureSVD on validation: proxy control or Step 13 binary/log check."""
 
 import os
 

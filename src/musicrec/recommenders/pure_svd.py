@@ -1,4 +1,4 @@
-"""PureSVD on zero-filled train proxy scores, without centering or learned biases."""
+"""PureSVD on zero-filled train values, without centering or learned biases."""
 
 import hashlib
 import json
@@ -21,7 +21,8 @@ NUMERIC_TIE_DECIMALS = 12
 class PureSVDRecommender(Recommender):
     """Score R V_k V_k.T using leading right singular vectors of sparse train R.
 
-    Observations use the prepared 1-5 proxy. Missing entries are algebraic zeros,
+    Observations use the 1-5 proxy, binary presence or log2(1 + count).
+    Missing entries are algebraic zeros,
     not observed dislikes. Scores are association strengths, not proxy ratings.
     Unknown users have a zero profile and an explicitly marked ID-order fallback.
     """
@@ -32,6 +33,7 @@ class PureSVDRecommender(Recommender):
         seed: int = 42,
         tolerance: float = 1e-10,
         max_iter: int = 10000,
+        representation: str = "proxy_score",
     ) -> None:
         if type(latent_factors) is not int or latent_factors <= 0:
             raise ValueError("latent_factors must be a positive integer")
@@ -41,8 +43,11 @@ class PureSVDRecommender(Recommender):
             raise ValueError("tolerance must be finite and positive")
         if type(max_iter) is not int or max_iter <= 0:
             raise ValueError("max_iter must be a positive integer")
+        if representation not in ("proxy_score", "binary", "log_count"):
+            raise ValueError("representation must be proxy_score, binary or log_count")
         self.latent_factors, self.seed = latent_factors, seed
         self.tolerance, self.max_iter = float(tolerance), max_iter
+        self.representation = representation
         self._users: list[str] = []
         self._items: list[str] = []
         self._ratings: csr_matrix[np.float64]
@@ -62,7 +67,9 @@ class PureSVDRecommender(Recommender):
     def fit(self, interactions: Iterable[Interaction]) -> "PureSVDRecommender":
         """Decompose canonical train CSR once; no validation fitting or SGD epochs."""
         rows = list(interactions)
-        if not rows or any(row.proxy_score is None for row in rows):
+        if not rows or (
+            self.representation == "proxy_score" and any(row.proxy_score is None for row in rows)
+        ):
             raise ValueError("PureSVD requires non-empty train interactions with proxy_score")
         if len({(row.user_id, row.item_id) for row in rows}) != len(rows):
             raise ValueError("Duplicate user-artist pair")
@@ -71,9 +78,19 @@ class PureSVDRecommender(Recommender):
         if self.latent_factors >= min(len(self._users), len(self._items)):
             raise ValueError("latent_factors must be smaller than both train dimensions")
         self._prepare()
+        values = np.array([row.proxy_score for row in rows], dtype=np.float64)
+        if self.representation == "binary":
+            values = np.ones(len(rows), dtype=np.float64)
+        if self.representation == "log_count":
+            counts = np.array([row.listening_count for row in rows], dtype=np.float64)
+            if not np.isfinite(counts).all() or (counts <= 0).any():
+                raise ValueError("Log counts require finite positive listening counts")
+            values = np.log2(1.0 + counts)
+        if not np.isfinite(values).all() or (values <= 0).any():
+            raise ValueError("PureSVD observations must be finite and positive")
         self._ratings = csr_matrix(
             (
-                np.array([row.proxy_score for row in rows], dtype=np.float64),
+                values,
                 (
                     [self._user_index[row.user_id] for row in rows],
                     [self._item_index[row.item_id] for row in rows],
@@ -176,7 +193,7 @@ class PureSVDRecommender(Recommender):
             user_embeddings=self._user_embeddings,
             singular_values=self._singular_values,
         )
-        state = {
+        state: dict[str, Any] = {
             "schema_version": 1,
             "model": "pure_svd",
             "numeric_tie_decimals": NUMERIC_TIE_DECIMALS,
@@ -197,6 +214,9 @@ class PureSVDRecommender(Recommender):
                 for name in ["ratings.npz", "projection.npz"]
             },
         }
+        # Keep existing proxy artifacts byte-compatible with the Step 12 control.
+        if self.representation != "proxy_score":
+            state["config"]["representation"] = self.representation
         with (directory / "state.json").open("x", encoding="utf-8") as handle:
             json.dump(state, handle, indent=2, allow_nan=False)
             handle.write("\n")
@@ -240,7 +260,13 @@ class PureSVDRecommender(Recommender):
             model.latent_factors >= min(len(model._users), len(model._items))
             or model._ratings.shape != (len(model._users), len(model._items))
             or not model._ratings.has_canonical_format
-            or not np.isin(model._ratings.data, [1, 2, 3, 4, 5]).all()
+            or not np.isfinite(model._ratings.data).all()
+            or (model._ratings.data <= 0).any()
+            or (
+                model.representation == "proxy_score"
+                and not np.isin(model._ratings.data, [1, 2, 3, 4, 5]).all()
+            )
+            or (model.representation == "binary" and (model._ratings.data != 1).any())
             or (np.diff(model._ratings.indptr) == 0).any()
             or (np.asarray(model._ratings.getnnz(axis=0)) == 0).any()
             or (model._singular_values < 0).any()

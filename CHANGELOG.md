@@ -7,6 +7,18 @@ Mọi thay đổi đáng chú ý của MusicRec được ghi trong file này the
 
 ### Changed
 
+- 2026-10-26: Hoàn thành Bước 13 so PureSVD nhị phân/log/proxy tại cùng
+  32 chiều/seed 42/split/catalog/evaluator. NDCG@10 tương ứng
+  0.1564272628/0.1545766607/0.1516922327; nhị phân tăng 3,1215% tương đối
+  so proxy nhưng ARP cao hơn/ILD thấp hơn, log phủ nhiều artist Top-10 hơn.
+  Thêm hai config và lựa chọn biểu diễn trong model/runner, giữ contract proxy
+  1–5 và artifact proxy tương thích. Đối chiếu biểu diễn train trước fit,
+  kiểm chứng độc lập bằng eigh toàn danh sách/score/metric, nạp lại và lặp
+  mỗi biểu diễn mới 9 tệp trùng hash; proxy cũng khớp 9 tệp Bước 12.
+  67 tests/lint/format/mypy đạt; 113 tệp đầu ra cũ/11 Word giữ nguyên.
+  Run/model giữ cục bộ, cập nhật tài liệu hiện có; chưa tuning, chốt nền M1,
+  tổng hợp Bước 14 hoặc mở test.
+
 - 2026-10-26: Hoàn thành Bước 12 PureSVD 32 chiều trên proxy train/seed 42,
   zero-fill không centering/bias, score R V32 V32.T bằng svds/ARPACK thưa.
   Không SGD/dừng sớm/RMSE; cold-start zero profile có reason riêng. NDCG@10
