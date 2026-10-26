@@ -247,6 +247,22 @@ def test_cli_32_dimensions_validation_only_no_rmse_reloads_repeats_and_rejects_c
     again = subprocess.run(command, cwd=root, capture_output=True, text=True)
     assert again.returncode != 0 and "new directory" in again.stderr
     assert (tmp_path / "second/metrics.json").read_bytes() == before
+    if representation in ("proxy_score", "binary"):
+        seed_command = command[:-2] + [
+            "--model-seed",
+            "43",
+            "--output-dir",
+            str(tmp_path / "seed43"),
+        ]
+        if representation == "proxy_score":
+            seed_command[2] = str(root / "scripts/run_svd.py")
+            seed_command[seed_command.index("--config") + 1] = str(root / "configs/models/svd.yaml")
+        seeded = subprocess.run(seed_command, cwd=root, capture_output=True, text=True)
+        assert seeded.returncode == 0, seeded.stderr
+        seed_metrics = json.loads((tmp_path / "seed43/metrics.json").read_text(encoding="utf-8"))
+        state = json.loads((tmp_path / "seed43/model/state.json").read_text(encoding="utf-8"))
+        assert seed_metrics["step"] == 14 and seed_metrics["seed"] == state["config"]["seed"] == 43
+        assert seed_metrics["input_sha256"] == metadata["input_sha256"]
     if representation != "proxy_score":
         wrong = pd.read_parquet(source / "train.parquet")
         wrong.loc[0, representation] += 1

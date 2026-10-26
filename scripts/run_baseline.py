@@ -45,6 +45,8 @@ def main(
     parser.add_argument("--config", type=Path, default=Path(f"configs/models/{model_name}.yaml"))
     parser.add_argument("--evaluation-config", type=Path, default=Path("configs/evaluation.yaml"))
     parser.add_argument("--output-dir", type=Path, required=True)
+    if model_name in ("random", "svd", "pure_svd"):
+        parser.add_argument("--model-seed", type=int, choices=[42, 43, 44], default=42)
     args = parser.parse_args()
     source, out = args.source_run.resolve(), args.output_dir.resolve()
     if out.exists() or source == out or source in out.parents:
@@ -195,6 +197,8 @@ def main(
         }
     if config != expected_config:
         raise ValueError(f"Expected the agreed {model_name} validation configuration")
+    if model_name in ("random", "svd", "pure_svd"):
+        config["seed"] = args.model_seed
     evaluation_config = yaml.safe_load(args.evaluation_config.read_text(encoding="utf-8"))
     if evaluation_config["ks"] != [5, 10, 20]:
         raise ValueError("Expected the shared cutoffs 5, 10, 20")
@@ -426,7 +430,9 @@ def main(
     write_json(
         "metrics.json",
         {
-            "step": {
+            "step": 14
+            if config["seed"] != 42
+            else {
                 "random": 7,
                 "popularity": 8,
                 "user_cf": 9,

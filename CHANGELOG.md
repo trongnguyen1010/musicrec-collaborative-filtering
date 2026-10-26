@@ -7,6 +7,18 @@ Mọi thay đổi đáng chú ý của MusicRec được ghi trong file này the
 
 ### Changed
 
+- 2026-10-26: Hoàn thành Bước 14 tổng hợp validation của tám cấu hình thuộc
+  sáu họ baseline, kiểm hash/protocol/cohort trên 14 run và phân tích chi phí,
+  lịch sử train <40/=40/>40 (41/1.822/2 user hợp lệ). Thêm CLI tổng hợp và
+  config cố định, helper nhóm/seed, --model-seed 42/43/44 cho Random/SVD/PureSVD.
+  Chạy đúng sáu fit xác nhận seed, không tuning: NDCG@10 mean ± sample std
+  PureSVD nhị phân 0.1564272628 ± 0, SVD 0.0576259192 ± 0.0010411842,
+  Random 0.0004124977 ± 0.0001408550; Popularity vẫn vượt SVD cả ba seed.
+  Giữ kết quả không cải thiện, các cấu hình cũ/11 Word và chưa mở test.
+  69 tests/lint/format/mypy đạt. PureSVD nhị phân là ứng viên M1 trong phạm vi
+  chưa tuning; chỉ đánh giá điều kiện đề xuất ALS riêng, chưa triển khai mở rộng
+  hoặc khóa nền M1. Run/model giữ cục bộ, tài liệu hiện có được đồng bộ.
+
 - 2026-10-26: Hoàn thành Bước 13 so PureSVD nhị phân/log/proxy tại cùng
   32 chiều/seed 42/split/catalog/evaluator. NDCG@10 tương ứng
   0.1564272628/0.1545766607/0.1516922327; nhị phân tăng 3,1215% tương đối

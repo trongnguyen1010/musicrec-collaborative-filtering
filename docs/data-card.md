@@ -1,8 +1,8 @@
 # Data card HetRec 2011 Last.fm 2K
 
-## Trạng thái sau Bước 13 ngày 26/10/2026
+## Trạng thái sau Bước 14 ngày 26/10/2026
 
-Đã hoàn thành Bước 1–13 theo yêu cầu người dùng. **Train có 74.275 cặp; validation và test mỗi tập 9.263 cặp; mapping gồm 1.877 user và 15.398 artist từ train.** Đã có evaluator, lượt chạy đầu của đủ sáu baseline và so PureSVD nhị phân/log/proxy tại 32 chiều/seed 42. NDCG@10 lần lượt 0.1564272628/0.1545766607/0.1516922327; chưa chốt mô hình cuối. Chưa tuning số chiều/CF/MF, học thẻ hoặc đánh giá test. Dừng Bước 13; các phần Bước 1–12 giữ bối cảnh lịch sử, kết quả mới nhất ở mục Bước 13 cuối tệp. Số dòng test ở đây kế thừa Bước 4, không mở lại test trong Bước 13. Word chỉ cập nhật khi người dùng yêu cầu rõ ràng, hiện giữ bản Bước 6.
+Đã hoàn thành Bước 1–14 theo yêu cầu người dùng. **Train có 74.275 cặp; validation và test mỗi tập 9.263 cặp; mapping gồm 1.877 user và 15.398 artist từ train.** Đã tổng hợp sáu họ baseline/tám cấu hình và xác nhận model seed 42/43/44 cho Random/SVD/PureSVD nhị phân. PureSVD nhị phân là ứng viên nền M1 trong phạm vi chưa tuning, NDCG@10 0.1564272628 ± 0 trên cùng split seed 42; chưa khóa nền hoặc mô hình cuối. Chưa tuning, học thẻ/M1/M2, chạy nhánh mở rộng hoặc đánh giá test. Các phần Bước 1–13 giữ bối cảnh lịch sử; kết quả mới nhất ở mục Bước 14 cuối tệp. Số dòng test kế thừa Bước 4, không mở lại test trong Bước 14. Word chỉ cập nhật khi được yêu cầu rõ ràng, hiện giữ bản Bước 6.
 
 Bằng chứng máy đọc được: [source_audit.json](../outputs/runs/source_audit_20261019_162917_245445/source_audit.json). Tệp ghi thời điểm, phiên bản mã, tình trạng thay đổi chưa commit, cách đọc, từng kiểm tra và mã băm. Dùng Python standard library để đọc/kiểm tra trực tiếp, không thêm pipeline hoặc thư viện mới. Không có thao tác ngẫu nhiên nên seed không áp dụng.
 
@@ -482,3 +482,94 @@ Kiểm tra độc lập [nhị phân](../outputs/runs/pure_svd_k32_binary_valida
 Mỗi biểu diễn mới nạp lại không fit/phân rã và khớp đủ 1.877 danh sách. Mỗi run `_recheck` trùng hash **9 tệp** kết quả/model/mapping/transform. [Lặp đối chứng proxy bằng mã mới](../outputs/runs/pure_svd_k32_proxy_control_validation_step13_20261026/metrics.json) cũng khớp đúng 9 tệp đã ghi ở Bước 12, gồm state/model; artifact proxy cũ vẫn nạp được nhờ giá trị mặc định. Bản chụp mã/config/runtime/Git SHA/trạng thái/diff, experiment.json, mã kiểm tra/guard và hash bảo toàn được giữ trong audit cục bộ. Đối chiếu 113 tệp xác nhận đầu ra các bước trước và 11 Word giữ nguyên. Chưa tổng hợp/chốt validation Bước 14, tuning, học thẻ/M1/M2 hoặc đánh giá test. Word vẫn Bước 6; Git chỉ nhận mã, cấu hình và các tài liệu làm việc hiện có.
 
 [Tổng hợp máy đọc được của phép so Bước 13](../outputs/runs/pure_svd_representations_validation_20261026/metrics.json), [bảng đủ ba K](../outputs/runs/pure_svd_representations_validation_20261026/metrics.csv) và [NDCG@10 từng user theo cặp](../outputs/runs/pure_svd_representations_validation_20261026/paired_ndcg_at_10.csv) giữ liên kết/hash tới từng run, cấu hình và bằng chứng kiểm chứng. **67 tests đạt; ruff check, ruff format --check và mypy toàn mã nguồn đạt**. Kiểm thử mới so phân rã SVD đặc trên toy cho binary/log (log không nguyên và có thể lớn hơn 5), save/load, từ chối count không hữu hạn, CLI ba biểu diễn/khóa rank, sai transform dù hash được cập nhật, checksum và chống ghi đè. Không thêm thư viện hoặc tài liệu tiến độ mới.
+
+## Bước 14 tổng hợp validation ngày 26/10/2026
+
+Run tổng hợp: [validation_summary_20261026](../outputs/runs/validation_summary_20261026/metrics.json), [cấu hình cố định](../configs/validation_summary.yaml), [CLI](../scripts/summarize_validation.py). Bằng chứng gồm [đủ metric K=5/10/20](../outputs/runs/validation_summary_20261026/metrics.csv), [seed](../outputs/runs/validation_summary_20261026/seed_summary.csv), [nhóm lịch sử](../outputs/runs/validation_summary_20261026/history_groups.csv), [chi phí](../outputs/runs/validation_summary_20261026/resources.csv) và [kiểm toán độc lập](../outputs/runs/validation_summary_20261026/verification.json). Tổng hợp 14 run: tám cấu hình seed 42 thuộc sáu họ baseline, cộng sáu fit xác nhận seed mới. Giữ tất cả kết quả, gồm các mô hình chưa vượt Popularity; không biến lượt chạy đầu thành kết quả tuning tối ưu.
+
+Câu hỏi: thứ tự chất lượng của các cấu hình hiện có ổn định thế nào khi đổi model seed, khác nhau ra sao theo độ dài lịch sử train và phải đánh đổi bao nhiêu về coverage/diversity/chi phí? Căn cứ là protocol đã kiểm chứng ở Bước 6 và phương pháp PureSVD của Cremonesi, Koren, Turrin (2010), [DOI](https://doi.org/10.1145/1864708.1864721)/[PDF](TLTK/Cremonesi%20et%20al.%202010.pdf); không thêm thuật toán trong Bước 14. Ngân sách sáu fit, quy tắc tổng hợp seed, nhóm train và ứng viên nhị phân được ghi trước vào experiment.json của audit cục bộ. Chọn seed 43/44, sample std, nhóm theo mode và ngưỡng lựa chọn là quy ước của nhóm, không gán cho bài gốc.
+
+Chỉ đổi model seed cho Random, SVD có độ lệch và PureSVD nhị phân đã dẫn đầu NDCG@10 ở seed 42. [Runner](../scripts/run_baseline.py) nhận --model-seed với tập {42,43,44}, vẫn kiểm cấu hình gốc và nguồn split seed 42; không nới L/shrinkage/factors/learning rate/regularization hoặc đổi biểu diễn. Config gốc trong snapshot cộng override CLI tái dựng được cấu hình thực ghi trong metrics/model state. Seed 43/44 được ghi Bước 14, không giả là split mới hoặc thay kết quả Bước 7–13. Popularity/UserCF/ItemCF xác định ở cấu hình hiện tại, không tạo ba seed giả lập. Proxy/log PureSVD chỉ giữ kết quả seed 42 làm đối chứng biểu diễn, chưa xác nhận nhiều seed cho hai biến thể này.
+
+Nguồn split Bước 4 và biểu diễn Bước 5 được kiểm hash và đối chiếu chính xác năm cột gốc của train/validation. Mọi run dùng cùng catalog 15.398 artist, 1.877 danh sách, cohort 1.865 user và 8.142 đích hợp lệ; loại và báo 12 user không còn đích trong catalog/1.121 đích ngoài catalog. CLI kiểm mọi hash đầu vào/đầu ra/mã snapshot và verification của run, equality config ngoài seed, cohort/candidate của từng user và evaluation_config. Không fit/refit trong script tổng hợp, không đọc test.parquet kể cả băm; không thay catalog khi phân tích nhóm.
+
+### Chất lượng ở seed 42
+
+| Mô hình/cấu hình | Precision@10 | Recall@10 | NDCG@10 | Coverage@10 | ARP@10 | ILD@10 |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| Random | 0.0003217158 | 0.0006970509 | 0.0003721497 | 0.7060007793 | 4.5472922252 | 0.9984051271 |
+| Popularity | 0.0339410188 | 0.0731903485 | 0.0623622664 | 0.0018184180 | 351.8289544236 | 0.6647826606 |
+| UserCF L40/s0 | 0.0057372654 | 0.0129490617 | 0.0080787555 | 0.1030653332 | 31.3817694370 | 0.9669347051 |
+| ItemCF L40/s0 | 0.0040214477 | 0.0091331546 | 0.0074299548 | 0.2250292246 | 34.4053083110 | 0.8328794020 |
+| SVD bias k32 | 0.0301876676 | 0.0657283289 | 0.0564899628 | 0.0053253669 | 317.0871849866 | 0.7211056802 |
+| PureSVD proxy k32 | 0.0780160858 | 0.1694459339 | 0.1516922327 | 0.0235095467 | 143.9861662198 | 0.8189157312 |
+| PureSVD log k32 | 0.0795174263 | 0.1732618409 | 0.1545766607 | 0.0242888687 | 143.4903485255 | 0.8184487864 |
+| PureSVD binary k32 | 0.0809651475 | 0.1758891868 | **0.1564272628** | 0.0238992077 | 145.3087935657 | 0.8172029176 |
+
+Coverage trong bảng là tỷ lệ, không phải phần trăm. Gini/Novelty và đầy đủ K=5/10/20 nằm trong CSV nguồn. PureSVD nhị phân dẫn đầu ranking trong tập cấu hình này; coverage Top-10 vẫn chỉ **368 artist/15.398 = 2,3899%**, Gini 0.9895695447, chưa giải quyết tập trung phơi bày. Log phủ 374 artist nhưng ranking thấp hơn nhị phân; UserCF/ItemCF có coverage hoặc ILD cao hơn nhưng ranking thấp hơn. Random phủ rộng/ILD gần 1 nhưng ít trúng đích, minh họa rằng đa dạng/độ phủ cao riêng lẻ không đủ. Các vị trí fallback của CF vẫn nằm trong chỉ số, như đã báo Bước 9–10. Không dùng một metric để tuyên bố thắng mọi mục tiêu.
+
+### Xác nhận model seed, giữ nguyên split seed 42
+
+| Mô hình | Seed 42 | Seed 43 | Seed 44 | Mean NDCG@10 | Sample std (ddof=1) |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| Random | 0.0003721497 | 0.0005691237 | 0.0002962196 | 0.0004124977 | 0.0001408550 |
+| SVD bias k32 | 0.0564899628 | 0.0578529182 | 0.0585348766 | 0.0576259192 | 0.0010411842 |
+| PureSVD binary k32 | 0.1564272628 | 0.1564272628 | 0.1564272628 | **0.1564272628** | **0** |
+
+Lấy trung bình đều ba seed, không chọn run có điểm cao nhất. Mean/std của Precision/Recall/NDCG/Coverage/Gini/ARP/Novelty/ILD ở cả ba K nằm trong seed_summary.csv. Popularity 0.0623622664 vẫn vượt SVD ở từng seed; SVD cả ba đều chọn epoch 1 sau sáu epoch/patience 5 theo quy tắc cũ. Không suy ra mọi MF thua Popularity khi cấu hình chưa tuning và mục tiêu học khác nhau.
+
+PureSVD binary có đủ **1.877 danh sách Top-20 giống nhau** qua ba seed, metric giống nhau ở cả ba K. Seed ở đây chỉ đổi vector đầu ARPACK cho cùng bài toán phân rã; kết quả này là kiểm tra ổn định số học theo khởi tạo, không phải ba mẫu dữ liệu hay ba phép kiểm định độc lập. Random đổi hoán vị, SVD đổi khởi tạo và thứ tự SGD; cả hai có dao động thực. Chưa bootstrap/kiểm định test hoặc đổi split, không coi ba lần của cùng user là ba user độc lập.
+
+### Nhóm lịch sử train
+
+Train có min=3, max=41, mode=40; **1.831/1.877 user có đúng 40 artist** và q25=q50=q75=40. Phân nhóm theo quartile sẽ suy biến, nên trước khi nhìn chất lượng theo nhóm đã chọn quy tắc <mode/=mode/>mode (hòa mode chọn nhỏ nhất), chỉ học ngưỡng từ train. Không lọc lại train theo nhóm để gọi evaluator: việc đó sẽ đổi catalog/listener count/ILD. Tái sử dụng điểm từng user đã tính trên toàn catalog và trung bình trong nhóm; user đủ đích nhưng trả rỗng vẫn nhận 0. Nhóm không có user đủ điều kiện giữ số lượng và metric null, đã có toy test cho trường hợp này.
+
+| Nhóm | User tổng | User hợp lệ | Không còn đích | Đích tổng | Đích hợp lệ | Đích ngoài catalog |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| <40 | 44 | 41 | 3 | 102 | 86 | 16 |
+| =40 | 1.831 | 1.822 | 9 | 9.153 | 8.048 | 1.105 |
+| >40 (thực tế 41) | 2 | 2 | 0 | 8 | 8 | 0 |
+
+NDCG@10 ở seed 42 (CSV cũng giữ từng seed bổ sung):
+
+| Mô hình | <40: 41 user | =40: 1.822 user | >40: 2 user |
+| --- | ---: | ---: | ---: |
+| Random | 0 | 0.0003809326 | 0 |
+| Popularity | 0.0464602951 | 0.0627122385 | 0.0695280898 |
+| UserCF | 0.0100945155 | 0.0080422634 | 0 |
+| ItemCF | 0 | 0.0076053050 | 0 |
+| SVD bias | 0.0575692571 | 0.0565276844 | 0 |
+| PureSVD proxy | 0.1280299322 | 0.1522226142 | 0.1535918579 |
+| PureSVD log | 0.1300098848 | 0.1551399512 | 0.1450378989 |
+| PureSVD binary | 0.1430819606 | 0.1567147254 | 0.1681275363 |
+
+Nhóm =40 chi phối trung bình toàn bộ. Nhóm <40 có 41 user/86 đích, >40 chỉ hai user/tám đích; chỉ mô tả số đo, không kết luận quy luật nhân quả “lịch sử dài hơn thì tốt hơn”, công bằng giữa nhóm hoặc hiệu quả cold-start. Đây đều là user đã có hồ sơ train và tham số khi mô hình cần; M2 phải kiểm tra bằng protocol riêng ở N=0,1,3,5.
+
+### Chi phí và giới hạn tài nguyên
+
+Số đo nguồn seed 42, lấy nguyên từ từng run để tránh bịa một benchmark mới:
+
+| Mô hình | Fit (giây) | Recommend trung bình (ms/user) | Model trên đĩa (byte) |
+| --- | ---: | ---: | ---: |
+| Random | 0.018829 | 5.131377 | 229.449 |
+| Popularity | 0.063455 | 0.008070 | 725.215 |
+| UserCF | 0.299661 | 2.596194 | 1.083.031 |
+| ItemCF | 0.622397 | 3.057621 | 2.303.559 |
+| SVD bias | 8.732634 | 4.022749 | 4.766.544 |
+| PureSVD proxy | 0.128760 | 3.133768 | 3.203.557 |
+| PureSVD log | 0.129892 | 3.539642 | 4.656.213 |
+| PureSVD binary | 0.128636 | 3.389343 | 2.895.881 |
+
+Fit SVD ở bảng tách phần theo dõi validation 45,015899 giây; tổng có theo dõi là **53,748533 giây**. resources.csv giữ riêng tổng này, thời gian recommend tổng/p95/evaluator và chi phí các seed mới. Model byte là các tệp số trong model/ đối với CF/MF/PureSVD, còn Random/Popularity dùng model.json vì chưa có thư mục artifact số; không cộng CSV kết quả/audit/dataset. Kích thước đĩa nén/JSON không tương đương bộ nhớ đỉnh. Các lượt chạy ở thời điểm/tải máy khác nhau, không kiểm soát warm-up hoặc môi trường benchmark; không suy ra độ trễ API, throughput, SLA hay hơn kém từ chênh vài ms. Peak RAM và chi phí ALS/BPR/SLIM chưa đo.
+
+### Lựa chọn trong phạm vi hiện có và điểm dừng
+
+**Ứng viên nền M1 là PureSVD binary k32, seed tham chiếu 42**, vì dẫn đầu NDCG@10 seed 42 và giữ kết quả khi xác nhận 43/44, còn coverage/popularity/diversity cho thấy đánh đổi để nghiên cứu M1. Không chọn seed đẹp nhất hoặc hứa M1 sẽ cải thiện. Chưa khóa nền cuối: các cấu hình hiện tại chưa tuning, chưa kiểm định/test; đổi nền sau nhánh mở rộng sẽ phải đánh giá lại M1/ablation. Popularity vẫn là đối chứng cần giữ, ItemCF của M2 vẫn theo thiết kế riêng.
+
+Đánh giá điều kiện mở rộng tại ngày lập kế hoạch 26/10/2026: sáu họ baseline đã có validation/kiểm chứng hợp lệ, cùng protocol đã kiểm, test chưa mở và lịch còn trước mốc baseline 08/11/chọn mô hình 15/11. **Đủ điều kiện đề xuất lượt ALS riêng** theo thứ tự ALS → BPR-MF, SLIM dự phòng; chưa chứng minh đủ tài nguyên chạy nhánh đó. Bước 14 không cài thư viện, tạo cấu hình ALS/BPR/SLIM hoặc huấn luyện mở rộng. Lượt đầu riêng phải đo chi phí/bộ nhớ và giải thích rồi mới xin bước tinh chỉnh; nếu ảnh hưởng M1/M2 hoặc lịch thì hoãn theo kế hoạch. Nếu người dùng chọn mở rộng, tổng hợp lại validation trước khi chốt nền M1; nếu đi tiếp M1 thì cần duyệt thiết kế bước đó. Không mở test hoặc tự chọn thay người dùng một trong hai hướng.
+
+### Kiểm chứng và bảo toàn
+
+Sáu run seed mới đều có kiểm chứng độc lập toàn bộ 1.877 danh sách/score/reason và các chỉ số user/K. Random dựng lại hoán vị bằng Python và tính metric bằng NumPy/CSR; SVD tái hiện **445.650 cập nhật SGD mỗi seed** bằng số vô hướng, cả sáu epoch/loss/validation/checkpoint, sai khác tham số tối đa 1,11023e-16; PureSVD dùng eigh Gram user–user không gọi svds/model/evaluator production, sai khác score toàn catalog tối đa 1,24345e-14. Cùng guard chặn mở test và kiểm hash nguồn/đầu ra/mã. Nạp lại SVD/PureSVD không fit và khớp đủ danh sách trong runner; mã audit giữ trong run/audit cục bộ.
+
+Kiểm toán tổng hợp độc lập không nhập helper production, đối chiếu **14 run, 42 dòng metric, 126 dòng nhóm và 72 dòng metric theo seed**, mọi count/mean/sample std/chi phí; kiểm danh sách PureSVD qua ba seed. Chạy lại script tổng hợp vào run `_recheck` cho **bốn CSV trùng hash**, không fit thêm. Đối chiếu **155 tệp cũ** xác nhận các đầu ra trước và 11 Word giữ nguyên. **69 tests đạt trong 149,96 giây; ruff check, ruff format --check và mypy 25 tệp nguồn đạt**. Các test mới kiểm nhóm trống, user trả rỗng, mean/std, chống lệch cohort và override seed của cả ba CLI mà vẫn giữ split/hashes cũ. Chỉ Git mã/config/các tài liệu làm việc hiện có; dataset/model/run giữ cục bộ. Word vẫn Bước 6; dừng Bước 14, chưa M1/M2/test hoặc mở rộng.

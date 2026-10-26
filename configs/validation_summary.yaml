@@ -1,0 +1,39 @@
+step: 14
+representations_run: outputs/runs/representations_20261024
+split_run: outputs/runs/split_20261024
+model_seeds: [42, 43, 44]
+split_seed: 42
+history_groups: below_at_above_train_mode_smallest_tie
+selection_metric: ndcg_at_10_validation
+seed_aggregation: equal_weight_mean_sample_std_ddof_1_no_best_seed_selection
+budget: six_new_seed_confirmation_fits_no_hyperparameter_or_representation_search
+runs:
+  random:
+    42: outputs/runs/random_validation_20261025
+    43: outputs/runs/random_seed43_validation_step14_20261026
+    44: outputs/runs/random_seed44_validation_step14_20261026
+  popularity:
+    42: outputs/runs/popularity_validation_20261025
+  user_cf:
+    42: outputs/runs/user_cf_l40_s0_validation_20261025_checked
+  item_cf:
+    42: outputs/runs/item_cf_l40_s0_validation_20261026
+  svd:
+    42: outputs/runs/svd_k32_validation_20261026
+    43: outputs/runs/svd_seed43_validation_step14_20261026
+    44: outputs/runs/svd_seed44_validation_step14_20261026
+  pure_svd_proxy:
+    42: outputs/runs/pure_svd_k32_proxy_validation_20261026
+  pure_svd_log:
+    42: outputs/runs/pure_svd_k32_log_validation_step13_20261026
+  pure_svd_binary:
+    42: outputs/runs/pure_svd_k32_binary_validation_step13_20261026
+    43: outputs/runs/pure_svd_binary_seed43_validation_step14_20261026
+    44: outputs/runs/pure_svd_binary_seed44_validation_step14_20261026
+candidate_for_m1: pure_svd_binary
+candidate_status: provisional_within_current_untuned_configs_pending_extension_decision
+extension_gate:
+  baseline_deadline: '2026-11-08'
+  model_selection_deadline: '2026-11-15'
+  policy: assess_readiness_only_no_als_bpr_slim_implementation_in_step14
+  next_authorization: extension_first_run_or_m1_design_is_a_separate_step

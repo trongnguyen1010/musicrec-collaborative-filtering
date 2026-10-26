@@ -127,6 +127,16 @@ def test_validation_cli_reproducibility_checksums_no_test_read_and_no_overwrite(
     nested = subprocess.run(command, cwd=root, capture_output=True, text=True)
     assert nested.returncode != 0
     assert not Path(command[-1]).exists()
+    seed_command = command[:-2] + ["--model-seed", "43", "--output-dir", str(tmp_path / "seed43")]
+    seeded = subprocess.run(seed_command, cwd=root, capture_output=True, text=True)
+    assert seeded.returncode == 0, seeded.stderr
+    seed_metrics = json.loads((tmp_path / "seed43/metrics.json").read_text(encoding="utf-8"))
+    assert seed_metrics["step"] == 14 and seed_metrics["seed"] == 43
+    assert seed_metrics["input_sha256"] == hashes  # Split still comes from seed 42.
+    assert seed_metrics["config"]["seed"] == 43 and seed_metrics["test_file_read"] is False
+    seed_command[seed_command.index("--model-seed") + 1] = "99"
+    invalid_seed = subprocess.run(seed_command, cwd=root, capture_output=True, text=True)
+    assert invalid_seed.returncode != 0 and "invalid choice" in invalid_seed.stderr
     with (source / "validation.parquet").open("ab") as handle:
         handle.write(b"tampered")
     command[-1] = str(tmp_path / "tampered")

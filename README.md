@@ -25,12 +25,12 @@ Các lệnh này không thay thế việc kiểm tra nguồn, EDA và xác minh 
 - [Kế hoạch từng bước](docs/WEEKLY_IMPLEMENTATION_PLAN.md): vận dụng hướng dẫn của cô, lộ trình dữ liệu → EDA → mô hình → thực nghiệm → prototype.
 - [Quy tắc phát triển](DEVELOPMENT_RULES.md): phạm vi được phép, giải thích cuối bước và lưu phiên bản báo cáo.
 - Đề tài **33**: [báo cáo mới nhất sau Bước 6, ngày 25/10/2026](docs/reports/33_BaoCaoKhoaLuan_CaoTrongNguyen_LeKhacGiaKhang_25-10-2026.docx), kế thừa V14 và giữ mọi bản cũ. Tên báo cáo theo mẫu `33_BaoCaoKhoaLuan_CaoTrongNguyen_LeKhacGiaKhang_DD-MM-YYYY.docx`.
-  Theo yêu cầu mới nhất, chỉ cập nhật Word khi người dùng yêu cầu rõ ràng, không tự cập nhật sau mỗi bước hoặc khi chạy hết mô hình. Kết quả Bước 7–13 nằm trong run và tài liệu làm việc, chưa đưa vào Word.
+  Theo yêu cầu mới nhất, chỉ cập nhật Word khi người dùng yêu cầu rõ ràng, không tự cập nhật sau mỗi bước hoặc khi chạy hết mô hình. Kết quả Bước 7–14 nằm trong run và tài liệu làm việc, chưa đưa vào Word.
 - [Data card](docs/data-card.md): thông tin nguồn và các mục còn chờ xác minh.
 - [Ôn tập và câu hỏi bảo vệ](docs/SEMINAR_CHUONG_1_2.md).
 - [Phối hợp và theo dõi](docs/PROGRESS_TRACKING_GUIDE.md), [cấu trúc dự kiến](PROJECT_STRUCTURE.md), [lịch sử thay đổi](CHANGELOG.md).
 
-Nguồn đối chiếu chính là [hướng dẫn của GVHD](docs/Hướng%20dẫn%20từng%20bước%20hoàn%20thành%20khóa%20luận.docx), kế hoạch và bằng chứng run hiện hành. Đã hoàn thành Bước 1–13: dữ liệu, evaluator, lượt chạy đầu của đủ sáu baseline và so sánh PureSVD nhị phân/log/proxy tại 32 chiều, seed 42. NDCG@10 tương ứng 0.1564272628/0.1545766607/0.1516922327 trên cùng validation; chưa chốt mô hình cuối, xem [data card](docs/data-card.md). Dừng giải thích Bước 13; chưa tuning số chiều/CF/MF, tổng hợp Bước 14, học thẻ hoặc đánh giá test. Dữ liệu gốc, các run trước và mọi bản Word đã bàn giao giữ nguyên.
+Nguồn đối chiếu chính là [hướng dẫn của GVHD](docs/Hướng%20dẫn%20từng%20bước%20hoàn%20thành%20khóa%20luận.docx), kế hoạch và bằng chứng run hiện hành. Đã hoàn thành Bước 1–14: dữ liệu, evaluator, sáu baseline, so ba biểu diễn PureSVD và tổng hợp validation của các cấu hình hiện có. PureSVD nhị phân 32 chiều là ứng viên nền M1 trong phạm vi chưa tuning: NDCG@10 **0.1564272628 ± 0** qua model seed 42/43/44 trên cùng split seed 42. Chưa khóa nền M1 hoặc mô hình cuối; xem [data card](docs/data-card.md). Dừng Bước 14, chưa tuning, chạy ALS/BPR/SLIM, học thẻ/M1/M2 hoặc đánh giá test. Dữ liệu gốc, run cũ và Word giữ nguyên.
 
 ## Chạy lại EDA dữ liệu gốc
 
@@ -174,5 +174,30 @@ Runner kiểm hash và đối chiếu cột nhị phân/log đã chuẩn bị v�
 Nhị phân tăng NDCG@10 **3,1215% tương đối** so proxy tại cấu hình này; log tăng 1,9015%. Đánh đổi: nhị phân có ARP cao hơn và ILD thấp hơn hai biểu diễn còn lại; log phủ nhiều artist hơn. Không kết luận một biểu diễn luôn tối ưu hoặc khóa nền M1 từ một split/seed/rank. Cùng 1.877 danh sách và cohort 1.865 user/8.142 đích hợp lệ.
 
 Kiểm tra độc lập bằng eigh user–user khớp 32 singular values, không gian chiếu và toàn bộ danh sách/score/chỉ số của hai biểu diễn mới. Mỗi biểu diễn chạy lại **9 tệp trùng hash**; đối chứng proxy chạy lại cũng khớp cả 9 tệp Bước 12. Nạp model không fit và khớp 1.877 danh sách. **67 tests đạt; lint/format/mypy toàn mã nguồn đạt**. Chi tiết run, chi phí, giới hạn và kiểm chứng ở [data card](docs/data-card.md). Word giữ Bước 6; dừng Bước 13, chưa chuyển Bước 14 hoặc tuning.
+
+## Chạy lại riêng Bước 14 tổng hợp validation
+
+[Cấu hình tổng hợp](configs/validation_summary.yaml) khóa 14 run: tám cấu hình seed 42 thuộc sáu họ baseline, cộng seed 43/44 cho Random, SVD có độ lệch và PureSVD nhị phân. Chỉ đổi model seed, giữ split seed 42 và mọi tham số khác; CLI của ba mô hình này nhận `--model-seed 42|43|44`. Không chọn seed đẹp nhất hoặc tìm thêm số chiều/biểu diễn. Sau khi các run có kiểm chứng độc lập:
+
+```powershell
+.venv/Scripts/python.exe -B scripts/summarize_validation.py --config configs/validation_summary.yaml --output-dir outputs/runs/validation_summary_new
+```
+
+Script kiểm hash đầu vào/đầu ra/snapshot, cấu hình giữa các seed và cùng cohort/catalog/protocol; từ chối ghi đè hoặc mở test.parquet, kể cả băm. Xuất metrics.csv, seed_summary.csv (mean và sample std, ddof=1), history_groups.csv, resources.csv và metrics.json có nguồn/hash/mã. Nhóm lịch sử dùng mode train=40: <40, =40, >40, giữ catalog/độ đo gốc; không chạy lại evaluator trên train bị lọc theo nhóm.
+
+| Mô hình | NDCG@10 seed 42 | Coverage@10 | ILD@10 |
+| --- | ---: | ---: | ---: |
+| Random | 0.000372 | 70.6001% | 0.998405 |
+| Popularity | 0.062362 | 0.1818% | 0.664783 |
+| UserCF | 0.008079 | 10.3065% | 0.966935 |
+| ItemCF | 0.007430 | 22.5029% | 0.832879 |
+| SVD có độ lệch | 0.056490 | 0.5325% | 0.721106 |
+| PureSVD proxy | 0.151692 | 2.3510% | 0.818916 |
+| PureSVD log | 0.154577 | 2.4289% | 0.818449 |
+| PureSVD nhị phân | **0.156427** | 2.3899% | 0.817203 |
+
+NDCG@10 qua seed 42/43/44: Random **0.0004124977 ± 0.0001408550**, SVD **0.0576259192 ± 0.0010411842**, PureSVD nhị phân **0.1564272628 ± 0**. Popularity vẫn cao hơn SVD ở cả ba seed; không suy ra MF nói chung kém Popularity khi chưa tuning. PureSVD chỉ kiểm độ nhạy vector bắt đầu ARPACK trên cùng split, không phải ba split độc lập.
+
+Nhóm <40/=40/>40 có 44/1.831/2 user tổng cộng, trong đó 41/1.822/2 user và 86/8.048/8 đích hợp lệ. Không suy rộng từ nhóm chỉ hai user hoặc dùng warm-start này chứng minh M2/cold-start. Chi phí giữ số đo từng run và byte artifact, chưa phải benchmark kiểm soát hoặc peak RAM. Bước 14 đủ điều kiện đề xuất lượt ALS riêng trước mốc 08/11–15/11; chưa triển khai mở rộng hay khóa nền M1. **69 tests/lint/format/mypy đạt**. Chi tiết và giới hạn trong [data card](docs/data-card.md); dừng trước nhánh mở rộng hoặc duyệt thiết kế M1.
 
 `dvc.yaml`, `validate_data.py` và `scripts/train.py` còn là khung cũ, chưa nối các CLI hiện hành; `scripts/evaluate.py` chỉ kiểm chứng toy, không thay stage evaluate trong DVC. Không dùng `dvc repro` hoặc `scripts/train.py` để chạy toàn bộ nghiên cứu.
