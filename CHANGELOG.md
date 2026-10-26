@@ -7,6 +7,20 @@ Mọi thay đổi đáng chú ý của MusicRec được ghi trong file này the
 
 ### Changed
 
+- 2026-10-26: Hoàn thành Bước 16 M2 trên protocol user riêng 1.501/187/189
+  học/tinh chỉnh/để dành, seed 42; chưa dùng nhóm để dành hoặc mở test.
+  Fit ItemCF L40/shrinkage0, ngưỡng proxy, Popularity và tag TF–IDF từ
+  train của nhóm học; lọc thẻ đúng cặp train, min artist df=2. Thêm
+  score_profile cho ItemCF, M2/set_profile/save-load, evaluator cold-user
+  dùng lại primitive metric, config/CLI/tests. Chín cặp chọn α=0.75/ngưỡng10
+  bằng mean NDCG@10 ở N=1/3/5 = 0.0454919147, Pop 0.0288284384;
+  N=0 khôi phục Pop. 48 phép đánh giá, 187 query/186 hợp lệ trên 13.210
+  artist, giữ mọi cấu hình và thiếu thẻ/hỗ trợ; không so với warm-start.
+  91 tests/lint/format/mypy đạt; audit 8.976 danh sách, 107.136 metric user
+  và 13.210 hàng neighbor khớp; 887 tệp cũ/11 Word giữ nguyên.
+  Đối chiếu Lin et al./Zhou et al. 2024, phân biệt protocol và thiết kế nhóm.
+  Dừng trước khóa cấu hình/đánh giá cuối Bước 17; chưa prototype hoặc sửa Word.
+
 - 2026-10-26: Hoàn thành Bước 15 M1 trên ba checkpoint ALS cố định: C=100,
   greedy relevance/cosine nhị phân/popularity train; score trả về là ALS gốc,
   thứ tự do greedy quyết định. Chốt công thức/normalization/gate trước chạy;

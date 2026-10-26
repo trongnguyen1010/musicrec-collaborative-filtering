@@ -132,6 +132,43 @@ class ItemCFRecommender(Recommender):
             raise ValueError("Artist is outside the train catalog")
         return float(scores[self._item_index[item_id]])
 
+    def score_profile(
+        self, interactions: Iterable[Interaction]
+    ) -> tuple[NDArray[np.float64], NDArray[np.bool_]]:
+        """Score a supplied profile against frozen neighbors without learning a user row.
+
+        Return support separately: a fallback mean is not collaborative evidence.
+        Unknown profile artists are ignored for CF, not added to the learned catalog.
+        """
+        if not self._users:
+            raise RuntimeError("Fit ItemCF before profile inference")
+        rows = list(interactions)
+        if (
+            any(r.proxy_score is None for r in rows)
+            or len({r.item_id for r in rows}) != len(rows)
+            or len({r.user_id for r in rows}) > 1
+        ):
+            raise ValueError("Expected one user's unique profile artists with proxy scores")
+        known = [r for r in rows if r.item_id in self._item_index]
+        indices = [self._item_index[r.item_id] for r in known]
+        profile = csr_matrix(
+            (
+                np.array([r.proxy_score for r in known], dtype=np.float64),
+                ([0] * len(known), indices),
+            ),
+            shape=(1, len(self._items)),
+            dtype=np.float64,
+        )
+        binary = profile.copy()
+        binary.data = np.ones_like(binary.data)
+        numerator = (profile @ self._incoming).toarray().ravel()
+        denominator = (binary @ self._incoming).toarray().ravel()
+        supported = denominator > 0
+        fallback = float(profile.data.mean()) if known else self._global_mean
+        scores = np.full(len(self._items), fallback)
+        scores[supported] = numerator[supported] / denominator[supported]
+        return scores, supported
+
     def recommend(self, user_id: str, k: int, seen_item_ids: set[str]) -> list[Recommendation]:
         """Rank unseen train items, using rounded sort keys then numeric mapping order."""
         if type(k) is not int or k <= 0:

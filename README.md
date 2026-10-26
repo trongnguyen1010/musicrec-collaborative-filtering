@@ -4,7 +4,7 @@ Khóa luận nghiên cứu **khuyến nghị Top-K nghệ sĩ** từ lịch sử
 
 Khảo sát ngày 24/10/2026 xác định **implicit ALS và BPR-MF** là hai ứng viên mở rộng, **SLIM** dự phòng. ALS đã được xác nhận qua ba seed và dùng làm nền Bước 15 M1; BPR/SLIM tiếp tục hoãn. Xem [căn cứ bài báo](docs/TONG_QUAN_TAI_LIEU_THAM_KHAO.md#khao-sat-mo-rong-20261024) và [thiết kế có giới hạn](docs/WEEKLY_IMPLEMENTATION_PLAN.md#thực-nghiệm-bổ-sung-có-giới-hạn). Sáu baseline và Word giữ nguyên.
 
-Repository hiện là bộ khung để triển khai theo từng bước, chưa phải hệ thống thực nghiệm đã hoàn thiện. Không coi cấu hình, bảng minh họa hoặc đầu ra của nhánh thử nghiệm khác là kết quả khóa luận đã được xác nhận.
+Repository đang triển khai theo từng bước: đã có pipeline dữ liệu, baseline và validation M1/M2; chưa hoàn thành đánh giá test cuối hoặc prototype. Không coi cấu hình, bảng minh họa hoặc đầu ra của nhánh thử nghiệm khác là kết quả khóa luận đã được xác nhận.
 
 **Hạn demo: cuối tháng 11/2026.** Kế hoạch đặt mốc chọn mô hình 15/11, demo chạy đủ luồng 22/11, sẵn sàng nội bộ 27/11 và dự phòng 28–30/11. Ngày 30/11 là mốc lập kế hoạch khi chưa có ngày/giờ nộp chính xác; xem lịch và phương án xử lý trễ trong [kế hoạch hiện hành](docs/WEEKLY_IMPLEMENTATION_PLAN.md).
 
@@ -25,12 +25,12 @@ Các lệnh này không thay thế việc kiểm tra nguồn, EDA và xác minh 
 - [Kế hoạch từng bước](docs/WEEKLY_IMPLEMENTATION_PLAN.md): vận dụng hướng dẫn của cô, lộ trình dữ liệu → EDA → mô hình → thực nghiệm → prototype.
 - [Quy tắc phát triển](DEVELOPMENT_RULES.md): phạm vi được phép, giải thích cuối bước và lưu phiên bản báo cáo.
 - Đề tài **33**: [báo cáo mới nhất sau Bước 6, ngày 25/10/2026](docs/reports/33_BaoCaoKhoaLuan_CaoTrongNguyen_LeKhacGiaKhang_25-10-2026.docx), kế thừa V14 và giữ mọi bản cũ. Tên báo cáo theo mẫu `33_BaoCaoKhoaLuan_CaoTrongNguyen_LeKhacGiaKhang_DD-MM-YYYY.docx`.
-  Theo yêu cầu mới nhất, chỉ cập nhật Word khi người dùng yêu cầu rõ ràng, không tự cập nhật sau mỗi bước hoặc khi chạy hết mô hình. Kết quả Bước 7–15 nằm trong run và tài liệu làm việc, chưa đưa vào Word.
+  Theo yêu cầu mới nhất, chỉ cập nhật Word khi người dùng yêu cầu rõ ràng, không tự cập nhật sau mỗi bước hoặc khi chạy hết mô hình. Kết quả Bước 7–16 nằm trong run và tài liệu làm việc, chưa đưa vào Word.
 - [Data card](docs/data-card.md): thông tin nguồn và các mục còn chờ xác minh.
 - [Ôn tập và câu hỏi bảo vệ](docs/SEMINAR_CHUONG_1_2.md).
 - [Phối hợp và theo dõi](docs/PROGRESS_TRACKING_GUIDE.md), [cấu trúc dự kiến](PROJECT_STRUCTURE.md), [lịch sử thay đổi](CHANGELOG.md).
 
-Nguồn đối chiếu chính là [hướng dẫn của GVHD](docs/Hướng%20dẫn%20từng%20bước%20hoàn%20thành%20khóa%20luận.docx), kế hoạch và bằng chứng run hiện hành. Đã hoàn thành Bước 1–15 và xác nhận ALS qua ba seed. M1 đầy đủ chọn **λ=0.75, β=0.5, C=100** bằng validation seed 42, xác nhận cùng tham số ở seed 43/44. Mean NDCG@10 **0.1880698319 ± 0.0018438691**, giảm **4,3317%** so ALS, qua giới hạn 5% từng seed và mean; ARP giảm **24,7101%**, ILD tăng **0.0279024**, coverage tăng từ **4,9898% lên 6,5225%**. Đây là đánh đổi tại K=10; NDCG@5 giảm 6,2175%. Bước tiếp theo là thiết kế M2 (Bước 16) khi được cho phép; chưa khóa test hoặc chạy M2. Xem [data card](docs/data-card.md); dữ liệu, run cũ và 11 Word giữ nguyên.
+Nguồn đối chiếu chính là [hướng dẫn của GVHD](docs/Hướng%20dẫn%20từng%20bước%20hoàn%20thành%20khóa%20luận.docx), kế hoạch và bằng chứng run hiện hành. Đã hoàn thành **Bước 1–16 trên validation**. M1 chọn λ=0.75/β=0.5/C=100, giảm mean NDCG@10 4,3317% so ALS và qua gate ba seed; ARP giảm 24,7101%, ILD tăng 0.0279024. M2 chọn **α=0.75/ngưỡng=10**, mean NDCG@10 tại N=1/3/5 **0.0454919147**, so Popularity cùng protocol **0.0288284384**. M2 dùng user tách biệt và catalog học riêng nên không so trực tiếp với ALS/M1. Tiếp theo là **Bước 17: khóa cấu hình/protocol rồi đánh giá cuối**, khi được cho phép; chưa mở test hoặc đánh giá 189 user để dành. [Data card](docs/data-card.md) giữ bằng chứng; mọi run cũ và 11 Word giữ nguyên.
 
 **Mốc lượt ALS đầu:** đã chạy một cấu hình implicit ALS theo yêu cầu, 32 factors/reg=0.1/confidence_scale=1/seed 42. Checkpoint vòng 18 (dừng vòng 23) đạt NDCG@10 **0.1974107044**, cao hơn đối chứng PureSVD nhị phân 26,1997% tương đối; Coverage@10 **4,9682%**, ARP giảm nhưng ILD giảm nhẹ. Tại mốc đó mới có một seed nên đề xuất ưu tiên xác nhận 43/44; phần xác nhận đã hoàn thành được ghi bên dưới. Căn cứ thực nghiệm ưu tiên nghiên cứu 2022–2026, đặc biệt nguồn 2024–2026 phù hợp protocol; [phân tích tài liệu gần đây](docs/TONG_QUAN_TAI_LIEU_THAM_KHAO.md#doi-chieu-als-20261026). Word và mọi run cũ giữ nguyên.
 
@@ -253,5 +253,26 @@ Chạy 12 tổ hợp seed 42; chỉ xét sáu bản đầy đủ để chọn AR
 | M1 đầy đủ (0.75, 0.5) | 0.1880698319 | 103.486238 | 0.840991 | 6.5225% |
 
 [Run M1](outputs/runs/m1_als_validation_20261026/metrics.json) lưu mọi cấu hình, pool Top-100, per-user metrics, nhóm lịch sử, lựa chọn trước xác nhận, context model, snapshot/hash và chi phí. [Đường đánh đổi seed 42](outputs/runs/m1_als_validation_20261026/tradeoff_seed42.png) giữ cả cấu hình vượt mức giảm 5%. Toàn lượt 155,84 s, peak cả tiến trình khoảng 427,43 MiB gồm giữ kết quả grid trong RAM; greedy thêm khoảng 0,46–0,48 ms/user trên pool đã có. Không phải benchmark API. Kiểm tra **83 tests/lint/format/mypy đạt**; không mở test hoặc sửa Word. Chi tiết kiểm toán và giới hạn ở [data card](docs/data-card.md). `configs/models/svd_rerank.yaml` là scaffold cũ, không dùng trong run này. Dừng sau Bước 15, chờ thiết kế M2.
+
+## Bước 16: M2 cho user mới với hồ sơ được cung cấp
+
+```powershell
+.venv/Scripts/python.exe -B scripts/run_m2.py --config configs/models/m2.yaml --output-dir outputs/runs/m2_cold_user_new
+```
+
+CLI chỉ đọc train/validation của split Bước 4 và thẻ của cleaning Bước 3, kiểm hash và yêu cầu thư mục mới. Chia 1.501/187/189 user học/tinh chỉnh/để dành bằng seed 42. ItemCF L=40/shrinkage=0, ngưỡng proxy, popularity, từ vựng/IDF chỉ học từ 59.371 tương tác train của nhóm học; thẻ phải thuộc đúng cặp train của nhóm đó. Không dùng checkpoint ItemCF warm-start vì chứa đóng góp user đánh giá.
+
+Mỗi user tinh chỉnh cung cấp hồ sơ train lồng nhau N=0/1/3/5; chỉ N mục này bị lọc. TF–IDF dùng số user gán mỗi thẻ, min artist df=2, smooth IDF và L2. Nội dung là cosine hồ sơ có trọng số log-count. M2 trộn `w*CF+(1-w)*fallback`, `w=min(1,N/ngưỡng)` trên artist có hỗ trợ CF; fallback là `alpha*content+(1-alpha)*popularity`. Thiếu CF → w=0 theo artist; thiếu nội dung → popularity. N=0 khớp thứ tự Popularity, score được chuẩn hóa. `set_profile` cung cấp lịch sử tạm trước predict/recommend; save/load không lưu hồ sơ query hoặc fit lại.
+
+| N | Popularity NDCG@10 | Nội dung + fallback | ItemCF hồ sơ + fallback | M2 cố định (0.75, 10) |
+| ---: | ---: | ---: | ---: | ---: |
+| 0 | 0.0276265202 | 0.0276265202 | 0.0276265202 | 0.0276265202 |
+| 1 | 0.0278007818 | 0.0302503835 | 0.0250110589 | 0.0396622327 |
+| 3 | 0.0289566955 | 0.0372681859 | 0.0218215421 | 0.0456927042 |
+| 5 | 0.0297278378 | 0.0484438230 | 0.0219386339 | 0.0511208072 |
+
+Chọn đúng chín cặp α/ngưỡng bằng mean NDCG@10 tại N=1/3/5, không chọn tham số riêng từng N; tổng 12 nhánh×4 mức N=48 phép đánh giá. Catalog 13.210 artist học, cohort 187 user/186 hợp lệ, 772 đích trong catalog. [Run M2](outputs/runs/m2_cold_user_validation_20261026/metrics.json) và [đường theo lịch sử](outputs/runs/m2_cold_user_validation_20261026/m2_history_curve.png) giữ mọi cấu hình, metric per-user, masking, chẩn đoán thiếu thành phần, timing/hash/snapshot và model.
+
+M2 tốt hơn các đối chứng về NDCG@10 trong cohort này nhưng chưa phải kết quả test: một split user/một mẫu hồ sơ, nhiều user hòa 0. Nội dung đơn lẻ có ILD/ARP thuận lợi hơn M2 tại N=3; không kết luận thắng mọi mục tiêu. Chỉ 4.717 artist có vector thẻ sau lọc nghiêm ngặt. **91 tests/lint/format/mypy đạt**, audit độc lập 8.976 danh sách/107.136 giá trị metric và toàn bộ 13.210 hàng láng giềng khớp. 887 tệp cũ, gồm 11 Word, giữ nguyên. Chưa dùng test hoặc 189 user để dành; dừng Bước 16.
 
 `dvc.yaml`, `validate_data.py` và `scripts/train.py` còn là khung cũ, chưa nối các CLI hiện hành; `scripts/evaluate.py` chỉ kiểm chứng toy, không thay stage evaluate trong DVC. Không dùng `dvc repro` hoặc `scripts/train.py` để chạy toàn bộ nghiên cứu.

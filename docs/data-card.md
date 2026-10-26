@@ -737,3 +737,86 @@ Kiểm toán độc lập [verification.json](../outputs/runs/m1_als_validation_
 **83 tests đạt trong 146,41 giây**, Ruff lint/format và mypy **28 tệp nguồn** đạt. Toy kiểm công thức, identity/prefix/mask/flat pool/tie, phản đối base không hợp lệ, không gọi base.fit, save/load/checksum, inclusive gate và trường hợp không full hợp lệ. Hash **358 tệp cũ**, gồm **11 Word**, giữ nguyên; test chưa mở. Mã reusable/config/CLI/tests và tài liệu làm việc được đưa Git; dataset/checkpoint/run lớn giữ local theo quy tắc repo.
 
 **Quyết định cuối Bước 15:** giữ M1 (0.75, 0.5, C=100) là cấu hình đánh đổi validation đạt tiêu chí @10, giữ ALS và các ablation làm đối chứng; chưa khóa mô hình cuối/test. Không cần đổi grid hoặc kế hoạch chính từ kết quả này. Dừng trước Bước 16 — thiết kế M2 vẫn trên ItemCF theo protocol riêng, chờ người dùng cho phép. Word vẫn bản Bước 6, không tự cập nhật.
+
+## Bước 16 — M2 trên user mới và hồ sơ N=0/1/3/5
+
+Người dùng cho thực hiện Bước 16 và đẩy GitHub. Đã giải thích thiết kế trước chạy, đối chiếu công thức (3.5)–(3.8) trong Word V1 **chỉ đọc**, đóng băng [YAML M2](../configs/models/m2.yaml) và `outputs/checks/m2_20261026/experiment.json`. Run mới [m2_cold_user_validation_20261026](../outputs/runs/m2_cold_user_validation_20261026/metrics.json) trên Git nền `29fe9476d348ab9250a64154e4b398d3f4cbd62a`, có snapshot mã chưa commit, config, runtime, lệnh và hashes. Các đoạn Bước 15 trở về trước giữ lịch sử quyết định; không ghi đè run/Word.
+
+### Phân tách và chống rò rỉ
+
+- Chỉ đọc `train.parquet`, `validation.parquet`, `id_mappings.json` của split Bước 4; `tag_assignments.parquet`/`tags.parquet` của cleaning Bước 3 và metadata/hashes. Không dùng proxy/transform Bước 5 vốn học từ toàn bộ warm-start train, không dùng checkpoint ItemCF cũ có query đóng góp. Hook cấm mở `test.parquet`, kể cả băm, cho runner và auditor.
+- Sắp user ID số, shuffle `random.Random(42)` một lần; floor80%/**1.501** user học, floor10%/**187** user tinh chỉnh, **189** user còn lại để dành. Không dùng 189 user để học thành phần, chọn tham số hoặc chấm metric trong Bước 16. Đọc bảng nguồn chứa mọi user không đồng nghĩa dùng các dòng của họ để fit; auditor kiểm trực tiếp mọi hàng model chỉ thuộc nhóm học.
+- Thành phần chung chỉ học từ **59.371 tương tác train** của 1.501 user. Catalog M2 gồm **13.210 artist** có tương tác trong nhóm đó. TF–IDF, ngưỡng phân vị, cosine ItemCF, popularity và thống kê ARP/Novelty/ILD đều dùng đúng phạm vi này. Không thêm artist chỉ có ở hồ sơ hoặc thẻ vào catalog.
+- Thẻ phải có `(userID, artistID)` trùng đúng cặp learning train. Từ 184.941 dòng gán thẻ, chỉ **46.761** dòng không rỗng được phép; **138.180** dòng bị loại/không hợp lệ cho phạm vi này. Normalize casefold/collapse whitespace rồi deduplicate còn **46.759** bộ user–artist–tag; không gộp thẻ chỉ vì gần nghĩa/hình thức. Không dùng user query/reserved hoặc các cặp validation/test để dựng đặc trưng.
+- Mỗi user tinh chỉnh có ít nhất năm tương tác train; lần này cả **187** user đều đạt. Sắp ID artist rồi shuffle bằng seed riêng `musicrec-m2-profile-v1:42:{user_id}`, lấy prefix 0/1/3/5 của **cùng thứ tự**. Chọn hồ sơ không dùng count hoặc đích; score chỉ nhận đúng các mục được cung cấp và count của chúng. Artist ngoài catalog vẫn giữ trong N/seen và báo cáo, không thêm vào học.
+- Đích là validation gốc của cùng cohort, giao learning catalog cho relevance. Tổng **926** đích, **154 ngoài catalog (16,6307%)**, **772 hợp lệ**; **186 user hợp lệ**, một user không có đích trong catalog. Cohort/đích giữ nguyên mọi N/nhánh; mỗi user vẫn nhận Top-20, danh sách của user không hợp lệ được lưu nhưng không vào mẫu số ranking.
+- Chỉ lọc **N artist đã cung cấp**, không lọc phần train bị giấu hoặc chèn chúng vào vector user. Full ranking trên learning catalog; mọi nhánh dùng `evaluate_cold_start` chung, tái dùng các primitive Precision/Recall/NDCG/Gini của Bước 6, còn tham chiếu thống kê tách khỏi query profile. Precision chia K, các metric dùng cùng cohort, Gini giữ cả zero exposure và ILD dùng cosine nhị phân **learning train**. Evaluator warm-start hiện có giữ nguyên để không làm thay đổi run M1 cũ.
+
+Đây là protocol **user cold-start có hồ sơ cung cấp**. Catalog/cohort và seen khác bảng warm-start 15.398 artist/1.865 user; không dùng số M2 so trực tiếp thắng thua với ALS hoặc M1. Không đánh giá item cold-start ngoài catalog hoặc thời gian thực. Tag assignment có ngày nhưng listening count không có timeline nên lọc đúng cặp không chứng minh an toàn temporal.
+
+### Thành phần, công thức và chín cấu hình đã chốt trước chạy
+
+ItemCF vẫn **L=40, shrinkage=0, cosine proxy toàn cột và top-L theo artist đích**. Fit lại từ learning train, gồm cả ngưỡng proxy: log2(1+count), phân vị 20/40/60/80% tuyến tính, điểm =1+số ngưỡng bị vượt nghiêm ngặt. `score_profile` dùng nguyên ma trận láng giềng để tính trung bình proxy có trọng số từ hồ sơ mới; không thêm row user hoặc fit lại. Support được trả riêng, mean fallback của ItemCF không bị coi là bằng chứng cộng tác. Chuẩn hóa score CF `(prediction−1)/4` về [0,1].
+
+TF là số user học khác nhau gán thẻ đã chuẩn hóa cho artist. Chỉ giữ thẻ có **df≥2 artist**; 5.695 thẻ chuẩn hóa trước lọc còn **2.316** trong vocabulary. Với D=13.210 artist học (gồm cả không có thẻ), IDF=`ln((1+D)/(1+df))+1`; vector TF×IDF chuẩn L2. Có **4.717 artist có vector**, **8.493 không có**. Hồ sơ nội dung là tổng vector artist được cung cấp với trọng số log2(1+count), chuẩn L2; cosine artist–profile nằm [0,1]. Không có vector profile hoặc artist → nội dung không khả dụng. Popularity là tổng log2(1+raw count) theo learning train, chia max toàn learning catalog; thứ tự giữ như đối chứng Popularity.
+
+Công thức V1 đã giải thích: `w=min(1,N/n_min)` trên candidate có CF support, không support → w=0; `fallback=alpha*content+(1-alpha)*pop` khi đủ vector nội dung, không đủ → pop; `s=w*CF+(1-w)*fallback`. Xử lý thiếu **theo artist**, không cộng số 0 giả như một điểm khả dụng. Ví dụ V1 N=2/ngưỡng5/alpha0.75 với CF/content/pop=0.8/0.6/0.2 cho fallback=0.5, w=0.4, s=**0.62**; toy xác nhận. N=0 mọi nhánh khôi phục thứ tự Pop, score chuẩn hóa, không phải cá nhân hóa. Artist ngoài hồ sơ mới dùng toàn catalog chưa cung cấp; score không phải xác suất thích hoặc rating thật.
+
+M2 giữ fit/predict/recommend và thêm `set_profile(user_id, rows)` cho hồ sơ tạm; save không lưu query profile, load không fit và cần cung cấp lại hồ sơ. Tie score làm tròn 12 chữ số rồi mapping numeric, ngoại lệ Pop/fallback Pop giữ nguyên thứ tự đối chứng. Ba đối chứng là **Popularity**, **nội dung + Pop khi thiếu**, **ItemCF hồ sơ + Pop khi thiếu**; không dùng zero-score cho các artist thiếu thành phần.
+
+Chạy đúng α={0.25,0.5,0.75}×ngưỡng={3,5,10}, dùng cùng các thành phần đã fit **một lần**, tại N=0/1/3/5. Tổng **48 phép đánh giá nhánh–N** = (9 M2+3 đối chứng)×4. Chọn cao nhất **mean NDCG@10 với trọng số bằng nhau qua N=1/3/5**; hòa chọn α/ngưỡng nhỏ hơn. N=0 không chọn tham số; không chọn khác cấu hình theo N hoặc thêm grid sau kết quả.
+
+| α | Ngưỡng | NDCG@10 N=1 | N=3 | N=5 | Mean ba N |
+| ---: | ---: | ---: | ---: | ---: | ---: |
+| 0.25 | 3 | 0.032637 | 0.021377 | 0.023180 | 0.025731 |
+| 0.25 | 5 | 0.032089 | 0.033622 | 0.023180 | 0.029630 |
+| 0.25 | 10 | 0.030831 | 0.032513 | 0.032923 | 0.032089 |
+| 0.50 | 3 | 0.044540 | 0.024010 | 0.024633 | 0.031061 |
+| 0.50 | 5 | 0.043976 | 0.042422 | 0.024633 | 0.037011 |
+| 0.50 | 10 | 0.044909 | 0.041536 | 0.045687 | 0.044044 |
+| 0.75 | 3 | 0.039170 | 0.029768 | 0.029749 | 0.032896 |
+| 0.75 | 5 | 0.039796 | 0.037630 | 0.029749 | 0.035725 |
+| **0.75** | **10** | **0.039662** | **0.045693** | **0.051121** | **0.045492** |
+
+Nguồn đủ độ chính xác: [grid_summary.csv](../outputs/runs/m2_cold_user_validation_20261026/grid_summary.csv), [selection.json](../outputs/runs/m2_cold_user_validation_20261026/selection.json) và [hình grid](../outputs/runs/m2_cold_user_validation_20261026/m2_grid.png). N=5/ngưỡng3 và 5 có các kết quả bằng nhau vì w bão hòa ở những artist có hỗ trợ; vẫn giữ cả hai cấu hình theo lưới. N=1 có cấu hình α0.5/ngưỡng10 tốt hơn winner ở riêng N này, nhưng **không chọn lại** vì tiêu chí là mean ba N.
+
+### Kết quả cùng cohort và giới hạn
+
+| N | Pop NDCG@10 | Nội dung + fallback | ItemCF hồ sơ + fallback | M2 cố định α0.75/ngưỡng10 |
+| ---: | ---: | ---: | ---: | ---: |
+| 0 | 0.0276265202 | 0.0276265202 | 0.0276265202 | 0.0276265202 |
+| 1 | 0.0278007818 | 0.0302503835 | 0.0250110589 | **0.0396622327** |
+| 3 | 0.0289566955 | 0.0372681859 | 0.0218215421 | **0.0456927042** |
+| 5 | 0.0297278378 | 0.0484438230 | 0.0219386339 | **0.0511208072** |
+| Mean N=1/3/5 | 0.0288284384 | 0.0386541308 | 0.0229237450 | **0.0454919147** |
+
+M2 mean tăng **57,8022% tương đối** so Pop, **17,6897%** so nội dung trong phép so validation này. Tại N=3, tăng NDCG tuyệt đối **0.0167360087**, tương đối **57,7967%**; không có nghĩa tăng 57,8 điểm phần trăm hoặc đã được test xác nhận. So theo user N=3 có **33 tăng/132 hòa/21 giảm** trên 186 user; phần lớn hòa do ít đích trúng, không suy ra mọi user tốt hơn. Chưa bootstrap/Wilcoxon/Holm của Bước 17, không gán ý nghĩa thống kê từ mean.
+
+| N=3, @10 | Pop | Nội dung + fallback | ItemCF hồ sơ + fallback | M2 |
+| --- | ---: | ---: | ---: | ---: |
+| ARP | 294.847849 | 61.180645 | 183.074731 | 113.717204 |
+| ILD | 0.644182 | 0.859014 | 0.757903 | 0.792286 |
+| Coverage | 0.0984% | 6.8584% | 3.8834% | 6.2226% |
+
+M2 N=3 giảm ARP **61,4319%** so Pop và tăng ILD/coverage, nhưng nội dung đơn lẻ có ARP/ILD/coverage thuận lợi hơn M2. Không kết luận full thắng mọi mục tiêu, hoặc gán toàn bộ cải thiện so nội dung cho riêng CF vì trọng số Pop cũng đổi. **ItemCF hồ sơ thấp hơn Pop ở cả N=1/3/5**, giữ đầy đủ kết quả thay vì đổi nền/miền tìm kiếm. Cấu hình chọn dùng w=0.1/0.3/0.5 khi có CF support; tăng N trong phép thử này không chứng minh luôn cải thiện hoặc đã kiểm N≥10.
+
+| N | User không có candidate CF support | User không có nội dung khả dụng | Artist profile trong catalog / tổng cung cấp | Artist profile có thẻ |
+| ---: | ---: | ---: | ---: | ---: |
+| 0 | 187 | 187 | 0/0 | 0 |
+| 1 | 27 | 55 | 160/187 | 132 |
+| 3 | 1 | 10 | 489/561 | 400 |
+| 5 | 0 | 4 | 798/935 | 660 |
+
+Số trong bảng là **187 user tổng**, không đổi sang 186 user metric. Thiếu thẻ được xử lý bằng Pop theo artist; unknown artist không bị âm thầm xóa khỏi N/seen. N=0 chỉ là baseline Pop. Chỉ một user split và một thứ tự hồ sơ/seed; N=1/3/5 là các điều kiện lồng nhau trên cùng user, **không phải ba seed hoặc ba mẫu độc lập**. Catalog học nhỏ hơn và query users chưa học nên độ khó khác warm-start. Chưa dùng 189 user để dành/test, đánh giá người dùng thực, âm thanh hoặc item cold-start; không khẳng định giải quyết hoàn toàn cold-start.
+
+### Chi phí, nguồn và kiểm chứng
+
+Fit chung **1.868875 giây**, model **2.354.023 byte**, OS peak cả tiến trình **233.623.552 byte (~222,80 MiB)** bao gồm fit thẻ/kết quả grid/reload. Tính đặc trưng hồ sơ trung bình N=0/1/3/5 là **1.0833/1.4796/1.6380/1.7636 ms/query**, p95 1.6490/2.3462/2.4904/2.6397 ms; riêng mix/sort winner 3.6517/5.3076/5.5970/5.6264 ms/query. Số đo local một lượt, không benchmark API/độ trễ cam kết. Reload shared artifact không fit, cung cấp lại profile và khớp ID/score đủ **748 danh sách** (187×4), tốn 5,18934 giây; chưa tạo release manifest/API.
+
+[Kiểm toán độc lập](../outputs/runs/m2_cold_user_validation_20261026/verification.json) không import code model/evaluator/protocol production: dựng lại user split/profile order bằng RNG đã khai báo, ngưỡng/proxy/pop từ raw learning train, lọc đúng cặp thẻ và TF/DF/IDF/L2; so toàn bộ rating matrix và **13.210 hàng top-40**. Suy luận CF bằng target×profile trực tiếp, hồ sơ nội dung bằng tổng dense nhỏ, mix/rank và metric độc lập cho **8.976 danh sách**, **107.136 giá trị per-user** và **144 dòng aggregate** tám metric/K. Sai khác TF–IDF tối đa 0, score **2,22e-16**, aggregate metric **8,88e-15**; kiểm selection theo mean/không N=0 và params artifact. Input/output/code/auditor/metadata có hash, không dùng reserved để kiểm winner.
+
+**91 tests đạt trong 136,77 giây**, Ruff lint/format và mypy **31 tệp nguồn** đạt. Toy kiểm công thức 0.62, availability per candidate, không học profile, thẻ query/held-out-pair không vào feature, local quantile, mask/unknown/zero profile, exact Pop, save/load/checksum và selection mean. Toàn bộ kiểm thử ItemCF cũ vẫn đạt, score/recommend warm-start không đổi. Kiểm hash **887 tệp cũ**, gồm **11 Word**, giữ nguyên; source/Word chỉ đọc, không tự cập nhật báo cáo. Mã/config/tests/CLI và tài liệu làm việc được commit; dataset/model/run lớn giữ local theo quy tắc repo.
+
+Căn cứ gần đây và giới hạn chuyển thể ở [đối chiếu M2](TONG_QUAN_TAI_LIEU_THAM_KHAO.md#doi-chieu-m2-20261026): Lin et al. KDD 2024 (tag train/assignment split khác user split), Zhou et al. arXiv v1/workshop 2024 (profile size, MovieLens/rating/pair tasks khác implicit ranking). Công thức V1, TF–IDF/min_df, normalization, split/profile/grid là thiết kế riêng của nhóm, không tuyên bố tái hiện nguyên paper hoặc lấy metric paper làm kết quả của nhóm.
+
+**Quyết định cuối Bước 16:** giữ α=0.75/ngưỡng10 là cấu hình M2 được chọn bằng validation, cùng ba đối chứng và protocol đã công bố; không nới grid hoặc đổi sang ALS. M1/ALS giữ kết quả riêng, chưa khóa release hoặc mở test. Bước tiếp theo là **Bước 17: trình bày và khóa cấu hình/protocol trước đánh giá cuối**, xác định rõ user để dành và các cặp kiểm định đã dự kiến; chỉ làm khi được phép. Word vẫn bản Bước 6 và mọi bản cũ nguyên vẹn.

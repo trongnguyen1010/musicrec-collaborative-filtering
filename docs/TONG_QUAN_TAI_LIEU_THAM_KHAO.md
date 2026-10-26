@@ -12,6 +12,21 @@ Bổ sung hiện hành: [Khảo sát mô hình mở rộng ngày 24/10/2026](#kh
 
 Ưu tiên theo yêu cầu mới ngày 26/10/2026: [đối chiếu nghiên cứu gần đây cho lượt ALS](#doi-chieu-als-20261026); dùng nguồn 2022–2026, ưu tiên 2024–2026 phù hợp bài toán khi đề xuất thay đổi kế hoạch. Các phần cũ phía dưới giữ vai trò lịch sử/tổng quan, không tự trở thành căn cứ thực nghiệm mới.
 
+<a id="doi-chieu-m2-20261026"></a>
+
+## Đối chiếu nghiên cứu gần đây cho Bước 16 M2
+
+Đã đọc nguồn gốc trước chạy M2, giữ ưu tiên 2022–2026 và phân biệt ngày/phiên bản. Công thức M2 đối chiếu bản V1: tăng trọng số CF theo số lịch sử, fallback kết hợp nội dung và popularity; không thay ItemCF bằng ALS vì ALS thắng warm-start.
+
+| Nghiên cứu được kiểm | Nội dung liên quan | Vận dụng và giới hạn |
+| --- | --- | --- |
+| [Lin et al., When Box Meets Graph Neural Network in Tag-aware Recommendation, KDD 2024](https://arxiv.org/html/2406.12020), arXiv v1 17/06/2024, DOI 10.1145/3637528.3671973 | Mục 5.1 dùng HetRec LastFm, tương tác gán thẻ, đồ thị chỉ từ training; chia assignments 80/10/10 và đánh giá full ranking. | Căn cứ giữ nguồn thẻ/học tách biệt và full ranking. M2 dùng **user split** 80/10/10 với count nghe và thẻ đúng cặp train; khác assignment split của bài. Min df=2 artist của nhóm khác ngưỡng ít nhất 5 lượt dùng thẻ của bài. Không tái lập BoxGNN hoặc so trực tiếp metric. |
+| [Zhou, Dai & Joachims, Language-Based User Profiles for Recommendation](https://arxiv.org/abs/2402.15623), arXiv v1 23/02/2024, bản tác giả ghi accepted LLM-IGS@WSDM2024 workshop | Khảo sát theo độ dài lịch sử, dùng profile text/LLM và NMF trên MovieLens với rating và lựa chọn cặp. | Căn cứ cần báo chất lượng theo lượng lịch sử và đối chứng; không phải bằng chứng cho TF–IDF/ItemCF trên HetRec. M2 dùng profile nghệ sĩ N=0/1/3/5, không text/LLM, RMSE hoặc sampled pair accuracy. Dùng ngày submission trên trang arXiv; không lấy các ngày placeholder trong template HTML làm năm xuất bản. |
+
+**Thiết kế riêng của nhóm, đóng băng trước kết quả:** chia numeric user IDs bằng Python random seed 42 (floor 80% học, floor 10% tinh chỉnh, còn lại để dành), chỉ học từ learning train; thẻ đúng cặp user–artist train; normalize casefold/whitespace, TF distinct learner/artist/tag, min artist df=2 và smooth IDF/L2. Hồ sơ train lồng nhau theo seed từng user, trọng số log2-count; CF proxy chuẩn hóa (s−1)/4, nội dung cosine, pop tổng log2-count/max. Công thức V1 `w*CF+(1-w)*fallback`, w=min(1,N/ngưỡng), fallback α*content+(1−α)*pop, xử lý thiếu theo artist. Chín cặp α/ngưỡng chọn bằng mean NDCG@10 N=1/3/5; N=0 là Pop. Không bài nào xác nhận trước grid hay mức cải thiện của thiết kế này.
+
+Run validation chọn α=0.75/ngưỡng10, mean NDCG@10 0.0454919147 so Pop 0.0288284384 cùng protocol. [Data card](data-card.md) ghi đủ cả ItemCF đơn lẻ thấp hơn Pop, 8.493 artist thiếu thẻ, đánh đổi với nội dung, một split/một mẫu hồ sơ và nhiều user hòa 0. Chưa dùng 189 user để dành, test hoặc kiểm định cuối; không tuyên bố giải quyết item cold-start, cải thiện trải nghiệm người dùng hoặc so với bảng warm-start. Burke 2002 tiếp tục là trích dẫn lịch sử về kết hợp, không làm căn cứ thực nghiệm chính cho quyết định mới. Word giữ nguyên.
+
 <a id="doi-chieu-m1-20261026"></a>
 
 ## Đối chiếu nghiên cứu gần đây cho Bước 15 M1

@@ -299,6 +299,8 @@ M2 kết hợp ItemCF từ hồ sơ, TF–IDF thẻ và Popularity tại N = 0,1
 
 Trước khi chạy mỗi mô-đun phải giải thích thiết kế, phép chuẩn hóa score, xử lý thiếu thẻ/điểm cộng tác và tiêu chí chọn. Công thức chi tiết đối chiếu báo cáo V1 và [kế hoạch hiện hành](WEEKLY_IMPLEMENTATION_PLAN.md); chưa có kết quả để khẳng định M1/M2 cải thiện.
 
+Cập nhật sau Bước 15–16: đã có validation thật cho cả M1/M2, xem [data card](data-card.md). M2 giữ công thức V1 với w=min(1,N/ngưỡng), fallback α*content+(1−α)*pop; thiếu CF đặt w=0 theo artist, thiếu vector nội dung dùng pop. Chỉ learning train học các thành phần/ngưỡng, không dùng checkpoint ItemCF warm-start. Chọn α=0.75/ngưỡng10 theo mean NDCG@10 N=1/3/5, không chọn tham số riêng mỗi N; N=0 vẫn Pop. Kết quả chưa xác nhận bằng test và không so trực tiếp với M1 vì khác user/catalog/protocol.
+
 ## 6. Các bài báo: đọc để bảo vệ một quyết định nghiên cứu
 
 ### 6.1. Những bài cần hiểu sâu
