@@ -2,7 +2,7 @@
 
 Khóa luận nghiên cứu **khuyến nghị Top-K nghệ sĩ** từ lịch sử nghe nhạc ngầm, với dữ liệu chính dự kiến là HetRec 2011 Last.fm 2K. So sánh Random, Popularity, UserCF, ItemCF, MF có độ lệch thường gọi SVD và PureSVD; sau đó kiểm chứng M1 về tái xếp hạng và M2 cho hồ sơ ít lịch sử.
 
-Khảo sát ngày 24/10/2026 xác định **implicit ALS và BPR-MF** là hai ứng viên mở rộng, **SLIM** dự phòng; chưa thay sáu baseline hoặc bổ sung vào báo cáo Word. Chỉ cân nhắc thử sau baseline, trước chốt nền M1/test nếu không ảnh hưởng mốc 15/11; thiếu thời gian thì để sau demo. Xem [căn cứ bài báo](docs/TONG_QUAN_TAI_LIEU_THAM_KHAO.md#khao-sat-mo-rong-20261024) và [thiết kế có giới hạn](docs/WEEKLY_IMPLEMENTATION_PLAN.md#thực-nghiệm-bổ-sung-có-giới-hạn). Chưa cài thư viện, tạo config hoặc huấn luyện cho nhánh này.
+Khảo sát ngày 24/10/2026 xác định **implicit ALS và BPR-MF** là hai ứng viên mở rộng, **SLIM** dự phòng. ALS đã được xác nhận qua ba seed và dùng làm nền Bước 15 M1; BPR/SLIM tiếp tục hoãn. Xem [căn cứ bài báo](docs/TONG_QUAN_TAI_LIEU_THAM_KHAO.md#khao-sat-mo-rong-20261024) và [thiết kế có giới hạn](docs/WEEKLY_IMPLEMENTATION_PLAN.md#thực-nghiệm-bổ-sung-có-giới-hạn). Sáu baseline và Word giữ nguyên.
 
 Repository hiện là bộ khung để triển khai theo từng bước, chưa phải hệ thống thực nghiệm đã hoàn thiện. Không coi cấu hình, bảng minh họa hoặc đầu ra của nhánh thử nghiệm khác là kết quả khóa luận đã được xác nhận.
 
@@ -25,12 +25,12 @@ Các lệnh này không thay thế việc kiểm tra nguồn, EDA và xác minh 
 - [Kế hoạch từng bước](docs/WEEKLY_IMPLEMENTATION_PLAN.md): vận dụng hướng dẫn của cô, lộ trình dữ liệu → EDA → mô hình → thực nghiệm → prototype.
 - [Quy tắc phát triển](DEVELOPMENT_RULES.md): phạm vi được phép, giải thích cuối bước và lưu phiên bản báo cáo.
 - Đề tài **33**: [báo cáo mới nhất sau Bước 6, ngày 25/10/2026](docs/reports/33_BaoCaoKhoaLuan_CaoTrongNguyen_LeKhacGiaKhang_25-10-2026.docx), kế thừa V14 và giữ mọi bản cũ. Tên báo cáo theo mẫu `33_BaoCaoKhoaLuan_CaoTrongNguyen_LeKhacGiaKhang_DD-MM-YYYY.docx`.
-  Theo yêu cầu mới nhất, chỉ cập nhật Word khi người dùng yêu cầu rõ ràng, không tự cập nhật sau mỗi bước hoặc khi chạy hết mô hình. Kết quả Bước 7–14 nằm trong run và tài liệu làm việc, chưa đưa vào Word.
+  Theo yêu cầu mới nhất, chỉ cập nhật Word khi người dùng yêu cầu rõ ràng, không tự cập nhật sau mỗi bước hoặc khi chạy hết mô hình. Kết quả Bước 7–15 nằm trong run và tài liệu làm việc, chưa đưa vào Word.
 - [Data card](docs/data-card.md): thông tin nguồn và các mục còn chờ xác minh.
 - [Ôn tập và câu hỏi bảo vệ](docs/SEMINAR_CHUONG_1_2.md).
 - [Phối hợp và theo dõi](docs/PROGRESS_TRACKING_GUIDE.md), [cấu trúc dự kiến](PROJECT_STRUCTURE.md), [lịch sử thay đổi](CHANGELOG.md).
 
-Nguồn đối chiếu chính là [hướng dẫn của GVHD](docs/Hướng%20dẫn%20từng%20bước%20hoàn%20thành%20khóa%20luận.docx), kế hoạch và bằng chứng run hiện hành. Đã hoàn thành Bước 1–14, lượt ALS đầu và xác nhận cùng cấu hình ở seed 43/44 theo điều chỉnh được cho phép. Qua seed 42/43/44 trên split seed 42, ALS đạt NDCG@10 **0.1965852193 ± 0.0014783714**, đối chứng PureSVD nhị phân **0.1564272628 ± 0**. ALS vượt đối chứng ở **3/3 seed**, qua tiêu chí giữ đã định trước và trở thành **ứng viên nền M1**, seed tham chiếu 42. Bước tiếp theo là duyệt thiết kế M1; chưa khóa mô hình cuối, tuning, BPR/SLIM, M1/M2 hoặc test. Xem [data card](docs/data-card.md); dữ liệu, run cũ và Word giữ nguyên.
+Nguồn đối chiếu chính là [hướng dẫn của GVHD](docs/Hướng%20dẫn%20từng%20bước%20hoàn%20thành%20khóa%20luận.docx), kế hoạch và bằng chứng run hiện hành. Đã hoàn thành Bước 1–15 và xác nhận ALS qua ba seed. M1 đầy đủ chọn **λ=0.75, β=0.5, C=100** bằng validation seed 42, xác nhận cùng tham số ở seed 43/44. Mean NDCG@10 **0.1880698319 ± 0.0018438691**, giảm **4,3317%** so ALS, qua giới hạn 5% từng seed và mean; ARP giảm **24,7101%**, ILD tăng **0.0279024**, coverage tăng từ **4,9898% lên 6,5225%**. Đây là đánh đổi tại K=10; NDCG@5 giảm 6,2175%. Bước tiếp theo là thiết kế M2 (Bước 16) khi được cho phép; chưa khóa test hoặc chạy M2. Xem [data card](docs/data-card.md); dữ liệu, run cũ và 11 Word giữ nguyên.
 
 **Mốc lượt ALS đầu:** đã chạy một cấu hình implicit ALS theo yêu cầu, 32 factors/reg=0.1/confidence_scale=1/seed 42. Checkpoint vòng 18 (dừng vòng 23) đạt NDCG@10 **0.1974107044**, cao hơn đối chứng PureSVD nhị phân 26,1997% tương đối; Coverage@10 **4,9682%**, ARP giảm nhưng ILD giảm nhẹ. Tại mốc đó mới có một seed nên đề xuất ưu tiên xác nhận 43/44; phần xác nhận đã hoàn thành được ghi bên dưới. Căn cứ thực nghiệm ưu tiên nghiên cứu 2022–2026, đặc biệt nguồn 2024–2026 phù hợp protocol; [phân tích tài liệu gần đây](docs/TONG_QUAN_TAI_LIEU_THAM_KHAO.md#doi-chieu-als-20261026). Word và mọi run cũ giữ nguyên.
 
@@ -233,6 +233,25 @@ Mean ± sample std ALS **0.1965852193 ± 0.0014783714**, tăng **25,6720% tươn
 .venv/Scripts/python.exe -B scripts/summarize_validation.py --config configs/validation_summary.yaml --output-dir outputs/runs/validation_summary_als_new
 ```
 
-Run chốt [validation_summary_als_confirmed_20261026](outputs/runs/validation_summary_als_confirmed_20261026/metrics.json) lưu quy tắc/các chênh seed/kết quả gate/candidate; kiểm toán độc lập 17 run, 51 dòng metric, 153 dòng nhóm và 96 dòng thống kê seed. Bốn CSV cốt lõi chạy lại trùng hash; **76 tests/lint/format/mypy đạt**, 219 tệp cũ và 11 Word giữ nguyên. Tiếp theo trình bày thiết kế **Bước 15 M1**, chưa triển khai hoặc tuning/test.
+Run chốt [validation_summary_als_confirmed_20261026](outputs/runs/validation_summary_als_confirmed_20261026/metrics.json) lưu quy tắc/các chênh seed/kết quả gate/candidate; kiểm toán độc lập 17 run, 51 dòng metric, 153 dòng nhóm và 96 dòng thống kê seed. Bốn CSV cốt lõi chạy lại trùng hash; tại mốc xác nhận ALS có **76 tests/lint/format/mypy đạt**, 219 tệp cũ và 11 Word giữ nguyên. M1 đã được thực hiện tiếp theo ở mục dưới.
+
+## Bước 15: M1 trên nền ALS cố định
+
+```powershell
+.venv/Scripts/python.exe -B scripts/run_m1.py --config configs/models/m1.yaml --output-dir outputs/runs/m1_als_new
+```
+
+Lệnh nạp ba checkpoint ALS đã kiểm chứng ở đường dẫn trong YAML, không fit ALS. Đầu ra phải mới. `M1Recommender.fit` chỉ học cosine nhị phân và số người nghe từ train. Từ Top-100 chưa nghe, chọn greedy theo `λ*r - (1-λ)*max_cosine - β*p`; `r` min-max trong cùng pool (phẳng → 1), `p=ln(1+listeners)/ln(1+max_listeners)`. Hòa mục tiêu sau làm tròn 12 chữ số giữ thứ tự ALS. `recommend` trả thứ tự greedy với **score ALS gốc**, có thể không giảm dần; `predict` vẫn là score ALS. Không dùng score này để sắp xếp lại danh sách M1.
+
+Chạy 12 tổ hợp seed 42; chỉ xét sáu bản đầy đủ để chọn ARP thấp nhất khi NDCG@10 ≥95% nền, rồi ILD/NDCG cao hơn. Giữ nguyên λ/β để xác nhận seed 43/44 và ablation cùng trọng số, tổng **20 phép đánh giá cấu hình–seed**, không chọn lại trên hai seed xác nhận. Trường hợp không có bản phù hợp được lưu như thất bại, không mở rộng grid. λ=1/β=0 khôi phục đúng nền. Catalog/cohort/đích/evaluator vẫn như baseline; Top-100 chỉ giới hạn reranker, không thu hẹp catalog đánh giá.
+
+| Nhánh (mean ba seed, @10) | NDCG | ARP | ILD | Coverage |
+| --- | ---: | ---: | ---: | ---: |
+| ALS (1, 0) | 0.1965852193 | 137.450295 | 0.813089 | 4.9898% |
+| Chỉ đa dạng (0.75, 0) | 0.1942801922 | 132.317962 | 0.825603 | 5.0310% |
+| Chỉ phổ biến (1, 0.5) | 0.1938036767 | 116.340983 | 0.823168 | 6.0138% |
+| M1 đầy đủ (0.75, 0.5) | 0.1880698319 | 103.486238 | 0.840991 | 6.5225% |
+
+[Run M1](outputs/runs/m1_als_validation_20261026/metrics.json) lưu mọi cấu hình, pool Top-100, per-user metrics, nhóm lịch sử, lựa chọn trước xác nhận, context model, snapshot/hash và chi phí. [Đường đánh đổi seed 42](outputs/runs/m1_als_validation_20261026/tradeoff_seed42.png) giữ cả cấu hình vượt mức giảm 5%. Toàn lượt 155,84 s, peak cả tiến trình khoảng 427,43 MiB gồm giữ kết quả grid trong RAM; greedy thêm khoảng 0,46–0,48 ms/user trên pool đã có. Không phải benchmark API. Kiểm tra **83 tests/lint/format/mypy đạt**; không mở test hoặc sửa Word. Chi tiết kiểm toán và giới hạn ở [data card](docs/data-card.md). `configs/models/svd_rerank.yaml` là scaffold cũ, không dùng trong run này. Dừng sau Bước 15, chờ thiết kế M2.
 
 `dvc.yaml`, `validate_data.py` và `scripts/train.py` còn là khung cũ, chưa nối các CLI hiện hành; `scripts/evaluate.py` chỉ kiểm chứng toy, không thay stage evaluate trong DVC. Không dùng `dvc repro` hoặc `scripts/train.py` để chạy toàn bộ nghiên cứu.

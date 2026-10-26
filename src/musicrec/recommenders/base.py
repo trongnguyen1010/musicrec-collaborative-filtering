@@ -29,4 +29,4 @@ class Recommender(ABC):
 
     @abstractmethod
     def recommend(self, user_id: str, k: int, seen_item_ids: set[str]) -> list[Recommendation]:
-        """Return at most k unseen items in descending score order."""
+        """Return at most k unseen items in model-defined rank order, with score metadata."""

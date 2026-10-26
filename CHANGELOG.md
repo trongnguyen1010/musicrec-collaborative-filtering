@@ -7,6 +7,20 @@ Mọi thay đổi đáng chú ý của MusicRec được ghi trong file này the
 
 ### Changed
 
+- 2026-10-26: Hoàn thành Bước 15 M1 trên ba checkpoint ALS cố định: C=100,
+  greedy relevance/cosine nhị phân/popularity train; score trả về là ALS gốc,
+  thứ tự do greedy quyết định. Chốt công thức/normalization/gate trước chạy;
+  12 tổ hợp seed 42 chọn λ=0.75/β=0.5, cố định full và ablation ở 43/44,
+  tổng 20 phép đánh giá. NDCG@10 mean 0.1880698319 ± 0.0018438691,
+  giảm 4,3317%, đạt giới hạn 5% từng seed và mean; ARP giảm 24,7101%,
+  ILD tăng 0.0279024, coverage từ 4,9898% lên 6,5225%. @5 giảm 6,2175%,
+  giữ cả kết quả không đạt và đường đánh đổi. Thêm model/context save-load,
+  selector/config/CLI/tests; dùng lại evaluator và nạp ALS không fit.
+  83 tests/lint/format/mypy đạt; giữ 358 tệp cũ/11 Word, không mở test.
+  Đối chiếu Carraro–Bridge và Ungruh et al. 2024; công thức và ngưỡng là
+  thiết kế nhóm, không tuyên bố tái lập paper hoặc chứng minh user satisfaction.
+  Dừng Bước 15, chưa M2 hoặc khóa test.
+
 - 2026-10-26: Áp dụng điều chỉnh ưu tiên xác nhận ALS trước tuning: đúng hai
   fit bổ sung seed 43/44, giữ cấu hình k32/reg0.1/a_conf1 và split seed 42.
   NDCG@10 seed 42/43/44 = 0.1974107044/0.1974665063/0.1948784471;

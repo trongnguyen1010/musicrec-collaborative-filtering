@@ -672,3 +672,68 @@ Kiểm toán tổng hợp độc lập đối chiếu **17 run, 51 dòng metric,
 **Đã áp dụng:** ưu tiên xác nhận ALS trước tuning; giữ điều kiện giữ cũ; cập nhật **ứng viên nền M1 thành ALS k32/reg0.1/a_conf1, seed tham chiếu 42** vì qua gate, dù seed 43 nhỉnh hơn không chọn nó làm mốc. Giữ PureSVD/Popularity và mọi baseline làm đối chứng; lưới ALS tám cấu hình vẫn là trần tùy chọn, không phải việc bắt buộc chạy đủ. Tuning tiếp tục hoãn, BPR/SLIM chưa mở; M2 vẫn ItemCF theo protocol riêng, các mốc demo không đổi.
 
 **Bước tiếp theo là Bước 15 — trình bày/duyệt thiết kế M1 trước code:** nền ALS đã xác nhận, C=100, các nhánh nền/chỉ đa dạng/chỉ giảm phổ biến/kết hợp và ngưỡng giảm NDCG tối đa 5% so nền theo kế hoạch. Đây chưa phải cho phép chạy M1 hoặc tự thay định nghĩa similarity/normalization; thiết kế chi tiết cần giải thích ở bước đó, dựa nguồn gần đây đã ưu tiên. Chưa khóa mô hình cuối cho test, chưa M1/M2/test hoặc cập nhật Word; bản Word vẫn Bước 6, kết quả mới chỉ trong run và tài liệu làm việc hiện có.
+
+## Bước 15 — M1/ablation trên nền ALS đã xác nhận
+
+Người dùng cho thực hiện trọn Bước 15 và đẩy GitHub. Thiết kế được giải thích trong chat và đóng băng trong [configs/models/m1.yaml](../configs/models/m1.yaml), `outputs/checks/m1_20261026/experiment.json` trước thực nghiệm. Run mới [m1_als_validation_20261026](../outputs/runs/m1_als_validation_20261026/metrics.json), Git nền `fbf3cad3f6acadc40dbab6956ad8cebc6a33ec00`, snapshot ghi chính xác mã chưa commit/config/runtime/hash. Mọi run/Word trước đó giữ nguyên; các đoạn phía trên là lịch sử quyết định theo từng mốc.
+
+### Thiết kế, dữ liệu và tiêu chí trước kết quả
+
+- Nạp đúng checkpoint ALS k32/reg0.1/confidence_scale1 của seed 42/43/44, không fit ALS mới. Kiểm hash mọi đầu ra/code của ba run, nguồn representations Bước 5 seed split 42, config evaluator và audit nguồn. Chỉ đọc train/validation/mapping/transform; audit hook cấm mở `test.parquet`, kể cả băm.
+- `M1Recommender.fit` chỉ tạo tương tác nhị phân user×artist từ **train**. Số người nghe là số user train khác nhau, không tổng count. Thẻ, validation và audio không tạo similarity/popularity. Duplicates bị từ chối.
+- ALS xếp hạng toàn catalog chưa nghe, lấy C=100 cố định theo user. `r=(score-min)/(max-min)` trên cả pool; pool phẳng dùng r=1. `p=ln(1+listeners)/ln(1+max_listeners)` dùng max toàn train catalog. Với prefix S, chọn artist có `q=λ*r-(1-λ)*max_{j∈S}cosine_binary_train(i,j)-β*p` cao nhất; max khi S rỗng bằng 0. Hòa q sau làm tròn 12 chữ số theo thứ tự ứng viên ALS. Chỉ tính Gram 100×100 theo user (~78 KiB float64), không dựng Gram đặc toàn catalog.
+- Ví dụ kiểm tay: bốn ứng viên a/b/c/d có score 10/9/8/6 → r=1/0.75/0.5/0; a và b có cosine 1, các cặp khác 0. Với λ=0.5/β=0, sau a thì q(b)=-0.125, q(c)=0.25 nên chọn c, sau đó d rồi b. Đây là ví dụ logic, không phải metric dữ liệu thật.
+- Giao diện giữ fit/predict/recommend; thứ tự recommend là greedy, **score metadata giữ ALS gốc** và predict trả score nền, không phải q phụ thuộc prefix. Vì vậy score không nhất thiết giảm dần; consumer phải giữ rank đã trả. Nhánh λ=1/β=0 trả chính prefix nền, cùng ID/score/reason. Cold user giữ reason fallback của nền, chưa giải quyết M2.
+- Lưới 3 λ×4 β đúng kế hoạch: 1 nền, 2 diversity-only, 3 popularity-only, 6 full. Chỉ seed 42 chọn full có NDCG@10 ≥95% ALS cùng seed; ưu tiên ARP thấp nhất, rồi ILD/NDCG cao nhất và λ/β tăng dần khi vẫn hòa. Nếu không có full hợp lệ thì lưu thất bại, không nới grid.
+- Trước chạy đã chốt xác nhận: giữ nguyên winner và ablation cùng λ/β trên seed 43/44, không chọn lại; yêu cầu bound @10 cho từng seed và mean. Tổng 12+4+4=**20 phép đánh giá cấu hình–seed**, 0 fit ALS. Seed 42 vẫn là dữ liệu chọn tham số, không tính nó như xác nhận độc lập.
+- Evaluator/công thức/catalog/đích/cohort không đổi: 15.398 artist train, 1.877 user nhận 20 mục, 1.865 user hợp lệ và 8.142 đích trong catalog; 1.121 đích ngoài catalog và 12 user không có đích hợp lệ vẫn báo cáo. Top-100 giới hạn khả năng rerank, không biến pool thành catalog đánh giá hoặc negative sample. Pool chứa 4.732/4.752/4.715 đích của 8.142 (micro recall 58,1184%/58,3640%/57,9096%); M1 không lấy được đích ngoài pool.
+
+Căn cứ mới: [Carraro & Bridge, arXiv v2 17/06/2024](https://arxiv.org/html/2401.11506v2) cho greedy reranking/đánh đổi/chi phí, [Ungruh et al., RecSys 2024](https://resolver.tudelft.nl/uuid:da06559d-83df-4eff-9767-a7aca12668dc) cho mục tiêu khám phá và giới hạn diễn giải offline. [Đối chiếu tài liệu](TONG_QUAN_TAI_LIEU_THAM_KHAO.md#doi-chieu-m1-20261026) phân biệt dữ liệu và phiên bản. Công thức kết hợp, normalization, C/grid/gate 5% là **lựa chọn riêng của nhóm**, không phải tái lập nguyên thuật toán hoặc chuẩn chung của paper.
+
+### Toàn bộ đường đánh đổi seed 42, K=10
+
+| λ | β | NDCG | Giảm tương đối so ALS | ARP | ILD | Đạt bound @10 |
+| ---: | ---: | ---: | ---: | ---: | ---: | --- |
+| 0.50 | 0.00 | 0.1860121198 | 5.7740% | 121.093405 | 0.851024 | Không |
+| 0.50 | 0.10 | 0.1844018919 | 6.5897% | 112.656568 | 0.855529 | Không |
+| 0.50 | 0.25 | 0.1792383906 | 9.2053% | 99.035550 | 0.863922 | Không |
+| 0.50 | 0.50 | 0.1679860624 | 14.9053% | 76.585630 | 0.879986 | Không |
+| 0.75 | 0.00 | 0.1945338751 | 1.4573% | 132.677212 | 0.825926 | Có |
+| 0.75 | 0.10 | 0.1936731526 | 1.8933% | 126.988686 | 0.828642 | Có |
+| 0.75 | 0.25 | 0.1923305767 | 2.5734% | 117.993190 | 0.833321 | Có |
+| **0.75** | **0.50** | **0.1888001319** | **4.3618%** | **103.475442** | **0.841461** | **Có, full được chọn** |
+| 1.00 | 0.00 | 0.1974107044 | 0% | 138.020912 | 0.813204 | Nền |
+| 1.00 | 0.10 | 0.1958006486 | 0.8156% | 133.751099 | 0.815109 | Có |
+| 1.00 | 0.25 | 0.1953508746 | 1.0434% | 127.136783 | 0.818306 | Có |
+| 1.00 | 0.50 | 0.1949786763 | 1.2320% | 116.383485 | 0.823976 | Có |
+
+Trong sáu full, chỉ ba bản λ=0.75 đạt bound; β=0.5 có ARP thấp nhất. Không chọn λ=0.5/β=0.5 dù ARP thấp hơn vì mất NDCG vượt ngân sách. Nhánh popularity-only có thể giữ accuracy tốt hơn full nhưng không thuộc tập full dùng quy tắc chọn đã định. CSV đầy đủ [tradeoff_seed42.csv](../outputs/runs/m1_als_validation_20261026/tradeoff_seed42.csv) và [hình đường đánh đổi](../outputs/runs/m1_als_validation_20261026/tradeoff_seed42.png) giữ mọi tổ hợp, không chỉ winner.
+
+### Xác nhận cùng tham số và ablation
+
+| Seed | ALS NDCG@10 | M1 (0.75, 0.5) NDCG@10 | Giảm tương đối | ≤5% |
+| ---: | ---: | ---: | ---: | --- |
+| 42 (chọn) | 0.1974107044 | 0.1888001319 | 4.3618% | Có |
+| 43 (xác nhận) | 0.1974665063 | 0.1894366894 | 4.0664% | Có |
+| 44 (xác nhận) | 0.1948784471 | 0.1859726745 | 4.5699% | Có |
+
+| Nhánh; λ/β | NDCG@10 mean ± sample std | ARP mean | ILD mean | Coverage mean |
+| --- | ---: | ---: | ---: | ---: |
+| ALS; 1/0 | 0.1965852193 ± 0.0014783714 | 137.450295 | 0.813089 | 4.9898% |
+| Chỉ đa dạng; 0.75/0 | 0.1942801922 ± 0.0010358251 | 132.317962 | 0.825603 | 5.0310% |
+| Chỉ phổ biến; 1/0.5 | 0.1938036767 ± 0.0016565391 | 116.340983 | 0.823168 | 6.0138% |
+| Full; 0.75/0.5 | **0.1880698319 ± 0.0018438691** | **103.486238** | **0.840991** | **6.5225%** |
+
+Mean qua ba seed, sample std ddof=1, split vẫn seed 42. Full giảm NDCG@10 **0.0085153874 tuyệt đối / 4.3317% tương đối**, ARP giảm **24.7101%**, ILD tăng **0.0279024370**, coverage tăng **1.5327 điểm phần trăm**. Precision/Recall mean từ 0.0996246649/0.2199255287 xuống 0.0954066130/0.2113583557. Gini giảm 0.9820984817 → 0.9726093950; Novelty tăng 9.7934246417 → 10.2627077465. Đầy đủ mean/std/min/max tám metric tại K=5/10/20 trong [seed_summary.json](../outputs/runs/m1_als_validation_20261026/seed_summary.json).
+
+Không suy rộng thành “tốt hơn mọi mặt”: **NDCG@5 mean giảm 6.2175%** (0.1610809292 → 0.1510657671), @20 giảm 3.1575% (0.2321100453 → 0.2247812140). Gate chỉ định trước cho @10. Ablation cho thấy hai thành phần cùng tăng ILD/giảm ARP nhưng kết hợp mất accuracy nhiều hơn; chưa phải bằng chứng nhân quả về trải nghiệm. Nhóm train <40/=40/>40 giữ 41/1.822/2 user hợp lệ, cùng metric gốc/catalog, không thay train bằng tập con để tính lại diversity. Không suy rộng nhóm chỉ hai user hoặc warm-start này sang cold-start. Các seed chỉ đổi khởi tạo ALS trên cùng split/validation; chưa có test, user study hoặc kiểm định cuối Bước 17.
+
+### Chi phí và kiểm chứng
+
+Toàn lượt grid/xác nhận/evaluation/reload **155.838517 giây**, OS peak working set **448.196.608 byte (~427.43 MiB)**, gồm giữ pool rows và kết quả nhiều tổ hợp trong RAM; không phải RAM riêng model. Candidate retrieval + tính đặc trưng trung bình 6.6210/6.7686/6.8544 ms/user, p95 8.1811/8.2617/8.3325 ms. Greedy full trên pool có sẵn thêm trung bình 0.4610/0.4708/0.4763 ms/user. Context M1 **372.008 byte/seed**, base ALS khoảng 2,56 MB riêng. Đây là số đo local/một lượt, không phải benchmark API hoặc cam kết độ trễ. Nạp context cùng đúng base checkpoint không fit, khớp đủ 1.877 danh sách/seed; chưa phải artifact release có manifest cho API.
+
+Kiểm toán độc lập [verification.json](../outputs/runs/m1_als_validation_20261026/verification.json) không import model/evaluator production: dùng phép giảm nhân factor NumPy để đối chiếu Top-100 toàn catalog; dựng cosine/popularity từ train gốc; greedy tính lại max trên prefix mỗi bước thay vì bộ đệm incremental. Kiểm đủ **37.540 danh sách**, **447.600 giá trị metric per-user**, tám aggregate metric ở K=5/10/20 cho cả 20 phép đánh giá, quy tắc chọn/mean/std/bound và context nhị phân. Score sai khác tối đa **4.44e-16**, aggregate metric **7.11e-15**. Identity khớp nguyên evaluation/danh sách ALS ở ba seed; mọi ID/score/reason và exclusion được đối chiếu. Mã auditor, metadata và bảng độc lập có hash; input/output/code snapshot được xác minh.
+
+**83 tests đạt trong 146,41 giây**, Ruff lint/format và mypy **28 tệp nguồn** đạt. Toy kiểm công thức, identity/prefix/mask/flat pool/tie, phản đối base không hợp lệ, không gọi base.fit, save/load/checksum, inclusive gate và trường hợp không full hợp lệ. Hash **358 tệp cũ**, gồm **11 Word**, giữ nguyên; test chưa mở. Mã reusable/config/CLI/tests và tài liệu làm việc được đưa Git; dataset/checkpoint/run lớn giữ local theo quy tắc repo.
+
+**Quyết định cuối Bước 15:** giữ M1 (0.75, 0.5, C=100) là cấu hình đánh đổi validation đạt tiêu chí @10, giữ ALS và các ablation làm đối chứng; chưa khóa mô hình cuối/test. Không cần đổi grid hoặc kế hoạch chính từ kết quả này. Dừng trước Bước 16 — thiết kế M2 vẫn trên ItemCF theo protocol riêng, chờ người dùng cho phép. Word vẫn bản Bước 6, không tự cập nhật.

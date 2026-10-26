@@ -12,6 +12,21 @@ Bổ sung hiện hành: [Khảo sát mô hình mở rộng ngày 24/10/2026](#kh
 
 Ưu tiên theo yêu cầu mới ngày 26/10/2026: [đối chiếu nghiên cứu gần đây cho lượt ALS](#doi-chieu-als-20261026); dùng nguồn 2022–2026, ưu tiên 2024–2026 phù hợp bài toán khi đề xuất thay đổi kế hoạch. Các phần cũ phía dưới giữ vai trò lịch sử/tổng quan, không tự trở thành căn cứ thực nghiệm mới.
 
+<a id="doi-chieu-m1-20261026"></a>
+
+## Đối chiếu nghiên cứu gần đây cho Bước 15 M1
+
+Đã kiểm nguồn gốc và giải thích thiết kế trước chạy M1 ngày 26/10/2026. Ưu tiên bài phù hợp giai đoạn 2022–2026; không dùng tuổi của bài thay cho kiểm tra dữ liệu/protocol.
+
+| Nguồn đã đọc | Minh chứng liên quan | Áp dụng và giới hạn |
+| --- | --- | --- |
+| [Carraro & Bridge, Enhancing Recommendation Diversity by Re-ranking with Large Language Models, arXiv:2401.11506v2, 17/06/2024](https://arxiv.org/html/2401.11506v2), bản preprint được kiểm | So sánh reranker LLM với các cách greedy truyền thống trên anime/sách, xét relevance/diversity và chi phí; bản này ghi nhận greedy có đánh đổi thuận lợi hơn LLM. | Căn cứ chọn reranking nhẹ và báo cáo chi phí; không phải kết quả trên HetRec, không triển khai LLM hoặc sao chép điểm paper. Cosine trên tương tác nhị phân là lựa chọn dữ liệu của nhóm, khác đặc trưng genre trong thí nghiệm của bài. |
+| [Ungruh, Dinnissen, Volk, Pera & Hauptmann, Putting Popularity Bias Mitigation to the Test: A User-Centric Evaluation in Music Recommenders, RecSys 2024, tr. 169–178](https://resolver.tudelft.nl/uuid:da06559d-83df-4eff-9767-a7aca12668dc), DOI [10.1145/3640457.3688102](https://doi.org/10.1145/3640457.3688102), bản xuất bản cuối | Nghiên cứu người dùng n=40, khảo sát nhận thức/hài lòng khi giảm thiên lệch phổ biến trong âm nhạc; cho thấy cần đánh giá trải nghiệm ngoài metric offline. | Căn cứ giữ mục tiêu khám phá nghệ sĩ ít phổ biến và hạn chế diễn giải: ARP/Novelty/ILD ở đây không chứng minh hài lòng, công bằng nghệ sĩ hoặc cảm nhận đa dạng. Không gọi penalty của nhóm là tái lập thuật toán của bài. |
+
+**Phần tự thiết kế của nhóm, được đóng băng trước kết quả:** công thức `λ*r - (1-λ)*max_cosine - β*p`, min-max score trên cùng Top-100, cosine cột user nhị phân train, log-normalized listener popularity, tie-break theo base rank, 12 tổ hợp và giới hạn giảm NDCG@10 5%. Chọn seed 42 theo ARP thấp nhất trong full đạt gate, rồi ILD/NDCG; cố định tham số/ablation khi xác nhận 43/44, không mở rộng grid. Ngưỡng 5% là mức chấp nhận nghiên cứu của nhóm, không phải chuẩn chung do hai bài xác nhận. MMR 1998 và các nguồn cũ vẫn giữ trong tổng quan lịch sử.
+
+M1 chọn λ=0.75/β=0.5 và đạt gate @10 cả ba seed/mean; NDCG giảm trong khi ARP/ILD/coverage cải thiện. Không vì đạt gate mà kết luận tốt hơn ở mọi K: @5 giảm mean 6,2175%. [Data card](data-card.md) giữ số đo thật, các cấu hình thất bại, ablation và chi phí; các seed dùng chung split/validation nên không phải ba phép đánh giá độc lập trên dữ liệu mới. Chưa mở test, khảo sát người dùng hoặc sửa Word.
+
 <a id="doi-chieu-als-20261026"></a>
 
 ## Đối chiếu nghiên cứu gần đây cho lượt ALS ngày 26/10/2026
