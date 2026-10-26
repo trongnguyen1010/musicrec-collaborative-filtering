@@ -1,8 +1,8 @@
 # Kết quả Chương 4 (phần validation): tinh chỉnh và M1 trên nền PureSVD
 
-Ngày chạy: 26/10/2026, máy đám mây (cấu hình như [chuong_3.md mục 1](chuong_3.md#1-môi-trường-chạy)). Đây là **lần chạy phát triển**. Bộ số chính thức cho báo cáo sẽ chạy lại cùng script trên máy Windows của nhóm.
+Ngày chạy: 26/10/2026, máy đám mây (cấu hình như [chuong_3.md mục 1](chuong_3.md#1-môi-trường-chạy)). Đây là **lần chạy phát triển**. Bản chạy chính thức, cũng trên máy đám mây theo lựa chọn ngày 26/10, cho đúng các lựa chọn và con số validation dưới đây. Kết quả test nằm ở [chuong_4_test.md](chuong_4_test.md).
 
-Phạm vi: bước 4.1–4.3 trong [ROADMAP](../ROADMAP.md#chương-4-huấn-luyện-và-thực-nghiệm-đánh-giá). **Chưa khóa cấu hình (4.4) và chưa mở tập test (4.5).** Không script nào trong lượt này đọc `test.parquet`.
+Phạm vi: bước 4.1–4.3 trong [ROADMAP](../ROADMAP.md#chương-4-huấn-luyện-và-thực-nghiệm-đánh-giá). Không script nào trong lượt chạy phát triển này đọc `test.parquet`. Bước 4.4–4.6 (khóa cấu hình, test, kiểm định) nằm ở [chuong_4_test.md](chuong_4_test.md).
 
 Quyết định áp dụng (chọn ngày 26/10/2026): Q3 ALS là thực nghiệm mở rộng; Q4 M1 dùng nền PureSVD; Q6 tinh chỉnh đủ ngân sách; Q7 PureSVD dùng biểu diễn nhị phân.
 
@@ -13,7 +13,7 @@ Quyết định áp dụng (chọn ngày 26/10/2026): Q3 ALS là thực nghiệm
 - Tinh chỉnh cải thiện UserCF (gấp 2,2 lần), ItemCF (gấp 2,1 lần), SVD (+7,4%) và PureSVD (+6,5%). ALS giữ nguyên cấu hình đầu.
 - **UserCF, ItemCF và SVD vẫn thấp hơn Popularity sau tinh chỉnh.** Đây là kết quả thật, cần ghi rõ trong báo cáo.
 - M1 trên nền PureSVD k=16 chọn **λ = 0,75, β = 0,5**: NDCG@10 tăng 0,52%, ARP giảm 15,81%, độ bao phủ tăng từ 1,79% lên 2,91%. Cấu hình này qua ngưỡng giảm NDCG tối đa 5%.
-- Có ba điểm cần bạn quyết định (mục 6), gồm việc mở tập test.
+- Các điểm cần quyết định ở mục 6 đã được chốt, trừ Q5 (M2).
 
 ## 1. Bảng validation sau tinh chỉnh (K = 10, seed 42)
 
@@ -118,7 +118,7 @@ So sánh với M1 trên nền ALS (run cũ, theo data card): NDCG@10 giảm 4,33
 ## 6. Cần bạn quyết định
 
 1. **Cấu hình tốt nhất nằm ở biên lưới.** UserCF và ItemCF có L = 20, PureSVD có k = 16, đều là giá trị nhỏ nhất của lưới. Kế hoạch ghi "không tăng lưới sau khi thấy kết quả". **Đã chốt ngày 26/10/2026: giữ nguyên lưới, ghi là hạn chế trong báo cáo** (không thử thêm L ∈ {5, 10} hay k ∈ {4, 8}).
-2. **Khóa cấu hình và mở tập test (4.4–4.5).** Tập test chỉ được mở một lần, không làm lại được. Mình đề xuất chạy toàn bộ Chương 3 + 4 lần cuối trên máy Windows, khóa cấu hình theo đúng kết quả máy đó, rồi mới mở test.
+2. **Khóa cấu hình và mở tập test (4.4–4.5).** Đã chốt ngày 26/10/2026: chạy bản chính thức trên máy đám mây. Đã chạy xong, xem [chuong_4_test.md](chuong_4_test.md).
 3. **Q5 (M2)** vẫn chờ trả lời trước khi viết lại mục 3.8 và chạy M2 trên 189 người dùng để dành.
 
 ## 7. Lệnh chạy lại
