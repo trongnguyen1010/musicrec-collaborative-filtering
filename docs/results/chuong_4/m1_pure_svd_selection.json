@@ -1,0 +1,39 @@
+{
+  "seed": 42,
+  "winner": {
+    "lambda": 0.75,
+    "beta": 0.5,
+    "precision": 0.08627345844504022,
+    "recall": 0.18733690795352995,
+    "ndcg": 0.16747698691052962,
+    "catalog_coverage": 0.02909468762176906,
+    "gini": 0.9896799730615062,
+    "arp": 152.49571045576408,
+    "novelty": 9.476829873717257,
+    "ild": 0.8047044606087119,
+    "ild_users": 1865,
+    "returned_positions": 18650,
+    "short_list_users": 0,
+    "empty_list_users": 0,
+    "full_list_rate": 1.0
+  },
+  "matching_ablations": {
+    "base": [
+      1.0,
+      0.0
+    ],
+    "diversity_only": [
+      0.75,
+      0.0
+    ],
+    "popularity_only": [
+      1.0,
+      0.5
+    ],
+    "full": [
+      0.75,
+      0.5
+    ]
+  },
+  "frozen_before_confirmation": true
+}
