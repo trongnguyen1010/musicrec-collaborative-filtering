@@ -1,0 +1,46 @@
+{
+  "seconds": {
+    "run": {
+      "raw_eda": 9.086003,
+      "cleaning": 1.466878,
+      "split": 1.065211,
+      "representations": 0.990843,
+      "evaluator": 0.06976
+    },
+    "recheck": {
+      "raw_eda": 4.726161,
+      "cleaning": 1.301269,
+      "split": 0.972719,
+      "representations": 0.967057,
+      "evaluator": 0.072528
+    }
+  },
+  "comparison": {
+    "raw_eda": {
+      "files_compared": 6,
+      "files_differ": [],
+      "output_sha256_equal": true
+    },
+    "cleaning": {
+      "files_compared": 8,
+      "files_differ": [],
+      "output_sha256_equal": true
+    },
+    "split": {
+      "files_compared": 5,
+      "files_differ": [],
+      "output_sha256_equal": true
+    },
+    "representations": {
+      "files_compared": 9,
+      "files_differ": [],
+      "output_sha256_equal": true
+    },
+    "evaluator": {
+      "files_compared": 3,
+      "files_differ": [],
+      "output_sha256_equal": true
+    }
+  },
+  "recheck_identical": true
+}
