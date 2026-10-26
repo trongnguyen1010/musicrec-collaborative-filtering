@@ -6,7 +6,8 @@ Tên tệp: `33_BaoCaoKhoaLuan_CaoTrongNguyen_LeKhacGiaKhang_vNN_DD-MM-YYYY.docx
 
 | Phiên bản | Ngày | Tệp | Nội dung | Gửi GVHD |
 | --- | --- | --- | --- | --- |
-| **v15 (hiện hành)** | 25/10/2026 | [v15](33_BaoCaoKhoaLuan_CaoTrongNguyen_LeKhacGiaKhang_v15_25-10-2026.docx) | Kế thừa v14; cập nhật mục 2.2.9, 3.10 (bộ đánh giá, Bước 6), Phụ lục B/C, thêm tài liệu [26]. Ch1–Ch3 có nội dung, Ch4–Ch5 chỉ có tiêu đề. | Chưa |
+| **v16 (hiện hành)** | 26/10/2026 | [v16](33_BaoCaoKhoaLuan_CaoTrongNguyen_LeKhacGiaKhang_v16_26-10-2026.docx) | Kế thừa v15. Viết đầy đủ Chương 4 từ lần chạy chính thức 26/10 (tinh chỉnh, kiểm thử, kiểm định, M1, M2, ALS mở rộng, 15 bảng). Sửa 1.3.2, 3.6.3, 3.6.4, Bảng 3.3, 3.7, 3.8 theo thiết kế đã chốt; thêm tài liệu [27]–[30]; sửa cỡ chữ số thứ tự trong chú thích bảng/hình. Chương 5 vẫn chỉ có tiêu đề. | Chưa |
+| v15 | 25/10/2026 | [v15](33_BaoCaoKhoaLuan_CaoTrongNguyen_LeKhacGiaKhang_v15_25-10-2026.docx) | Kế thừa v14; cập nhật mục 2.2.9, 3.10 (bộ đánh giá, Bước 6), Phụ lục B/C, thêm tài liệu [26]. Ch1–Ch3 có nội dung, Ch4–Ch5 chỉ có tiêu đề. | Chưa |
 | v14 | 24/10/2026 | [v14](33_BaoCaoKhoaLuan_CaoTrongNguyen_LeKhacGiaKhang_v14_24-10-2026.docx) | Bổ sung chia tập, ánh xạ, bốn biểu diễn và ngưỡng train (Bước 4–5). Trước đây nằm ở `docs/reports/V14/`. | **Đã gửi** |
 | v01 | 04/10/2026 | [v01](33_BaoCaoKhoaLuan_CaoTrongNguyen_LeKhacGiaKhang_v01_04-10-2026.docx) | Bản đầu tiên, cấu trúc cũ (Ch2 có 13 mục, Ch4–Ch5 viết dạng dự kiến). Trước đây là `BaoCao_KLTN_CaoTrongNguyen_LeKhacGiaKhang_V1.docx`. | Đã nộp trước đây |
 
