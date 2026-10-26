@@ -91,17 +91,17 @@ Ngoài các con số, ba nhận định định tính trong bản v15 cũng đư
 - Chạy lại cùng hạt giống cho dữ liệu và ánh xạ trùng mã băm (mục 3.5.2, 3.5.3).
 - Kiểm thử tự động có đối chiếu NDCG với `ndcg_score` của scikit-learn trên 20 ví dụ, mỗi ví dụ 4 giá trị K (mục 3.10.3, xem `tests/unit/test_ranking.py`).
 
-## 4. Những điểm Chương 3 cần sửa (chưa làm, chờ quyết định)
+## 4. Những điểm Chương 3 cần sửa
 
-Số liệu không sai, nhưng phần mô tả thiết kế ở 3.6–3.8 chưa khớp với những gì code đã làm. Các điểm này đã liệt kê trong [ROADMAP mục 2](../ROADMAP.md) và phụ thuộc câu hỏi Q3–Q7:
+Số liệu không sai, nhưng phần mô tả thiết kế ở 3.6–3.8 chưa khớp với những gì code đã làm. Bốn trong năm điểm dưới đây đã được chốt ngày 26/10; bảng tham số cuối và đề xuất sửa từng mục nằm ở [chuong_3_thiet_ke.md](chuong_3_thiet_ke.md). Mục 3.8 vẫn chờ trả lời Q5.
 
 | Mục | Bản v15 viết | Code hiện tại | Câu hỏi |
 | --- | --- | --- | --- |
-| 1.3.2, 3.6 | Sáu mô hình đối sánh | Có thêm implicit ALS | Q3 |
-| 3.6.3 | CF không có láng giềng thì chuyển sang M2 | Trong giao thức chính, CF dùng trung bình người dùng/trung bình chung | Q3–Q5 |
-| 3.6.4 | PureSVD trên điểm đại diện | Tốt nhất trên validation là biểu diễn nhị phân | Q7 |
-| 3.7 | M1 dựa trên mô hình nền (đề cương: SVD) | M1 đang chạy trên nền ALS | Q4 |
-| 3.8 | M2 đánh giá trên tập chính | M2 dùng phép chia người dùng riêng 1.501/187/189, catalog 13.210, chỉ ItemCF làm thành phần cộng tác | Q5 |
+| 1.3.2, 3.6 | Sáu mô hình đối sánh | Có thêm implicit ALS | Q3: để ALS là thực nghiệm mở rộng |
+| 3.6.3 | CF không có láng giềng thì chuyển sang M2 | Trong giao thức chính, CF dùng trung bình người dùng/trung bình chung | Sửa theo code |
+| 3.6.4 | PureSVD trên điểm đại diện | Tốt nhất trên validation là biểu diễn nhị phân | Q7: dùng nhị phân, k = 16 |
+| 3.7 | M1 dựa trên mô hình nền (đề cương: SVD) | M1 đang chạy trên nền ALS | Q4: đổi nền sang PureSVD k = 16 |
+| 3.8 | M2 đánh giá trên tập chính | M2 dùng phép chia người dùng riêng 1.501/187/189, catalog 13.210, chỉ ItemCF làm thành phần cộng tác | Q5: **chưa trả lời** |
 
 ## 5. Ghi chú về dữ liệu
 
@@ -111,4 +111,4 @@ Số liệu không sai, nhưng phần mô tả thiết kế ở 3.6–3.8 chưa 
 ## 6. Việc tiếp theo
 
 1. Chạy lại đúng hai lệnh ở mục 2 trên máy Windows với `--label windows` để lấy bộ số chính thức, rồi cập nhật bảng môi trường ở mục 1.
-2. Sau khi có trả lời Q3–Q7: làm bước 3.3 (bảng tham số cuối của từng mô hình, công thức M1, giao thức M2) và đề xuất đoạn sửa cho 1.6/1.7, 3.6.3, 3.6.4, 3.7, 3.8.
+2. Bước 3.3 đã làm xong cho 3.6 và 3.7 (xem [chuong_3_thiet_ke.md](chuong_3_thiet_ke.md)); phần 3.8 chờ Q5.
