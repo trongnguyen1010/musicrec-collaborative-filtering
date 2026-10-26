@@ -5,7 +5,11 @@ from copy import deepcopy
 import pytest
 
 from musicrec.evaluation.ranking import evaluate_ranking
-from musicrec.evaluation.validation import summarize_history_groups, summarize_seeds
+from musicrec.evaluation.validation import (
+    compare_seed_models,
+    summarize_history_groups,
+    summarize_seeds,
+)
 
 
 def example() -> dict:
@@ -45,3 +49,20 @@ def test_seed_summary_uses_all_three_seeds_sample_std_and_rejects_cohort_drift()
     seeds[44]["per_user"]["1"]["candidate_count"] += 1
     with pytest.raises(ValueError, match="cohort"):
         summarize_seeds(seeds)
+
+
+def test_retention_gate_requires_higher_mean_two_positive_seeds_and_same_cohort() -> None:
+    control = {seed: deepcopy(example()) for seed in [42, 43, 44]}
+    for value in control.values():
+        value["at_k"]["1"]["ndcg"] = 0.5
+    candidate = deepcopy(control)
+    for seed, score in [(42, 0.75), (43, 0.75), (44, 0.25)]:
+        candidate[seed]["at_k"]["1"]["ndcg"] = score
+    assert compare_seed_models(candidate, control, k=1)["passes"]
+    for seed, score in [(42, 1.0), (43, 0.45), (44, 0.45)]:
+        candidate[seed]["at_k"]["1"]["ndcg"] = score
+    assert not compare_seed_models(candidate, control, k=1)["passes"]  # Higher mean, one win.
+    assert not compare_seed_models(control, control, k=1)["passes"]
+    candidate[42]["catalog_size"] += 1
+    with pytest.raises(ValueError, match="cohort"):
+        compare_seed_models(candidate, control, k=1)

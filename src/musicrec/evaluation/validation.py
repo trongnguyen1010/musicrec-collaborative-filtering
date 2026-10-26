@@ -50,24 +50,28 @@ def summarize_history_groups(
     return {"train_history_mode": threshold, "mode_ties": "smallest", "groups": groups}
 
 
+def _check_cohort(evaluation: dict[str, Any], reference: dict[str, Any]) -> None:
+    cohort_fields = ["eligible", "targets_total", "targets_in_catalog", "candidate_count"]
+    if (
+        evaluation["split"] != "validation"
+        or evaluation["catalog_size"] != reference["catalog_size"]
+        or evaluation["at_k"].keys() != reference["at_k"].keys()
+        or evaluation["per_user"].keys() != reference["per_user"].keys()
+        or any(
+            any(values[field] != reference["per_user"][u][field] for field in cohort_fields)
+            for u, values in evaluation["per_user"].items()
+        )
+    ):
+        raise ValueError("Seed comparison requires the same validation cohort and candidates")
+
+
 def summarize_seeds(evaluations: dict[int, dict[str, Any]]) -> dict[str, Any]:
     """Report equal-weight seed means and sample standard deviations, never best seed."""
     if set(evaluations) != {42, 43, 44}:
         raise ValueError("Expected exactly the predeclared model seeds 42, 43 and 44")
     reference = evaluations[42]
-    cohort_fields = ["eligible", "targets_total", "targets_in_catalog", "candidate_count"]
     for evaluation in evaluations.values():
-        if (
-            evaluation["split"] != "validation"
-            or evaluation["catalog_size"] != reference["catalog_size"]
-            or evaluation["at_k"].keys() != reference["at_k"].keys()
-            or evaluation["per_user"].keys() != reference["per_user"].keys()
-            or any(
-                any(values[field] != reference["per_user"][u][field] for field in cohort_fields)
-                for u, values in evaluation["per_user"].items()
-            )
-        ):
-            raise ValueError("Seed comparison requires the same validation cohort and candidates")
+        _check_cohort(evaluation, reference)
     at_k = {}
     for k in reference["at_k"]:
         metrics: dict[str, Any] = {}
@@ -95,3 +99,35 @@ def summarize_seeds(evaluations: dict[int, dict[str, Any]]) -> dict[str, Any]:
                 }
         at_k[k] = metrics
     return {"seeds": [42, 43, 44], "std_ddof": 1, "split_seed": 42, "at_k": at_k}
+
+
+def compare_seed_models(
+    candidate: dict[int, dict[str, Any]],
+    control: dict[int, dict[str, Any]],
+    *,
+    k: int = 10,
+) -> dict[str, Any]:
+    """Apply the predeclared gate: higher mean NDCG and positive delta in at least 2/3 seeds."""
+    candidate_summary, control_summary = summarize_seeds(candidate), summarize_seeds(control)
+    _check_cohort(candidate[42], control[42])
+    if type(k) is not int or k <= 0 or str(k) not in candidate_summary["at_k"]:
+        raise ValueError("Expected an evaluated positive cutoff")
+    candidate_stats = candidate_summary["at_k"][str(k)]["ndcg"]
+    control_stats = control_summary["at_k"][str(k)]["ndcg"]
+    if candidate_stats is None or control_stats is None:
+        raise ValueError("Retention requires defined NDCG for both models")
+    deltas = {
+        str(seed): candidate[seed]["at_k"][str(k)]["ndcg"] - control[seed]["at_k"][str(k)]["ndcg"]
+        for seed in [42, 43, 44]
+    }
+    positive = sum(delta > 0 for delta in deltas.values())
+    return {
+        "metric": f"ndcg_at_{k}",
+        "candidate_mean": candidate_stats["mean"],
+        "control_mean": control_stats["mean"],
+        "seed_deltas": deltas,
+        "positive_seed_count": positive,
+        "passes": candidate_stats["mean"] > control_stats["mean"] and positive >= 2,
+        "tie_policy": "retain_control",
+        "test_evaluation_or_lock": False,
+    }

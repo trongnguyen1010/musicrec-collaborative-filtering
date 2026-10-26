@@ -48,7 +48,7 @@ def main(
     parser.add_argument("--config", type=Path, default=Path(f"configs/models/{model_name}.yaml"))
     parser.add_argument("--evaluation-config", type=Path, default=Path("configs/evaluation.yaml"))
     parser.add_argument("--output-dir", type=Path, required=True)
-    if model_name in ("random", "svd", "pure_svd"):
+    if model_name in ("random", "svd", "pure_svd", "implicit_als"):
         parser.add_argument("--model-seed", type=int, choices=[42, 43, 44], default=42)
     args = parser.parse_args()
     source, out = args.source_run.resolve(), args.output_dir.resolve()
@@ -235,7 +235,7 @@ def main(
             raise ValueError("Expected the pinned implicit 0.7.3 implementation")
     if config != expected_config:
         raise ValueError(f"Expected the agreed {model_name} validation configuration")
-    if model_name in ("random", "svd", "pure_svd"):
+    if model_name in ("random", "svd", "pure_svd", "implicit_als"):
         config["seed"] = args.model_seed
     evaluation_config = yaml.safe_load(args.evaluation_config.read_text(encoding="utf-8"))
     if evaluation_config["ks"] != [5, 10, 20]:
@@ -515,7 +515,9 @@ def main(
     write_json(
         "metrics.json",
         {
-            "step": 14
+            "step": "extension_als_seed_confirmation"
+            if model_name == "implicit_als" and config["seed"] != 42
+            else 14
             if config["seed"] != 42
             else {
                 "random": 7,

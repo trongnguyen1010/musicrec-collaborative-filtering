@@ -20,6 +20,8 @@ Trạng thái sau Bước 14 ngày 26/10/2026: đã tổng hợp tám cấu hìn
 
 Cập nhật sau phép riêng của người dùng: lượt ALS đầu tiên (32 factors/reg 0.1/a_conf 1/seed 42) đã hoàn thành, tốt nhất vòng 18/dừng 23, NDCG@10 0.1974107044 so PureSVD nhị phân 0.1564272628; coverage tăng, ARP giảm, ILD giảm nhẹ. Đã đo fit/monitor/recommend, OS peak working set và artifact; 73 tests/lint/format/mypy cùng kiểm toán độc lập đạt. Nguồn thực nghiệm mới ưu tiên 2022–2026 theo yêu cầu, có kiểm định nghĩa metric/nhãn preprint. Đề xuất ưu tiên xác nhận hai seed còn lại trước tuning hoặc M1; chưa chạy 43/44 hoặc đổi nền, chưa BPR/SLIM/M1/M2/test. Kế hoạch mốc chính giữ nguyên; Word vẫn Bước 6.
 
+Trạng thái sau điều chỉnh đã được cho phép: xác nhận ALS seed 43/44 xong, tổng hợp lại 17 run cùng cohort/catalog/protocol. ALS NDCG@10 **0.1965852193 ± 0.0014783714** qua ba seed, thắng đối chứng PureSVD nhị phân **3/3 seed**, tăng mean 25,6720%; qua điều kiện giữ đã chốt. Cập nhật ứng viên nền M1 sang ALS cùng cấu hình, seed 42 tham chiếu, không chọn seed đẹp nhất. **76 tests/lint/format/mypy đạt**; kiểm toán độc lập, bốn CSV tổng hợp trùng hash, 219 tệp cũ/11 Word giữ nguyên. Tuning tiếp tục hoãn; chưa BPR/SLIM/M1/M2/test. Việc kế tiếp là duyệt thiết kế Bước 15 M1; chưa triển khai reranker hoặc khóa mô hình cuối.
+
 1. Xác nhận bước được phép, mục tiêu, đầu vào, đầu ra và những việc chưa thuộc bước đó.
 2. Trước khi thực hiện, giải thích căn cứ tài liệu và lựa chọn riêng; chỉ cần kiến thức đủ để hiểu công việc sắp làm.
 3. Khi đến bước code/thực nghiệm, kiểm tra logic trên ví dụ nhỏ trước; lưu kết quả thật cùng cấu hình.

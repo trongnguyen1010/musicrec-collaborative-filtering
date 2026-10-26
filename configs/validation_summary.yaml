@@ -1,4 +1,5 @@
 step: 14
+revision: extension_als_seed_confirmation
 representations_run: outputs/runs/representations_20261024
 split_run: outputs/runs/split_20261024
 model_seeds: [42, 43, 44]
@@ -6,7 +7,7 @@ split_seed: 42
 history_groups: below_at_above_train_mode_smallest_tie
 selection_metric: ndcg_at_10_validation
 seed_aggregation: equal_weight_mean_sample_std_ddof_1_no_best_seed_selection
-budget: six_new_seed_confirmation_fits_no_hyperparameter_or_representation_search
+budget: two_new_als_seed_confirmation_fits_no_tuning_or_other_models
 runs:
   random:
     42: outputs/runs/random_validation_20261025
@@ -30,10 +31,20 @@ runs:
     42: outputs/runs/pure_svd_k32_binary_validation_step13_20261026
     43: outputs/runs/pure_svd_binary_seed43_validation_step14_20261026
     44: outputs/runs/pure_svd_binary_seed44_validation_step14_20261026
+  implicit_als:
+    42: outputs/runs/implicit_als_k32_c1_r01_validation_20261026
+    43: outputs/runs/implicit_als_seed43_validation_20261026
+    44: outputs/runs/implicit_als_seed44_validation_20261026
 candidate_for_m1: pure_svd_binary
-candidate_status: provisional_within_current_untuned_configs_pending_extension_decision
+candidate_status: apply_predeclared_three_seed_gate_before_m1_design_no_test_lock
+retention_gate:
+  candidate: implicit_als
+  control: pure_svd_binary
+  metric: ndcg_at_10_validation
+  rule: higher_mean_and_at_least_two_positive_seed_differences
+  tie: retain_control
 extension_gate:
   baseline_deadline: '2026-11-08'
   model_selection_deadline: '2026-11-15'
-  policy: assess_readiness_only_no_als_bpr_slim_implementation_in_step14
-  next_authorization: extension_first_run_or_m1_design_is_a_separate_step
+  policy: als_seed_confirmation_authorized_defer_tuning_bpr_slim_and_m1_implementation
+  next_authorization: m1_design_review_after_updated_validation_is_a_separate_step

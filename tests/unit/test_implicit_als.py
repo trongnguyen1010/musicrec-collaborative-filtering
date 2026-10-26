@@ -126,7 +126,11 @@ def test_reproducible_order_proxy_independence_and_invalid_inputs() -> None:
         ImplicitALSRecommender(max_epochs=1).fit(rows(), validation_score=lambda _: float("nan"))
 
 
-def test_cli_fixed_config_hashes_checkpoint_reload_and_no_test_or_rmse(tmp_path: Path) -> None:
+@pytest.mark.parametrize("seed", [42, 43, 44])
+def test_cli_fixed_config_hashes_checkpoint_reload_and_no_test_or_rmse(
+    tmp_path: Path,
+    seed: int,
+) -> None:
     source = tmp_path / "source"
     source.mkdir()
     train = pd.DataFrame(
@@ -167,13 +171,19 @@ def test_cli_fixed_config_hashes_checkpoint_reload_and_no_test_or_rmse(tmp_path:
         str(root / "scripts/run_implicit_als.py"),
         "--representations-run",
         str(source),
+        "--model-seed",
+        str(seed),
         "--output-dir",
         str(tmp_path / "run"),
     ]
     result = subprocess.run(command, cwd=root, capture_output=True, text=True)
     assert result.returncode == 0, result.stderr
     metadata = json.loads((tmp_path / "run/metrics.json").read_text(encoding="utf-8"))
-    assert metadata["step"] == "extension_als_first" and not metadata["test_file_read"]
+    expected_step = "extension_als_first" if seed == 42 else "extension_als_seed_confirmation"
+    assert metadata["step"] == expected_step and not metadata["test_file_read"]
+    state = json.loads((tmp_path / "run/model/state.json").read_text(encoding="utf-8"))
+    assert metadata["seed"] == metadata["config"]["seed"] == state["config"]["seed"] == seed
+    assert metadata["input_sha256"] == hashes  # Split seed is still 42.
     assert metadata["supplementary"]["reload_verified_users"] == 3
     assert metadata["supplementary"]["process_peak_working_set_bytes"] > 0
     assert "proxy_rmse" not in metadata["supplementary"]

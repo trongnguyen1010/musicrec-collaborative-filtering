@@ -30,9 +30,9 @@ Các lệnh này không thay thế việc kiểm tra nguồn, EDA và xác minh 
 - [Ôn tập và câu hỏi bảo vệ](docs/SEMINAR_CHUONG_1_2.md).
 - [Phối hợp và theo dõi](docs/PROGRESS_TRACKING_GUIDE.md), [cấu trúc dự kiến](PROJECT_STRUCTURE.md), [lịch sử thay đổi](CHANGELOG.md).
 
-Nguồn đối chiếu chính là [hướng dẫn của GVHD](docs/Hướng%20dẫn%20từng%20bước%20hoàn%20thành%20khóa%20luận.docx), kế hoạch và bằng chứng run hiện hành. Đã hoàn thành Bước 1–14 và lượt ALS đầu tiên được cho phép riêng. Đối chứng PureSVD nhị phân 32 chiều có NDCG@10 **0.1564272628 ± 0** qua model seed 42/43/44 trên split seed 42; ALS seed 42 đạt **0.1974107044**, cần xác nhận thêm seed trước khi đề nghị thay nền M1. Chưa khóa nền hoặc mô hình cuối; xem [data card](docs/data-card.md). Chưa tuning, chạy BPR/SLIM, học thẻ/M1/M2 hoặc đánh giá test. Dữ liệu gốc, run cũ và Word giữ nguyên.
+Nguồn đối chiếu chính là [hướng dẫn của GVHD](docs/Hướng%20dẫn%20từng%20bước%20hoàn%20thành%20khóa%20luận.docx), kế hoạch và bằng chứng run hiện hành. Đã hoàn thành Bước 1–14, lượt ALS đầu và xác nhận cùng cấu hình ở seed 43/44 theo điều chỉnh được cho phép. Qua seed 42/43/44 trên split seed 42, ALS đạt NDCG@10 **0.1965852193 ± 0.0014783714**, đối chứng PureSVD nhị phân **0.1564272628 ± 0**. ALS vượt đối chứng ở **3/3 seed**, qua tiêu chí giữ đã định trước và trở thành **ứng viên nền M1**, seed tham chiếu 42. Bước tiếp theo là duyệt thiết kế M1; chưa khóa mô hình cuối, tuning, BPR/SLIM, M1/M2 hoặc test. Xem [data card](docs/data-card.md); dữ liệu, run cũ và Word giữ nguyên.
 
-**Cập nhật sau Bước 14:** đã chạy một cấu hình implicit ALS theo yêu cầu, 32 factors/reg=0.1/confidence_scale=1/seed 42. Checkpoint vòng 18 (dừng vòng 23) đạt NDCG@10 **0.1974107044**, cao hơn đối chứng PureSVD nhị phân 26,1997% tương đối; Coverage@10 **4,9682%**, ARP giảm nhưng ILD giảm nhẹ. Đây là một seed, chưa thay nền M1 hoặc tuning; đề xuất ưu tiên xác nhận cùng cấu hình ở seed 43/44 trước khi quyết định bước tiếp. Theo yêu cầu mới, đối chiếu nghiên cứu 2022–2026, ưu tiên nguồn 2024–2026 phù hợp protocol; [phân tích tài liệu gần đây](docs/TONG_QUAN_TAI_LIEU_THAM_KHAO.md#doi-chieu-als-20261026). Word và mọi run cũ giữ nguyên.
+**Mốc lượt ALS đầu:** đã chạy một cấu hình implicit ALS theo yêu cầu, 32 factors/reg=0.1/confidence_scale=1/seed 42. Checkpoint vòng 18 (dừng vòng 23) đạt NDCG@10 **0.1974107044**, cao hơn đối chứng PureSVD nhị phân 26,1997% tương đối; Coverage@10 **4,9682%**, ARP giảm nhưng ILD giảm nhẹ. Tại mốc đó mới có một seed nên đề xuất ưu tiên xác nhận 43/44; phần xác nhận đã hoàn thành được ghi bên dưới. Căn cứ thực nghiệm ưu tiên nghiên cứu 2022–2026, đặc biệt nguồn 2024–2026 phù hợp protocol; [phân tích tài liệu gần đây](docs/TONG_QUAN_TAI_LIEU_THAM_KHAO.md#doi-chieu-als-20261026). Word và mọi run cũ giữ nguyên.
 
 ## Chạy lại EDA dữ liệu gốc
 
@@ -214,5 +214,25 @@ CLI khóa [cấu hình đầu](configs/models/implicit_als.yaml), cùng source t
 Run thực tế trả 20 mục cho 1.877 user, cùng cohort 1.865 user/8.142 đích. Precision@10 0.1003753351, Recall@10 0.2212064343; Top-10 phủ 765 artist so 368 của đối chứng. ARP 138.0209 so 145.3088; ILD 0.813204 so 0.817203. Fit riêng 2,083086 giây, theo dõi validation 174,467051 giây, tổng 176,550137 giây; recommend trung bình 4,410802 ms/user. OS peak working set cả tiến trình **178 MiB**, không phải RAM riêng của factor; model trên đĩa 2.556.337 byte. Thời gian khác lượt baseline, không phải benchmark kiểm soát.
 
 **73 tests/lint/format/mypy đạt**; toy đối chiếu phương trình chuẩn có trọng số/loss cả ô chưa quan sát, checkpoint/patience và load không fit. Kiểm toán độc lập confidence/dot/recommendations/evaluator khớp, nạp lại đủ 1.877 danh sách; chỉ fit dữ liệu thật **một lần**, không chạy thêm seed/tuning. Chi tiết trong [data card](docs/data-card.md); mã/config/metric tham chiếu bài gần đây, giữ bản Word Bước 6. Đề xuất xác nhận seed 43/44 là bước riêng, chưa thực hiện.
+
+## Xác nhận ALS qua ba seed và cập nhật ứng viên M1
+
+Đã áp dụng điều chỉnh: đúng hai fit bổ sung seed 43/44, cùng cấu hình 32 factors/reg=0.1/a_conf=1/CG3/float32 và split seed 42; giữ run seed 42 nguyên vẹn. CLI nhận --model-seed 42|43|44 và ghi seed thực cùng nguồn split/hash; không chọn seed đẹp nhất, không chạy lưới tuning.
+
+| Seed | Vòng tốt nhất / dừng | ALS NDCG@10 | PureSVD binary NDCG@10 |
+| ---: | ---: | ---: | ---: |
+| 42 | 18 / 23 | 0.1974107044 | 0.1564272628 |
+| 43 | 32 / 37 | 0.1974665063 | 0.1564272628 |
+| 44 | 12 / 17 | 0.1948784471 | 0.1564272628 |
+
+Mean ± sample std ALS **0.1965852193 ± 0.0014783714**, tăng **25,6720% tương đối**, thắng 3/3 seed và qua điều kiện mean cao hơn/ít nhất 2/3 chênh dương. Vì vậy cập nhật **ứng viên nền M1 sang ALS**, giữ seed 42 tham chiếu; không khóa test hoặc tuyên bố tối ưu. Coverage@10 mean 4,9898%, ARP 137,4503, ILD 0,813089; ILD thấp hơn đối chứng nên vẫn cần nghiên cứu đánh đổi của M1.
+
+[Cấu hình tổng hợp](configs/validation_summary.yaml) nay giữ 17 run thuộc chín cấu hình, không ghi đè tổng hợp Bước 14. Chạy lại phần tổng hợp, không fit:
+
+```powershell
+.venv/Scripts/python.exe -B scripts/summarize_validation.py --config configs/validation_summary.yaml --output-dir outputs/runs/validation_summary_als_new
+```
+
+Run chốt [validation_summary_als_confirmed_20261026](outputs/runs/validation_summary_als_confirmed_20261026/metrics.json) lưu quy tắc/các chênh seed/kết quả gate/candidate; kiểm toán độc lập 17 run, 51 dòng metric, 153 dòng nhóm và 96 dòng thống kê seed. Bốn CSV cốt lõi chạy lại trùng hash; **76 tests/lint/format/mypy đạt**, 219 tệp cũ và 11 Word giữ nguyên. Tiếp theo trình bày thiết kế **Bước 15 M1**, chưa triển khai hoặc tuning/test.
 
 `dvc.yaml`, `validate_data.py` và `scripts/train.py` còn là khung cũ, chưa nối các CLI hiện hành; `scripts/evaluate.py` chỉ kiểm chứng toy, không thay stage evaluate trong DVC. Không dùng `dvc repro` hoặc `scripts/train.py` để chạy toàn bộ nghiên cứu.

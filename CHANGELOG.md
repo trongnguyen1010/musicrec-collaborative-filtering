@@ -7,6 +7,17 @@ Mọi thay đổi đáng chú ý của MusicRec được ghi trong file này the
 
 ### Changed
 
+- 2026-10-26: Áp dụng điều chỉnh ưu tiên xác nhận ALS trước tuning: đúng hai
+  fit bổ sung seed 43/44, giữ cấu hình k32/reg0.1/a_conf1 và split seed 42.
+  NDCG@10 seed 42/43/44 = 0.1974107044/0.1974665063/0.1948784471;
+  mean ± sample std 0.1965852193 ± 0.0014783714, vượt PureSVD nhị phân
+  25,6720% và thắng 3/3 seed. Thêm gate mean cao hơn/ít nhất 2/3 chênh dương,
+  kiểm cohort và giữ control khi hòa; cập nhật ứng viên nền M1 sang ALS,
+  seed 42 tham chiếu, chưa khóa test. Tổng hợp 17 run/51 dòng metric/153 dòng
+  nhóm/96 thống kê seed; bốn CSV chạy lại trùng hash, audit độc lập đạt.
+  76 tests/lint/format/mypy đạt; 219 tệp cũ/11 Word giữ nguyên. Hoãn tuning,
+  chưa BPR/SLIM/M1/M2/test; bước tiếp theo là duyệt thiết kế M1.
+
 - 2026-10-26: Hoàn thành lượt implicit ALS đầu tiên sau Bước 14, đúng một
   cấu hình/seed 42: 32 factors, reg 0.1, c=1+ln(1+raw count), alpha thư viện 1,
   implicit CPU 0.7.3/native CG3/float32/một luồng. Chọn NDCG@10 mỗi vòng,

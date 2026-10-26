@@ -12,7 +12,11 @@ from pathlib import Path
 import pandas as pd
 import yaml
 
-from musicrec.evaluation.validation import summarize_history_groups, summarize_seeds
+from musicrec.evaluation.validation import (
+    compare_seed_models,
+    summarize_history_groups,
+    summarize_seeds,
+)
 
 
 def main() -> None:
@@ -66,6 +70,8 @@ def main() -> None:
     lengths = {u: int(n) for u, n in train.groupby("user_id").size().items()}
     records, group_rows, resources, seed_rows = [], [], [], []
     seed_results, source_runs = {}, {}
+    gate_config = config.get("retention_gate")
+    gate_evaluations = {}
     reference_cohort = None
     reference_protocol = None
     for model, runs in config["runs"].items():
@@ -152,6 +158,9 @@ def main() -> None:
                         "fit_including_validation_seconds"
                     ),
                     "best_epoch": metadata.get("supplementary", {}).get("best_epoch"),
+                    "process_peak_working_set_bytes": metadata.get("supplementary", {}).get(
+                        "process_peak_working_set_bytes"
+                    ),
                     "model_artifact_bytes": sum(
                         p.stat().st_size for p in model_files if p.is_file()
                     ),
@@ -170,6 +179,21 @@ def main() -> None:
                 for metric, stats in metrics.items():
                     if stats is not None:
                         seed_rows.append({"model": model, "k": int(k), "metric": metric, **stats})
+        if gate_config and model in (gate_config["candidate"], gate_config["control"]):
+            gate_evaluations[model] = evaluations
+    gate = None
+    selected_candidate = config["candidate_for_m1"]
+    if gate_config:
+        if (
+            gate_config["metric"] != "ndcg_at_10_validation"
+            or gate_config["rule"] != "higher_mean_and_at_least_two_positive_seed_differences"
+            or gate_config["tie"] != "retain_control"
+        ):
+            raise ValueError("Expected the predeclared three-seed retention rule")
+        gate = compare_seed_models(
+            gate_evaluations[gate_config["candidate"]], gate_evaluations[gate_config["control"]]
+        )
+        selected_candidate = gate_config["candidate"] if gate["passes"] else gate_config["control"]
     if not all(sha(Path(p)) == value for p, value in input_hashes.items()):
         raise RuntimeError("Inputs changed during summary")
     out.mkdir(parents=True, exist_ok=False)
@@ -191,13 +215,16 @@ def main() -> None:
     ]:
         shutil.copyfile(path, code / path.name)
     result = {
-        "step": 14,
-        "scope": "validation synthesis of current untuned configurations; no test or extensions",
+        "step": config.get("revision", 14),
+        "scope": "validation synthesis of declared configurations; no tuning or test evaluation",
         "created_at_utc": datetime.now(UTC).isoformat(),
         "config": config,
         "input_sha256": input_hashes,
         "source_runs": source_runs,
         "model_seed_summaries": seed_results,
+        "retention_gate": gate,
+        "candidate_for_m1": selected_candidate,
+        "candidate_status": "validation_candidate_pending_m1_design_no_test_lock",
         "train_history_mode": groups["train_history_mode"],
         "train_history_quantiles": train.groupby("user_id")
         .size()
@@ -207,8 +234,8 @@ def main() -> None:
             k: {n: v for n, v in g.items() if n != "at_k"} for k, g in groups["groups"].items()
         },
         "resource_limitations": (
-            "Historical per-run timings and on-disk model size; "
-            "not controlled latency benchmark or peak RAM"
+            "Historical per-run timings/on-disk size; OS process peak only where logged; "
+            "not controlled latency benchmark or model-only RAM"
         ),
         "test_file_read": False,
         "test_open_guard_enabled": True,

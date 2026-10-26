@@ -1,10 +1,10 @@
 # Data card HetRec 2011 Last.fm 2K
 
-## Trạng thái sau Bước 14 và lượt ALS đầu tiên ngày 26/10/2026
+## Trạng thái sau Bước 14 và xác nhận ALS qua ba seed ngày 26/10/2026
 
-Đã hoàn thành Bước 1–14 và lượt ALS đầu tiên theo phép riêng. **Train có 74.275 cặp; validation và test mỗi tập 9.263 cặp; mapping gồm 1.877 user và 15.398 artist từ train.** Đã tổng hợp sáu họ baseline/tám cấu hình và xác nhận model seed 42/43/44 cho Random/SVD/PureSVD nhị phân. PureSVD nhị phân là đối chứng hiện hành, NDCG@10 0.1564272628 ± 0; ALS seed 42 đạt 0.1974107044, chưa đủ xác nhận thay nền M1. Chưa tuning, học thẻ/M1/M2, chạy BPR/SLIM hoặc đánh giá test. Các phần trước giữ bối cảnh lịch sử; kết quả mới nhất nằm ở mục ALS cuối tệp. Số dòng test kế thừa Bước 4, không mở lại test trong lượt ALS. Word chỉ cập nhật khi được yêu cầu rõ ràng, hiện giữ bản Bước 6.
+Đã hoàn thành Bước 1–14, lượt ALS đầu và xác nhận cùng cấu hình ở seed 43/44 theo điều chỉnh được cho phép. **Train có 74.275 cặp; validation và test mỗi tập 9.263 cặp; mapping gồm 1.877 user và 15.398 artist từ train.** Tổng hợp hiện hành có 17 run; ALS đạt NDCG@10 **0.1965852193 ± 0.0014783714** qua seed 42/43/44, đối chứng PureSVD nhị phân 0.1564272628 ± 0; thắng 3/3 seed và qua điều kiện giữ. ALS trở thành ứng viên nền M1, seed 42 tham chiếu; chưa khóa mô hình cuối hoặc triển khai reranker. Tuning tiếp tục hoãn, chưa BPR/SLIM/M1/M2/test. Kết quả trước giữ bối cảnh lịch sử; mục xác nhận ALS cuối tệp là hiện hành. Số dòng test kế thừa Bước 4, không mở lại test. Word giữ bản Bước 6.
 
-Sau điểm dừng Bước 14, đã chạy một cấu hình implicit ALS được người dùng cho phép: NDCG@10 0.1974107044 ở seed 42, checkpoint vòng 18/dừng vòng 23. Cao hơn đối chứng PureSVD nhị phân 26,1997% tương đối; chưa xác nhận seed 43/44, tuning hoặc thay nền M1. Kết quả mới nhất ở mục lượt ALS cuối tệp, dữ liệu/Word/run cũ giữ nguyên. Căn cứ thực nghiệm mới ưu tiên nghiên cứu 2022–2026 theo yêu cầu; chưa chạy test, BPR/SLIM/M1/M2.
+Mốc lượt ALS đầu sau Bước 14 có NDCG@10 0.1974107044 ở seed 42, checkpoint vòng 18/dừng vòng 23; khi đó mới có một seed nên chưa đổi ứng viên. Lượt xác nhận 43/44 đã hoàn thành sau phép điều chỉnh của người dùng, được ghi ở mục cuối. Căn cứ thực nghiệm tiếp tục ưu tiên nghiên cứu 2022–2026; dữ liệu/Word/run cũ giữ nguyên, chưa chạy test hoặc BPR/SLIM/M1/M2.
 
 Bằng chứng máy đọc được: [source_audit.json](../outputs/runs/source_audit_20261019_162917_245445/source_audit.json). Tệp ghi thời điểm, phiên bản mã, tình trạng thay đổi chưa commit, cách đọc, từng kiểm tra và mã băm. Dùng Python standard library để đọc/kiểm tra trực tiếp, không thêm pipeline hoặc thư viện mới. Không có thao tác ngẫu nhiên nên seed không áp dụng.
 
@@ -624,3 +624,51 @@ Trước dữ liệu thật đã kiểm một vòng native CG trên toy hai chi�
 **Có cơ sở điều chỉnh thứ tự ưu tiên, chưa có cơ sở thay toàn bộ kế hoạch hoặc khóa ALS làm nền M1.** Đề xuất bước riêng tiếp theo là xác nhận **chính cấu hình này ở seed 43/44**, thay vì tự chạy đủ lưới tám cấu hình hay đi ngay M1 trên nền cũ. Nếu mean NDCG qua 42/43/44 cao hơn baseline mạnh nhất và chênh dương ở ít nhất 2/3 seed theo tiêu chí trước chạy, tổng hợp lại validation để đề nghị đổi nền M1. Một seed hiện tại mới đáp ứng tín hiệu triển vọng, chưa đáp ứng đầy đủ tiêu chí giữ mô hình. Không chọn seed đẹp nhất.
 
 Sau xác nhận mới quyết định có cần tuning; nếu không ổn định thì giữ đầy đủ kết quả và cân nhắc lưới đã giới hạn hoặc trở lại nền PureSVD, theo phép riêng. Giữ M1/M2, ItemCF của M2, split/catalog/metric, các mốc 15/11/22/11/27/11 và test sau khóa. Chưa BPR/SLIM, planning/MCTS, MICE hoặc thẻ/GNN, không đổi thiết kế chỉ dựa năm bài báo. M1/ablation phải chạy trên nền được duyệt cuối, không suy từ mức NDCG tăng rằng reranker chắc chắn thành công. Ghi đề xuất trong plan_assessment.json/kế hoạch hiện có; **chưa chạy 43/44, tuning, M1/M2 hoặc test**. Word giữ Bước 6, kết quả lưu cục bộ theo .gitignore.
+
+## Xác nhận ALS qua seed 43/44 và điều chỉnh ứng viên nền M1 ngày 26/10/2026
+
+Người dùng chấp thuận điều chỉnh ưu tiên xác nhận trước tuning. Đã chạy đúng **hai fit dữ liệu thật bổ sung**, [seed 43](../outputs/runs/implicit_als_seed43_validation_20261026/metrics.json) và [seed 44](../outputs/runs/implicit_als_seed44_validation_20261026/metrics.json), giữ [run seed 42](../outputs/runs/implicit_als_k32_c1_r01_validation_20261026/metrics.json) nguyên vẹn. Mọi tham số ngoài model RNG seed giống nhau: k32, regularization=0.1, a_conf=1, confidence=1+ln(1+count), library alpha=1, native CG3, float32/một luồng, tối đa 50 vòng/patience 5 theo NDCG@10. Split/biểu diễn/source vẫn seed 42; không đổi ngưỡng, catalog, candidate hoặc evaluator. Ngân sách/quy tắc giữ/hashes được ghi trước fit trong experiment.json cục bộ. Không fit lại seed 42, không lưới, BPR/SLIM/M1/M2 hoặc test.
+
+[Tổng hợp hiện hành](../outputs/runs/validation_summary_als_confirmed_20261026/metrics.json), [đủ metric](../outputs/runs/validation_summary_als_confirmed_20261026/metrics.csv), [seed](../outputs/runs/validation_summary_als_confirmed_20261026/seed_summary.csv), [nhóm](../outputs/runs/validation_summary_als_confirmed_20261026/history_groups.csv), [tài nguyên](../outputs/runs/validation_summary_als_confirmed_20261026/resources.csv) và [kiểm toán](../outputs/runs/validation_summary_als_confirmed_20261026/verification.json) có 17 run thuộc chín cấu hình/bảy họ model, cùng 1.877 danh sách, catalog 15.398 artist, cohort 1.865 user và 8.142 đích hợp lệ. Giữ riêng 12 user không còn đích và 1.121 đích ngoài catalog. Tổng hợp Bước 14 và mọi run trước được giữ nguyên; config working hiện hành khai báo thêm ba run ALS và gate.
+
+### Kết quả theo seed và quy tắc giữ
+
+| Seed | Vòng tốt nhất | Vòng dừng | ALS NDCG@10 | PureSVD binary NDCG@10 | Chênh tuyệt đối |
+| ---: | ---: | ---: | ---: | ---: | ---: |
+| 42 | 18 | 23 | 0.1974107044 | 0.1564272628 | +0.0409834416 |
+| 43 | 32 | 37 | 0.1974665063 | 0.1564272628 | +0.0410392435 |
+| 44 | 12 | 17 | 0.1948784471 | 0.1564272628 | +0.0384511843 |
+
+| Chỉ số @10 | ALS mean | ALS sample std (ddof=1) | PureSVD binary mean |
+| --- | ---: | ---: | ---: |
+| Precision | 0.0996246649 | 0.0010341717 | 0.0809651475 |
+| Recall | 0.2199255287 | 0.0017330765 | 0.1758891868 |
+| NDCG | **0.1965852193** | 0.0014783714 | 0.1564272628 |
+| Coverage (tỷ lệ) | 0.0498982552 | 0.0001984057 | 0.0238992077 |
+| Gini | 0.9820984817 | 0.0001371235 | 0.9895695447 |
+| ARP | 137.4502949062 | 0.6254119364 | 145.3087935657 |
+| Novelty | 9.7934246417 | 0.0070570220 | 9.5019819854 |
+| ILD | 0.8130889604 | 0.0002959671 | 0.8172029176 |
+
+NDCG mean tăng **0.0401579565 tuyệt đối, 25,6720% tương đối**. Cả mean cao hơn và **3/3 chênh seed dương** đáp ứng quy tắc đã định trước (ít nhất 2/3, hòa giữ control). Helper compare_seed_models kiểm cohort/catalog/candidate đồng nhất, đủ đúng ba seed, NDCG xác định và rule; không chọn seed cao nhất hoặc chỉ xét mean rồi bỏ dấu chênh. Unit test chặn trường hợp một seed kéo mean lên nhưng chỉ có một seed thắng, trường hợp hòa và lệch cohort. CLI tổng hợp ghi đầy đủ gate và candidate_for_m1=implicit_als, test_evaluation_or_lock=false.
+
+Coverage mean 4,9898% và ARP thấp hơn đối chứng, nhưng ILD cũng thấp hơn khoảng 0.004114; không suy ra mọi mục tiêu đều thắng. [Bảng paired theo user](../outputs/runs/validation_summary_als_confirmed_20261026/paired_per_user_mean_ndcg.csv) lấy mean qua ba seed **trong từng user trước**: 842 user tăng, 462 giảm, 561 hòa NDCG@10 so control. Không coi ba seed của cùng user thành ba user độc lập. Vẫn chỉ một split ngẫu nhiên, chưa kiểm định/test hoặc tuning tối ưu. Nhóm <40/=40/>40 giữ 41/1.822/2 user hợp lệ và giới hạn mẫu nhỏ đã giải thích ở Bước 14; chưa có bằng chứng cold-start/M2.
+
+### Chi phí hai lượt mới
+
+| Seed | Fit riêng (s) | Monitor validation (s) | Tổng fit+monitor (s) | Recommend mean (ms/user) | OS peak working set (byte) | Model (byte) |
+| ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| 43 | 3.003913 | 236.718266 | 239.722179 | 4.759958 | 186.630.144 | 2.555.141 |
+| 44 | 1.555115 | 124.680397 | 126.235512 | 4.129720 | 186.613.760 | 2.560.743 |
+
+Số vòng chọn/dừng khác nhau do khởi tạo và diễn biến validation; không đổi max/patience để ép bằng nhau. OS peak khoảng 178 MiB cả tiến trình như lượt 42, không phải RAM riêng factor. CSV resources giữ p95/tổng recommend/evaluator; thời gian load nằm trong metadata nguồn. Số đo khác tải máy/thời điểm, không phải benchmark kiểm soát. Các model cũ chưa có peak ghi nhận giữ null, không điền 0 hoặc suy diễn từ byte artifact.
+
+### Kiểm chứng, điều chỉnh đã áp dụng và bước tiếp theo
+
+Hai audit độc lập [43](../outputs/runs/implicit_als_seed43_validation_20261026/verification.json)/[44](../outputs/runs/implicit_als_seed44_validation_20261026/verification.json) dựng confidence từ count gốc, tính dot bằng phép giảm NumPy, đối chiếu mọi danh sách/score/reason và metric user/K, weighted loss trên cả ô thiếu, strict-best/patience/khôi phục checkpoint. So với **control cùng seed** có hash; score sai khác tối đa 4,44089e-16, normalized checkpoint loss sai khác tối đa 1,63048e-10. Nạp lại không fit và khớp đủ 1.877 danh sách mỗi run; không fit thêm để audit.
+
+Kiểm toán tổng hợp độc lập đối chiếu **17 run, 51 dòng metric, 153 dòng nhóm và 96 dòng metric seed**, mọi mean/std và gate bằng NumPy/Pandas, không dùng helper production. Chạy lại tổng hợp cho **bốn CSV cốt lõi trùng hash**, không huấn luyện; bảng paired bổ sung có hash audit. **76 tests đạt trong 156,85 giây; lint/format/mypy 26 tệp nguồn đạt**. Kiểm hash **219 tệp cũ/11 Word giữ nguyên**; audit/code/config/seed/Git SHA/runtime/hashes lưu cùng run mới.
+
+**Đã áp dụng:** ưu tiên xác nhận ALS trước tuning; giữ điều kiện giữ cũ; cập nhật **ứng viên nền M1 thành ALS k32/reg0.1/a_conf1, seed tham chiếu 42** vì qua gate, dù seed 43 nhỉnh hơn không chọn nó làm mốc. Giữ PureSVD/Popularity và mọi baseline làm đối chứng; lưới ALS tám cấu hình vẫn là trần tùy chọn, không phải việc bắt buộc chạy đủ. Tuning tiếp tục hoãn, BPR/SLIM chưa mở; M2 vẫn ItemCF theo protocol riêng, các mốc demo không đổi.
+
+**Bước tiếp theo là Bước 15 — trình bày/duyệt thiết kế M1 trước code:** nền ALS đã xác nhận, C=100, các nhánh nền/chỉ đa dạng/chỉ giảm phổ biến/kết hợp và ngưỡng giảm NDCG tối đa 5% so nền theo kế hoạch. Đây chưa phải cho phép chạy M1 hoặc tự thay định nghĩa similarity/normalization; thiết kế chi tiết cần giải thích ở bước đó, dựa nguồn gần đây đã ưu tiên. Chưa khóa mô hình cuối cho test, chưa M1/M2/test hoặc cập nhật Word; bản Word vẫn Bước 6, kết quả mới chỉ trong run và tài liệu làm việc hiện có.
