@@ -107,7 +107,9 @@ def compare(first: Path, second: Path) -> dict[str, Any]:
             path.relative_to(left).as_posix()
             for path in left.rglob("*")
             if path.is_file()
-            and "code" not in path.relative_to(left).parts
+            and not any(
+                part == "code" or part.startswith(".") for part in path.relative_to(left).parts
+            )
             and path.suffix not in {".py", ".png"}
             and path.name != "metrics.json"
         )
