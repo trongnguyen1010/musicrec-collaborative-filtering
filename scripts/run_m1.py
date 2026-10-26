@@ -1,4 +1,4 @@
-"""Run the frozen Step 15 grid and matching seed ablations; never fit ALS or open test."""
+"""Run the frozen Step 15 grid and matching seed ablations; never fit the base or open test."""
 
 import os
 
@@ -32,6 +32,9 @@ from musicrec.evaluation.validation import (  # noqa: E402
 )
 from musicrec.recommenders.implicit_als import ImplicitALSRecommender  # noqa: E402
 from musicrec.recommenders.m1 import M1Recommender, rerank_candidates  # noqa: E402
+from musicrec.recommenders.pure_svd import PureSVDRecommender  # noqa: E402
+
+BASE_CLASSES = {"implicit_als": ImplicitALSRecommender, "pure_svd": PureSVDRecommender}
 
 
 def main() -> None:
@@ -76,7 +79,10 @@ def main() -> None:
     if any(config.get(k) != v for k, v in expected.items()):
         raise ValueError("Expected the predeclared Step 15 grid/seed/bound protocol")
     if evaluation_config["ks"] != config["ks"] or set(config["base_runs"]) != {42, 43, 44}:
-        raise ValueError("Expected unchanged evaluator and three pinned ALS checkpoints")
+        raise ValueError("Expected unchanged evaluator and three pinned base checkpoints")
+    base_class = config.get("base_class", "implicit_als")
+    if base_class not in BASE_CLASSES:
+        raise ValueError("Expected an implicit_als or pure_svd base")
     source, out = Path(config["representations_run"]).resolve(), args.output_dir.resolve()
     sources = [source, *(Path(p).resolve() for p in config["base_runs"].values())]
     if out.exists() or any(out == p or p in out.parents for p in sources):
@@ -95,7 +101,7 @@ def main() -> None:
     pin(source / "metrics.json")
     for name in ["train.parquet", "validation.parquet", "id_mappings.json", "transform.json"]:
         pin(source / name, metadata["output_sha256"][name])
-    base_evaluations, base_metadata = {}, {}
+    base_evaluations, base_metadata, verification = {}, {}, {}
     root = Path(__file__).resolve().parents[1]
     for seed, name in config["base_runs"].items():
         run = Path(name).resolve()
@@ -103,24 +109,31 @@ def main() -> None:
         if (
             info["seed"] != seed
             or Path(info["source_run"]).resolve() != source
-            or info["config"]["model"] != "implicit_als"
+            or info["config"]["model"] != base_class
             or info["evaluation_config"] != evaluation_config
-            or not read(run / "verification.json")["all_checks_passed"]
         ):
-            raise ValueError("Expected independently verified matching ALS runs")
+            raise ValueError("Expected matching base runs for every seed")
+        # The ALS runs of 26/10 carry an independent audit; runs from the tuning
+        # driver do not, and that absence is recorded instead of being hidden.
+        if (run / "verification.json").exists():
+            if not read(run / "verification.json")["all_checks_passed"]:
+                raise ValueError("Base run failed its independent verification")
+            pin(run / "verification.json")
+            verification[seed] = "independent_audit_passed"
+        else:
+            verification[seed] = "not_available_runner_checks_only"
         for relative, digest in info["output_sha256"].items():
             pin(run / relative, digest)
         for relative, digest in info["code_sha256"].items():
             pin(run / "code" / relative, digest)
-        for path in [run / "metrics.json", run / "verification.json"]:
-            pin(path)
+        pin(run / "metrics.json")
         for name in ["train.parquet", "validation.parquet", "id_mappings.json", "transform.json"]:
             if info["input_sha256"][name] != metadata["output_sha256"][name]:
-                raise ValueError("ALS used different data")
-        for relative in ["implicit_als.py", "ranking.py"]:
-            folder = "recommenders" if relative == "implicit_als.py" else "evaluation"
+                raise ValueError("Base model used different data")
+        for relative in [f"{base_class}.py", "ranking.py"]:
+            folder = "evaluation" if relative == "ranking.py" else "recommenders"
             if sha(root / "src/musicrec" / folder / relative) != info["code_sha256"][relative]:
-                raise ValueError("Frozen ALS inference/evaluator code changed")
+                raise ValueError("Frozen base inference/evaluator code changed")
         base_evaluations[seed], base_metadata[seed] = read(run / "evaluation.json"), info
     train = pd.read_parquet(source / "train.parquet")
     validation = pd.read_parquet(source / "validation.parquet")
@@ -144,7 +157,7 @@ def main() -> None:
         args.config,
         args.evaluation_config,
         root / "src/musicrec/recommenders/m1.py",
-        root / "src/musicrec/recommenders/implicit_als.py",
+        root / f"src/musicrec/recommenders/{base_class}.py",
         root / "src/musicrec/recommenders/base.py",
         root / "src/musicrec/data/contracts.py",
         root / "src/musicrec/evaluation/m1.py",
@@ -169,7 +182,7 @@ def main() -> None:
         if seed != 42 and winner is None:
             break
         base_run = Path(config["base_runs"][seed])
-        base = ImplicitALSRecommender.load(base_run / "model")
+        base = BASE_CLASSES[base_class].load(base_run / "model")
         if base.seed != seed or set(base._users) != set(users):
             raise ValueError("Loaded checkpoint does not match the seed/cohort")
         wrapper = M1Recommender(base, candidate_size=100).fit(interactions)
@@ -252,7 +265,7 @@ def main() -> None:
                 "evaluation_seconds": eval_seconds,
             }
         if seed_results[(1.0, 0.0)] != base_evaluations[seed]:
-            raise RuntimeError("Identity M1 must exactly reproduce the frozen ALS evaluation")
+            raise RuntimeError("Identity M1 must exactly reproduce the frozen base evaluation")
         original = pd.read_csv(
             base_run / "recommendations.csv", dtype={"user_id": str, "item_id": str}
         )
@@ -346,7 +359,9 @@ def main() -> None:
             "input_sha256": input_hashes,
             "inputs_unchanged": True,
             "test_file_read": False,
-            "als_fit_calls": 0,
+            "base_class": base_class,
+            "base_fit_calls": 0,
+            "base_verification": verification,
             "code_sha256": code_hashes,
             "git_sha": subprocess.check_output(["git", "rev-parse", "HEAD"], text=True).strip(),
             "git_status": subprocess.check_output(["git", "status", "--short"], text=True),
