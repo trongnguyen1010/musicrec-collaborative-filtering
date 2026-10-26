@@ -1,0 +1,32 @@
+{
+  "step": 17,
+  "created_at_utc": "2026-10-26T15:35:49.766931+00:00",
+  "lock_sha256": "eeea6a4c03055fba7fcdb8e522d67fd29cf0202a6acc21aa1bf4f6944b83c9f6",
+  "lock_unchanged": true,
+  "reserved_users_total": 189,
+  "reserved_users_evaluated": 189,
+  "learning_users": 1501,
+  "catalog_size": 13210,
+  "test_pairs_of_cohort": 932,
+  "input_sha256": {
+    "train.parquet": "5232d6b1b7a5bb8354b94bc8ee2e4d27054607915f83ca8d18f8aefdd97cb526",
+    "test.parquet": "c9196bba9fa761db016d1b8eab7d3b76e3bad8a9fc044a5f66e2e42e58685901"
+  },
+  "git_sha": "717d04bb844c40d526cf2b8e0893249eec3a930b",
+  "git_status": "",
+  "command": [
+    "scripts/evaluate_m2_test.py",
+    "--m2-run",
+    "outputs/chinh_thuc_cloud_20261026/chuong_4/m2_tuning",
+    "--output-dir",
+    "outputs/chinh_thuc_cloud_20261026/chuong_4/m2_test"
+  ],
+  "runtime": {
+    "python": "3.11.17 (main, Oct  1 2026, 15:41:07) [GCC 13.3.0]",
+    "platform": "Linux-6.18.44-fc-v153-x86_64-with-glibc2.39",
+    "numpy": "2.4.6",
+    "scipy": "1.17.1",
+    "pandas": "2.3.3",
+    "pyarrow": "19.0.1"
+  }
+}

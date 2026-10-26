@@ -1,6 +1,6 @@
 # Chương 3 bước 3.3: thiết kế đã chốt cho 3.6–3.8 và đề xuất sửa báo cáo
 
-Ngày: 26/10/2026. Đây là bước 3.3 trong [ROADMAP](../ROADMAP.md). Nội dung dựa trên bốn quyết định ngày 26/10 (Q3, Q4, Q6, Q7) và kết quả tinh chỉnh trong [chuong_4.md](chuong_4.md). Mục 3.8 (M2) chưa viết vì đang chờ trả lời Q5.
+Ngày: 26/10/2026. Đây là bước 3.3 trong [ROADMAP](../ROADMAP.md). Nội dung dựa trên bốn quyết định ngày 26/10 (Q3, Q4, Q6, Q7) và kết quả tinh chỉnh trong [chuong_4.md](chuong_4.md). Mục 3.8 (M2) đã chốt theo Q5.
 
 Các tham số dưới đây lấy từ cấu hình chạy thật, không phải từ kế hoạch. Nguồn: trường `config` trong `metrics.json` của từng run đã chọn.
 
@@ -57,7 +57,11 @@ Một điểm cần ghi trung thực: PureSVD cho kết quả giống hệt ở 
 
 ### 2.5 Mục 3.8 (M2)
 
-Chờ trả lời Q5. Nội dung cần chốt: có đưa phép chia người dùng 1.501 / 187 / 189 vào Chương 3 hay không, và 189 người để dành được đánh giá trên tập kiểm thử hay tập xác thực của họ.
+Đã chốt theo Q5 (26/10): giữ phép chia người dùng và chấm 189 người để dành trên tập kiểm thử. Đề xuất viết lại 3.8 như sau:
+
+> M2 được đánh giá theo giao thức người dùng mới riêng. Người dùng của tập train được xáo một lần theo hạt giống 42 rồi chia thành nhóm học (80%, 1.501 người), nhóm tinh chỉnh (10%, 187 người) và nhóm để dành (189 người). Mọi thành phần của M2 (điểm đại diện, ItemCF với L = 40, từ vựng thẻ và IDF, độ phổ biến) chỉ học từ dữ liệu train của nhóm học; danh mục gồm 13.210 nghệ sĩ. Với mỗi người dùng đánh giá, hệ thống chỉ nhận N ∈ {0, 1, 3, 5} nghệ sĩ đầu tiên của một thứ tự xáo cố định trên lịch sử train của họ. Cấu hình (α, ngưỡng lịch sử) được chọn trên tập xác thực của nhóm tinh chỉnh theo NDCG@10 trung bình ở N = 1, 3, 5; nhóm để dành chỉ được chấm một lần trên tập kiểm thử sau khi cấu hình đã khóa.
+
+Thêm vào 3.8 dòng tham số: lưới α ∈ {0,25; 0,5; 0,75}, ngưỡng ∈ {3, 5, 10}; thẻ chỉ giữ nếu xuất hiện ở ít nhất 2 nghệ sĩ. Kết quả ở [chuong_4_m2.md](chuong_4_m2.md).
 
 ### 2.6 Mục 4.4 (không gian siêu tham số)
 
