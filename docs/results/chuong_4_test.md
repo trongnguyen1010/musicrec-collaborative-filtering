@@ -12,7 +12,7 @@ Thư mục kết quả: `outputs/chinh_thuc_cloud_20261026/`. Các tệp nhỏ (
 - **PureSVD cao hơn Popularity** 0,1140 NDCG@10 (CI 95% [0,1064; 0,1219], p Holm < 1e-100).
 - **SVD, UserCF và ItemCF vẫn thấp hơn Popularity trên test**, giống validation.
 - **M1** so với nền PureSVD: NDCG@10 giảm 0,75%, khác biệt **không có ý nghĩa thống kê** (p Holm = 0,608), trong khi ARP giảm 15,69%, độ bao phủ tăng từ 1,86% lên 2,94%, ILD tăng từ 0,795 lên 0,814.
-- **M2 chưa đánh giá trên test** vì còn chờ trả lời Q5.
+- **M2** đã chấm trên 189 người để dành (Q5): không hơn Popularity về NDCG@10 ở N nào, xem [chuong_4_m2.md](chuong_4_m2.md).
 
 ## 1. Môi trường chạy
 
@@ -121,10 +121,40 @@ Trên validation, M1 tăng NDCG 0,52%; trên test, M1 giảm 0,75%. Cả hai tha
 | Mô hình tốt nhất trong sáu mô hình | Chưa có số | PureSVD nhị phân k = 16, NDCG@10 test 0,1828 |
 | CF so với Popularity | Kỳ vọng CF tốt hơn | UserCF, ItemCF, SVD đều thấp hơn Popularity trên cả validation và test |
 | M1 | Kỳ vọng đánh đổi một phần NDCG để giảm phổ biến | NDCG không đổi có ý nghĩa; ARP giảm 15,69% |
-| M2 | | Chưa đánh giá trên test (chờ Q5) |
+| M2 | Kỳ vọng hơn Popularity với người dùng ít lịch sử | Không hơn Popularity trên test (N = 3: −0,0087, p Holm 0,857); tăng coverage, giảm ARP. Xem [chuong_4_m2.md](chuong_4_m2.md) |
 
-## 7. Việc còn lại
+## 7. Nhóm lịch sử và chi phí (4.7, 4.8)
 
-1. Trả lời Q5 để chạy M2 trên 189 người dùng để dành, rồi viết lại mục 3.8 và phần M2 ở Chương 4.
-2. Bước 4.7 (bảng chi phí: thời gian huấn luyện, gợi ý, bộ nhớ, kích thước mô hình) và 4.8 (phân tích ca lỗi) chưa làm. Số liệu thời gian và bộ nhớ đã có sẵn trong `metrics.json` của từng run.
-3. Bản chạy chính thức trên máy Windows không còn cần thiết, trừ khi bạn muốn có thêm bằng chứng tái lập trên máy thứ hai. Khi đó phải ghi rõ trong báo cáo đây là lần chạy lại, không phải lần chọn mô hình mới.
+Nguồn: [history_groups.csv](chinh_thuc_cloud_20261026/test/history_groups.csv), [cost.csv](chinh_thuc_cloud_20261026/test/cost.csv), script [test_breakdown.py](../../scripts/test_breakdown.py). Script chỉ đọc kết quả đã lưu, không chấm lại.
+
+NDCG@10 trên test theo độ dài lịch sử train (mốc là giá trị phổ biến nhất, 40 nghệ sĩ):
+
+| Mô hình | Dưới 40 (37 người) | Đúng 40 (1.816 người) | Trên 40 (2 người) |
+| --- | --- | --- | --- |
+| Popularity | 0,153110 | 0,067056 | 0,069528 |
+| UserCF | 0,036357 | 0,018514 | 0 |
+| ItemCF | 0 | 0,017785 | 0,084064 |
+| SVD | 0,144561 | 0,061050 | 0 |
+| PureSVD | 0,212681 | 0,182065 | 0,279254 |
+| M1 | 0,191281 | 0,181117 | 0,270700 |
+| ALS (mở rộng) | 0,239272 | 0,216890 | 0,325317 |
+
+Gần như toàn bộ người dùng có đúng 40 nghệ sĩ trong train (do mỗi người có tối đa 50 nghệ sĩ và chia 80/10/10). Hai nhóm còn lại quá nhỏ để kết luận về ảnh hưởng của độ dài lịch sử.
+
+Chi phí của cấu hình đã chọn, đo trên lượt chạy validation (một luồng BLAS, máy đám mây):
+
+| Mô hình | Huấn luyện (giây) | Gợi ý trung bình (ms/người) | Kích thước mô hình (byte) |
+| --- | --- | --- | --- |
+| Random | 0,02 | 2,85 | 212.158 |
+| Popularity | 0,22 | 0,04 | 692.495 |
+| UserCF | 0,52 | 1,39 | 736.339 |
+| ItemCF | 0,75 | 1,51 | 1.254.621 |
+| SVD | 5,10 | 2,52 | 2.632.514 |
+| PureSVD | 0,18 | 2,09 | 1.614.976 |
+| M1 | 0 (dùng lại PureSVD) | 4,84 lấy ứng viên + 0,19 tái xếp hạng | 354.719 (cộng mô hình nền) |
+| ALS (mở rộng) | 1,50 | 2,30 | 2.538.843 |
+
+## 8. Việc còn lại
+
+1. Phân tích từng ca lỗi cụ thể (4.8) chưa làm; mục 7 chỉ có phân tích theo nhóm lịch sử.
+2. Bản chạy chính thức trên máy Windows không còn cần thiết, trừ khi bạn muốn có thêm bằng chứng tái lập trên máy thứ hai. Khi đó phải ghi rõ trong báo cáo đây là lần chạy lại, không phải lần chọn mô hình mới.
