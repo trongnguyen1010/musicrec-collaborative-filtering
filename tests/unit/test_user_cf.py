@@ -147,7 +147,7 @@ def test_equal_cosines_ignore_roundoff_before_global_top_l_selection() -> None:
     assert UserCFRecommender(neighbors=1).fit(reversed(rows)).recommend("1", 1, set()) == [result]
 
 
-@pytest.mark.parametrize(("model_name", "step"), [("user_cf", 9), ("item_cf", 10)])
+@pytest.mark.parametrize(("model_name", "step"), [("user_cf", 9), ("item_cf", 10), ("svd", 11)])
 def test_proxy_cf_cli_reads_step5_only_reloads_and_refuses_corruption(
     tmp_path: Path, model_name: str, step: int
 ) -> None:
@@ -206,6 +206,12 @@ def test_proxy_cf_cli_reads_step5_only_reloads_and_refuses_corruption(
         assert metrics["step"] == step and metrics["test_file_read"] is False
         assert metrics["supplementary"]["reload_verified_users"] == 4
         assert metrics["supplementary"]["proxy_rmse_pairs"] == 3
+        if model_name == "svd":
+            details = metrics["supplementary"]
+            assert 1 <= details["best_epoch"] <= details["epochs_completed"] <= 100
+            assert details["best_validation_ndcg_at_10"] == pytest.approx(
+                metrics["at_k"]["10"]["ndcg"], abs=1e-15
+            )
         for name, expected in metrics["output_sha256"].items():
             assert hashlib.sha256((out / name).read_bytes()).hexdigest() == expected
     for name in [
@@ -214,7 +220,7 @@ def test_proxy_cf_cli_reads_step5_only_reloads_and_refuses_corruption(
         "evaluation.json",
         "model/state.json",
         "model/ratings.npz",
-        "model/neighbors.npz",
+        "model/parameters.npz" if model_name == "svd" else "model/neighbors.npz",
         "transform.json",
     ]:
         assert (tmp_path / "first" / name).read_bytes() == (tmp_path / "second" / name).read_bytes()

@@ -7,6 +7,16 @@ Mọi thay đổi đáng chú ý của MusicRec được ghi trong file này the
 
 ### Changed
 
+- 2026-10-26: Hoàn thành Bước 11 SVD có độ lệch: 32 factors, lr=0.005,
+  reg=0.02, seed=42; SGD chỉ trên proxy train quan sát với global mean/bias,
+  cập nhật đồng thời factors và L2 theo quan sát. Chọn epoch bằng NDCG@10
+  validation mỗi epoch, patience=5, dừng 6/100 epoch và khôi phục epoch 1.
+  NDCG@10 0.0564899628 chưa vượt Popularity, Coverage@10 82 artist (0.5325%),
+  RMSE proxy bổ sung 1.2439097807. Tái hiện độc lập cả 445.650 cập nhật và metric,
+  nạp lại không fit khớp 1.877 danh sách; 10 tệp chạy lại trùng hash, có đường học.
+  59 tests/lint/format/mypy đạt. Chưa tuning, PureSVD, M1/M2 hoặc mở test;
+  giữ mọi run cũ/Word và cập nhật tài liệu làm việc, dừng trước Bước 12.
+
 - 2026-10-26: Hoàn thành Bước 10 ItemCF L=40/shrinkage=0 trên validation:
   cosine toàn cột proxy train, top-L theo artist đích rồi giao lịch sử user,
   trung bình điểm có trọng số và mean fallback có reason. Tính từng khối 256

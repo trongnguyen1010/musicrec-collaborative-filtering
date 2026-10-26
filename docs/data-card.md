@@ -1,8 +1,8 @@
 # Data card HetRec 2011 Last.fm 2K
 
-## Trạng thái sau Bước 10 ngày 26/10/2026
+## Trạng thái sau Bước 11 ngày 26/10/2026
 
-Đã hoàn thành Bước 1–10 theo yêu cầu người dùng. **Train có 74.275 cặp; validation và test mỗi tập 9.263 cặp; mapping gồm 1.877 user và 15.398 artist từ train.** Đã có evaluator, Random/Popularity và hai CF mỗi mô hình một cấu hình L=40/shrinkage=0 trên validation. Chưa tuning CF, chạy MF/PureSVD, học thẻ hoặc đánh giá test. Dừng Bước 10; các phần Bước 1–9 giữ bối cảnh lịch sử, kết quả mới nhất ở mục Bước 10 cuối tệp. Word chỉ cập nhật khi người dùng yêu cầu rõ ràng, hiện giữ bản Bước 6.
+Đã hoàn thành Bước 1–11 theo yêu cầu người dùng. **Train có 74.275 cặp; validation và test mỗi tập 9.263 cặp; mapping gồm 1.877 user và 15.398 artist từ train.** Đã có evaluator và năm baseline trên validation; CF/MF mới chạy mỗi mô hình một cấu hình. SVD có độ lệch 32 nhân tố chọn epoch 1 và dừng sau 6 epoch theo patience 5. Chưa tuning CF/MF, chạy PureSVD, học thẻ hoặc đánh giá test. Dừng Bước 11; các phần Bước 1–10 giữ bối cảnh lịch sử, kết quả mới nhất ở mục Bước 11 cuối tệp. Word chỉ cập nhật khi người dùng yêu cầu rõ ràng, hiện giữ bản Bước 6.
 
 Bằng chứng máy đọc được: [source_audit.json](../outputs/runs/source_audit_20261019_162917_245445/source_audit.json). Tệp ghi thời điểm, phiên bản mã, tình trạng thay đổi chưa commit, cách đọc, từng kiểm tra và mã băm. Dùng Python standard library để đọc/kiểm tra trực tiếp, không thêm pipeline hoặc thư viện mới. Không có thao tác ngẫu nhiên nên seed không áp dụng.
 
@@ -364,4 +364,49 @@ Artifact gồm recommendations.csv có score/reason, metric tổng/từng user, 
 
 [Kiểm tra độc lập](../outputs/runs/item_cf_l40_s0_validation_20261026/verification.json) không nhập recommender/evaluator production: dựng cosine từ tích vô hướng cột gốc chia chuẩn (khác cách chuẩn hóa trước trong model), kiểm tra cả 15.398 bộ top-40; tính lại điểm từ ma trận lịch sử × láng giềng để tái dựng mọi danh sách/score/reason, RMSE, từng metric user và mọi chỉ số tổng bằng NumPy/CSR. Sai khác trọng số tối đa 1,22125e-15, score 2,66454e-15; các chỉ số khớp trong 1e-12. Mã kiểm tra và guard được lưu cùng audit của run. **53 tests đạt; ruff check, ruff format --check và mypy toàn mã nguồn đạt** sau sửa nhỏ lỗi style/import/type đã có; .venv-legacy được bỏ khỏi quét qua .gitignore. Các sửa này không triển khai luồng prototype mới. Đối chiếu hash 36 tệp xác nhận mọi đầu ra baseline trước và cả 11 Word giữ nguyên.
 
-GitHub chỉ nhận mã/cấu hình/tài liệu theo quy tắc repository; dataset, model và run vẫn giữ cục bộ trong các đường dẫn bị ignore. Word chưa chứa kết quả Bước 7–10, vẫn giữ bản Bước 6. Dừng giải thích Bước 10; bước tiếp theo là Bước 11 SVD có độ lệch, cần cho phép riêng. Tinh chỉnh UserCF/ItemCF cũng là các điểm dừng riêng, chưa chạy lưới.
+Đây là bằng chứng riêng Bước 10; kết quả SVD có độ lệch nằm ở mục Bước 11 bên dưới. GitHub chỉ nhận mã/cấu hình/tài liệu; dataset, model và run vẫn giữ cục bộ trong các đường dẫn bị ignore. Word giữ Bước 6; tinh chỉnh UserCF/ItemCF vẫn là các điểm dừng riêng, chưa chạy lưới.
+
+## Bước 11 SVD có độ lệch một cấu hình ngày 26/10/2026
+
+Run chốt: [svd_k32_validation_20261026](../outputs/runs/svd_k32_validation_20261026/metrics.json). [SVDRecommender](../src/musicrec/recommenders/svd.py), [CLI](../scripts/run_svd.py) và [cấu hình](../configs/models/svd.yaml) học proxy_score từ Bước 5. Tham số theo kế hoạch hiện hành: 32 nhân tố, learning rate 0.005, regularization 0.02, seed 42, tối đa 100 epoch, patience 5 theo NDCG@10 validation. YAML khung cũ 64 nhân tố/30 vòng được thay bằng cấu hình này trước chạy. Chỉ một cấu hình/seed; chưa tuning hoặc thử seed bổ sung.
+
+Căn cứ phương pháp là [Koren, Bell và Volinsky (2009), Matrix Factorization Techniques for Recommender Systems](https://doi.org/10.1109/MC.2009.263), đối chiếu trực tiếp [toàn văn, công thức 4–5 và phần SGD](https://homepages.math.uic.edu/~lreyzin/s15_mcs590/koren09.pdf). Mô hình dự đoán mu + b_u + b_i + p_u dot q_i, với mu là mean proxy train cố định, hai bias và hai vector học từ quan sát. Đây là MF có bias thường gọi SVD trong recommender, không gọi TruncatedSVD/PureSVD, implicit ALS, BPR hoặc SVD++. Chuyển lượt nghe thành proxy 1–5, số nhân tố, khởi tạo, seed, fallback và cách chọn epoch là lựa chọn của nhóm; không tuyên bố tái hiện kết quả Netflix hoặc xem proxy là sao thật.
+
+Loss ghi trong learning curve là 1/2 × tổng trên từng cặp quan sát [(r_ui − dự đoán)^2 + lambda × (b_u^2 + b_i^2 + norm(p_u)^2 + norm(q_i)^2)]. L2 được áp mỗi quan sát nên khi tổng hợp tương đương trọng số tần suất quan sát cho norm từng user/item; không mô tả nhầm là một lần phạt toàn bộ tham số độc lập tần suất. SGD chỉ qua 74.275 cặp train, không điền ô thiếu thành nhãn 0 và không sinh negative. Bias khởi tạo 0; factor float64 lấy normal(0,0.1) bằng Generator(PCG64(42)); sắp các cặp theo mapping user/item số trước khi xáo trộn mỗi epoch bằng cùng RNG sau khởi tạo. Các gradient dùng error và factor trước bước học; p mới không được dùng để cập nhật q trong cùng bước.
+
+Ví dụ minh họa: mu=3, b_u=0.2, b_i=−0.3, p=[0.1,0.9], q=[0.2,0.8] cho dự đoán 3.64. Nếu target proxy=5, error=1.36; một bước lr=0.005/reg=0.02 cho b_u mới=0.20678, b_i mới=−0.29317, p mới=[0.10135,0.90535], q mới=[0.20066,0.80604]. Ví dụ kiểm tra SGD bằng số vô hướng trong test dùng bảng quan sát nhỏ và trạng thái khởi tạo thật, kiểm cả objective sau epoch; không phải cấu hình thực nghiệm thứ hai.
+
+Từ epoch 1 tính full-ranking NDCG@10 trên đúng cohort validation sau mỗi epoch. Chỉ tăng nghiêm ngặt mới cải thiện, hòa giữ epoch sớm nhất; sau 5 epoch liên tiếp không cải thiện thì dừng, hoặc đạt trần 100. Sao chép đủ bias/factor ở checkpoint tốt nhất và khôi phục trước khi xuất model/đánh giá cuối. Validation chỉ chọn epoch, không cung cấp target gradient, không học lại phân vị, mean hoặc mapping. RMSE không điều khiển dừng sớm. Run và kiểm tra độc lập có guard báo lỗi nếu mở test.parquet, kể cả để băm; không đọc test hoặc refit train+validation.
+
+User mới dùng mu + bias artist, không có bias/vector user; reason là svd_item_bias_cold_start. Đây là đường không cá nhân hóa, chưa phải M2. Predict từ chối artist ngoài catalog. Recommend loại lịch sử train đã biết và lịch sử truyền thêm; đủ full catalog chưa nghe, không lấy mẫu ứng viên. Score/gradient không clip hoặc làm tròn; riêng khóa sort làm tròn 12 chữ số rồi theo mapping số. CLI đặt OPENBLAS/MKL/OMP/BLIS một luồng trước import NumPy để kiểm tra tái lập; runtime lưu môi trường luồng và phiên bản thư viện.
+
+Run chạy **6 epoch**, chọn/khôi phục **epoch 1**. [learning_curve.csv](../outputs/runs/svd_k32_validation_20261026/learning_curve.csv) và [hình đường học](../outputs/runs/svd_k32_validation_20261026/audit/learning_curve.png) giữ cả sáu epoch; tham số model và kết quả dưới đây thuộc epoch 1, không thuộc epoch cuối.
+
+| Epoch | Train proxy RMSE | NDCG@10 validation | Checkpoint |
+| ---: | ---: | ---: | --- |
+| 1 | 1.2331161636 | 0.0564899628 | Tốt nhất, được xuất |
+| 2 | 1.1059182031 | 0.0543261867 | Không cải thiện |
+| 3 | 1.0136200681 | 0.0504302904 | Không cải thiện |
+| 4 | 0.9469206037 | 0.0478624503 | Không cải thiện |
+| 5 | 0.8989960759 | 0.0436939184 | Không cải thiện |
+| 6 | 0.8645013737 | 0.0431400553 | Đủ patience 5, dừng |
+
+Đủ 1.877 user nhận 20 mục (37.540 dòng); evaluator dùng cùng 1.865 user và 8.142 đích hợp lệ như bốn baseline trước. Báo riêng 12 user không còn đích và 1.121 đích ngoài catalog. Không có mục trùng/đã nghe/ngoài catalog hoặc danh sách thiếu/rỗng. Tất cả user trong phép thử chính đã có tham số học từ train; không dùng chất lượng này làm bằng chứng cold-start.
+
+| K | Precision | Recall | NDCG | Coverage | Gini | ARP (listener) | Novelty (bit) | ILD |
+| ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| 5 | 0.0345308311 | 0.0373369080 | 0.0415643226 | 0.0020132485 | 0.9994811415 | 361.1347989276 | 7.9934939147 | 0.6176560312 |
+| 10 | 0.0301876676 | 0.0657283289 | 0.0564899628 | 0.0053253669 | 0.9990620627 | 317.0871849866 | 8.2154873533 | 0.7211056802 |
+| 20 | 0.0205630027 | 0.0889008043 | 0.0662684929 | 0.0422132745 | 0.9972423667 | 254.3220375335 | 8.7180984374 | 0.7974723635 |
+
+Tìm trúng 322/563/767 cặp tại K=5/10/20, phủ 31/82/650 artist tương ứng. NDCG@10 0.0564899628 dưới Popularity 0.0623622664, cao hơn UserCF 0.0080787555, ItemCF 0.0074299548 và Random 0.0003721497. Coverage@10 0,5325% cao hơn Popularity 0,1818% nhưng vẫn rất thấp so hai CF; ARP 317,0872 thấp hơn Popularity 351,8290 nhưng vẫn tập trung artist nhiều người nghe, ILD 0,7211 cao hơn Popularity 0,6648 và thấp hơn hai CF. Chưa kết luận về họ mô hình hoặc chọn nền cuối từ một cấu hình/seed validation.
+
+RMSE proxy bổ sung của checkpoint = **1.2439097807** trên 8.142 cặp, không có dự đoán held-out ngoài 1–5 ở run này; code vẫn không clip. RMSE này cao hơn hai CF dù ranking tốt hơn chúng. Train RMSE/objective giảm đều trong khi NDCG validation giảm qua sáu epoch: việc khớp tốt hơn điểm train chưa bảo đảm thứ hạng đích ẩn tốt hơn. Chỉ đây chưa đủ xác định nguyên nhân hoặc kết luận tác dụng của tuning; không tự đổi objective, patience, seed hay chọn thêm cấu hình sau kết quả.
+
+Lần chạy đầu: fit phần SGD/chuẩn bị/đo loss 8,732634 giây, theo dõi validation 45,015899 giây, tổng fit có theo dõi 53,748533 giây. Recommend tổng 7,550701 giây, trung bình 4,022749 ms/user, phân vị 95% 4,435320 ms; evaluator 6,034926 giây. RMSE riêng 0,066220 giây; nạp và đối chiếu 1.877 danh sách 7,795826 giây. Ba tệp model chiếm **4.766.544 byte trên đĩa**, không phải bộ nhớ đỉnh. Thời gian chỉ thuộc lần chạy/môi trường này, không gồm I/O nguồn trong fit/recommend, không phải độ trễ API hoặc benchmark kiểm soát so với các model chạy thời điểm khác.
+
+Artifact gồm CSR proxy trong model/ratings.npz, bốn mảng bias/factor trong model/parameters.npz, state giữ ID/mean/config/best_epoch/đường học/hash, learning_curve.csv, recommendations có score/reason, metrics tổng/từng user, mapping/transform, seed/version/Git SHA/trạng thái/diff và snapshot mã. Load dùng dữ liệu số không pickle, kiểm checksum/mapping/kích thước/giá trị/lịch sử rồi nạp checkpoint, không fit hoặc chạy chọn epoch. Đã nạp lại và khớp đủ 1.877 danh sách/score/reason; run `_recheck` trùng hash **10 tệp** dự đoán/chỉ số/model/mapping/transform/learning curve.
+
+[Kiểm tra độc lập](../outputs/runs/svd_k32_validation_20261026/verification.json) không nhập model/evaluator production. Mã Python số vô hướng và fsum tái hiện đủ **445.650 cập nhật SGD** qua sáu epoch từ cùng train/khởi tạo/thứ tự RNG; đối chiếu train RMSE/objective và full-ranking NDCG mỗi epoch, quy tắc patience và checkpoint. Sai khác tham số tối đa **1,11023e-16**. Từ checkpoint độc lập tính lại mọi danh sách/score/reason, RMSE, từng metric user/K và Coverage/Gini/ARP/Novelty/ILD bằng NumPy/CSR; sai khác score tối đa 1,77636e-15, các chỉ số khớp trong 1e-12. Mã audit/guard và mã vẽ được giữ trong audit của run. **59 tests đạt; ruff check, ruff format --check và mypy toàn mã nguồn đạt**. Đối chiếu hash **47 tệp** xác nhận các đầu ra baseline trước và cả 11 Word giữ nguyên.
+
+GitHub chỉ nhận mã/cấu hình/tài liệu; dataset, model, run và hình giữ cục bộ theo .gitignore. Word chưa chứa Bước 7–11, vẫn là bản Bước 6. Dừng giải thích Bước 11; Bước 12 PureSVD và tinh chỉnh CF/MF là các lần cho phép riêng, chưa chạy. Chưa học thẻ, M1/M2 hoặc đánh giá test.

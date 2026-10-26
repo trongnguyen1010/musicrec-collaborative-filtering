@@ -4,11 +4,13 @@ import argparse
 import hashlib
 import importlib.metadata
 import json
+import os
 import platform
 import shutil
 import subprocess
 import sys
 from datetime import UTC, datetime
+from math import fsum, isclose
 from pathlib import Path
 from time import perf_counter
 from typing import Literal
@@ -17,17 +19,18 @@ import pandas as pd
 import yaml
 
 from musicrec.data.contracts import Interaction
-from musicrec.evaluation.ranking import evaluate_ranking, proxy_rmse
+from musicrec.evaluation.ranking import evaluate_ranking, ndcg_at_k, proxy_rmse
 from musicrec.recommenders.base import Recommender
 from musicrec.recommenders.item_cf import ItemCFRecommender
 from musicrec.recommenders.popularity import PopularityRecommender
 from musicrec.recommenders.random import RandomRecommender
+from musicrec.recommenders.svd import SVDRecommender
 from musicrec.recommenders.user_cf import UserCFRecommender
 
 
-def main(model_name: Literal["random", "popularity", "user_cf", "item_cf"]) -> None:
+def main(model_name: Literal["random", "popularity", "user_cf", "item_cf", "svd"]) -> None:
     """Verify source hashes, fit the train catalog and persist validation evidence."""
-    proxy_model = model_name in ("user_cf", "item_cf")
+    proxy_model = model_name in ("user_cf", "item_cf", "svd")
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
         "--representations-run" if proxy_model else "--split-run",
@@ -122,6 +125,34 @@ def main(model_name: Literal["random", "popularity", "user_cf", "item_cf"]) -> N
             "numeric_tie_decimals": 12,
             "fit_scope": "train_only",
         }
+    if model_name == "svd":
+        expected_config = {
+            "model": "svd",
+            "seed": 42,
+            "seed_role": "initialization_and_epoch_shuffle",
+            "latent_factors": 32,
+            "learning_rate": 0.005,
+            "regularization": 0.02,
+            "max_epochs": 100,
+            "patience": 5,
+            "init_std": 0.1,
+            "initializer": "numpy_pcg64_normal_zero_mean",
+            "optimizer": "sequential_observed_pair_sgd_simultaneous_factor_updates",
+            "training_order": "numeric_user_item_then_rng_permutation_each_epoch",
+            "objective": "half_sum_observed_squared_error_plus_per_observation_l2",
+            "global_mean": "fixed_observed_train_proxy_mean",
+            "initial_biases": "zero",
+            "selection_metric": "ndcg_at_10_validation_every_epoch",
+            "selection_ties": "earliest_epoch",
+            "min_delta": 0,
+            "restore_best_checkpoint": True,
+            "unknown_user_fallback": "global_mean_plus_learned_item_bias",
+            "score_clipping": "none",
+            "tie_break": "numeric_train_mapping_order",
+            "numeric_tie_decimals": 12,
+            "blas_threads": 1,
+            "fit_scope": "train_only_validation_selects_epoch",
+        }
     if config != expected_config:
         raise ValueError(f"Expected the agreed {model_name} validation configuration")
     evaluation_config = yaml.safe_load(args.evaluation_config.read_text(encoding="utf-8"))
@@ -163,9 +194,49 @@ def main(model_name: Literal["random", "popularity", "user_cf", "item_cf"]) -> N
         model = UserCFRecommender(neighbors=config["neighbors"], shrinkage=config["shrinkage"])
     if model_name == "item_cf":
         model = ItemCFRecommender(neighbors=config["neighbors"], shrinkage=config["shrinkage"])
+    if model_name == "svd":
+        model = SVDRecommender(
+            **{
+                name: config[name]
+                for name in [
+                    "latent_factors",
+                    "learning_rate",
+                    "regularization",
+                    "max_epochs",
+                    "patience",
+                    "seed",
+                    "init_std",
+                ]
+            }
+        )
+    monitor_seconds = []
+
+    def validation_ndcg(current: SVDRecommender) -> float:
+        start_monitor = perf_counter()
+        catalog = set(mappings["item_id_to_index"])
+        values = []
+        for user in sorted(histories, key=int):
+            relevant = targets[user] & catalog
+            if relevant:
+                recs = current.recommend(user, 10, histories[user])
+                values.append(ndcg_at_k([item.item_id for item in recs], relevant, 10))
+        if not values:
+            raise ValueError("Epoch selection requires eligible validation users")
+        score = fsum(values) / len(values)
+        monitor_seconds.append(perf_counter() - start_monitor)
+        print(
+            json.dumps({"epoch": len(current.learning_curve) + 1, "validation_ndcg_at_10": score}),
+            flush=True,
+        )
+        return score
+
     start = perf_counter()
-    model.fit(interactions)
-    fit_seconds = perf_counter() - start
+    if isinstance(model, SVDRecommender):
+        model.fit(interactions, validation_score=validation_ndcg)
+    else:
+        model.fit(interactions)
+    fit_total_seconds = perf_counter() - start
+    fit_seconds = fit_total_seconds - sum(monitor_seconds)
     lists, rows, latencies, recorded_recommendations = {}, [], [], {}
     for user in sorted(histories, key=int):
         start = perf_counter()
@@ -187,19 +258,35 @@ def main(model_name: Literal["random", "popularity", "user_cf", "item_cf"]) -> N
     result = evaluate_ranking(lists, targets, histories, ks=tuple(evaluation_config["ks"]))
     evaluator_seconds = perf_counter() - start
     supplementary = {}
+    if isinstance(model, SVDRecommender):
+        best_score = model.learning_curve[model.best_epoch - 1]["validation_ndcg_at_10"]
+        if not isclose(result["at_k"]["10"]["ndcg"], best_score, rel_tol=0, abs_tol=1e-15):
+            raise RuntimeError("Restored checkpoint disagrees with selected validation epoch")
+        supplementary.update(
+            {
+                "best_epoch": model.best_epoch,
+                "epochs_completed": len(model.learning_curve),
+                "best_validation_ndcg_at_10": best_score,
+                "stop_reason": model.stop_reason,
+                "fit_including_validation_seconds": fit_total_seconds,
+                "validation_monitor_seconds": sum(monitor_seconds),
+            }
+        )
     if proxy_model:
         known_targets = validation[validation.item_index.notna()]
         start = perf_counter()
         predicted = [
             model.predict(row.user_id, row.item_id) for row in known_targets.itertuples(index=False)
         ]
-        supplementary = {
-            "proxy_rmse": proxy_rmse(known_targets.proxy_score.tolist(), predicted),
-            "proxy_rmse_pairs": len(known_targets),
-            "proxy_rmse_outside_catalog_excluded": int(validation.item_index.isna().sum()),
-            "proxy_rmse_seconds": perf_counter() - start,
-            "prediction_clipping": "none",
-        }
+        supplementary.update(
+            {
+                "proxy_rmse": proxy_rmse(known_targets.proxy_score.tolist(), predicted),
+                "proxy_rmse_pairs": len(known_targets),
+                "proxy_rmse_outside_catalog_excluded": int(validation.item_index.isna().sum()),
+                "proxy_rmse_seconds": perf_counter() - start,
+                "prediction_clipping": "none",
+            }
+        )
     out.mkdir(parents=True, exist_ok=False)
 
     def write_json(name: str, value: object) -> None:
@@ -224,7 +311,7 @@ def main(model_name: Literal["random", "popularity", "user_cf", "item_cf"]) -> N
     if model_name == "popularity":
         state["learned_values"] = "per-artist sum of log2(1 + raw train count); no user factors"
         state["scores"] = {item: model.predict("offline", item) for item in state["catalog"]}
-    if isinstance(model, (UserCFRecommender, ItemCFRecommender)):
+    if isinstance(model, (UserCFRecommender, ItemCFRecommender, SVDRecommender)):
         model.save(out / "model")
         start = perf_counter()
         restored = type(model).load(out / "model")
@@ -237,6 +324,13 @@ def main(model_name: Literal["random", "popularity", "user_cf", "item_cf"]) -> N
         supplementary["reload_verified_users"] = len(histories)
         supplementary["reload_verification_seconds"] = perf_counter() - start
         state["learned_values"] = "train proxy CSR, observed means and top-L cosine neighbors"
+        if isinstance(model, SVDRecommender):
+            state["learned_values"] = (
+                "train proxy CSR, global mean, user/item biases and factors; best validation epoch"
+            )
+            pd.DataFrame(model.learning_curve).to_csv(
+                out / "learning_curve.csv", index=False, lineterminator="\n"
+            )
         state["artifact_directory"] = "model"
         shutil.copyfile(source / "transform.json", out / "transform.json")
     write_json("model.json", state)
@@ -264,7 +358,9 @@ def main(model_name: Literal["random", "popularity", "user_cf", "item_cf"]) -> N
     write_json(
         "metrics.json",
         {
-            "step": {"random": 7, "popularity": 8, "user_cf": 9, "item_cf": 10}[model_name],
+            "step": {"random": 7, "popularity": 8, "user_cf": 9, "item_cf": 10, "svd": 11}[
+                model_name
+            ],
             "scope": f"{model_name} on validation only; no tuning or test evaluation",
             "created_at_utc": datetime.now(UTC).isoformat(),
             "seed": config["seed"],
@@ -299,6 +395,17 @@ def main(model_name: Literal["random", "popularity", "user_cf", "item_cf"]) -> N
             ).hexdigest(),
             "runtime": {
                 "python": platform.python_version(),
+                "blas_thread_environment": {
+                    name: os.environ.get(name)
+                    for name in [
+                        "OPENBLAS_NUM_THREADS",
+                        "MKL_NUM_THREADS",
+                        "OMP_NUM_THREADS",
+                        "BLIS_NUM_THREADS",
+                    ]
+                }
+                if model_name == "svd"
+                else None,
                 **{
                     name: importlib.metadata.version(name)
                     for name in ["pandas", "numpy", "pyarrow", "scipy"]
