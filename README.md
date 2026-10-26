@@ -25,12 +25,12 @@ Các lệnh này không thay thế việc kiểm tra nguồn, EDA và xác minh 
 - [Kế hoạch từng bước](docs/WEEKLY_IMPLEMENTATION_PLAN.md): vận dụng hướng dẫn của cô, lộ trình dữ liệu → EDA → mô hình → thực nghiệm → prototype.
 - [Quy tắc phát triển](DEVELOPMENT_RULES.md): phạm vi được phép, giải thích cuối bước và lưu phiên bản báo cáo.
 - Đề tài **33**: [báo cáo mới nhất sau Bước 6, ngày 25/10/2026](docs/reports/33_BaoCaoKhoaLuan_CaoTrongNguyen_LeKhacGiaKhang_25-10-2026.docx), kế thừa V14 và giữ mọi bản cũ. Tên báo cáo theo mẫu `33_BaoCaoKhoaLuan_CaoTrongNguyen_LeKhacGiaKhang_DD-MM-YYYY.docx`.
-  Theo yêu cầu mới nhất, chỉ cập nhật Word khi người dùng yêu cầu rõ ràng, không tự cập nhật sau mỗi bước hoặc khi chạy hết mô hình. Kết quả Bước 7–11 nằm trong run và tài liệu làm việc, chưa đưa vào Word.
+  Theo yêu cầu mới nhất, chỉ cập nhật Word khi người dùng yêu cầu rõ ràng, không tự cập nhật sau mỗi bước hoặc khi chạy hết mô hình. Kết quả Bước 7–12 nằm trong run và tài liệu làm việc, chưa đưa vào Word.
 - [Data card](docs/data-card.md): thông tin nguồn và các mục còn chờ xác minh.
 - [Ôn tập và câu hỏi bảo vệ](docs/SEMINAR_CHUONG_1_2.md).
 - [Phối hợp và theo dõi](docs/PROGRESS_TRACKING_GUIDE.md), [cấu trúc dự kiến](PROJECT_STRUCTURE.md), [lịch sử thay đổi](CHANGELOG.md).
 
-Nguồn đối chiếu chính là [hướng dẫn của GVHD](docs/Hướng%20dẫn%20từng%20bước%20hoàn%20thành%20khóa%20luận.docx), kế hoạch và bằng chứng run hiện hành. Đã hoàn thành Bước 1–11: dữ liệu, evaluator và năm baseline Random, Popularity, UserCF, ItemCF, SVD có độ lệch. CF/MF mới chạy mỗi mô hình một cấu hình trên validation, xem [data card](docs/data-card.md). Dừng giải thích Bước 11; chưa tinh chỉnh CF/MF, chạy PureSVD, học thẻ hoặc đánh giá test. Dữ liệu gốc, các run trước và mọi bản Word đã bàn giao giữ nguyên.
+Nguồn đối chiếu chính là [hướng dẫn của GVHD](docs/Hướng%20dẫn%20từng%20bước%20hoàn%20thành%20khóa%20luận.docx), kế hoạch và bằng chứng run hiện hành. Đã hoàn thành Bước 1–12: dữ liệu, evaluator và lượt chạy đầu của đủ sáu baseline Random, Popularity, UserCF, ItemCF, SVD có độ lệch, PureSVD. CF/MF/PureSVD mới chạy mỗi mô hình một cấu hình trên validation, xem [data card](docs/data-card.md). Dừng giải thích Bước 12; chưa tinh chỉnh, so sánh biểu diễn, học thẻ hoặc đánh giá test. Dữ liệu gốc, các run trước và mọi bản Word đã bàn giao giữ nguyên.
 
 ## Chạy lại EDA dữ liệu gốc
 
@@ -140,6 +140,18 @@ CLI giới hạn BLAS một luồng, dùng chung I/O/evaluator/cohort, không m�
 
 Run `outputs/runs/svd_k32_validation_20261026` chạy 6 epoch, chọn **epoch 1**. NDCG@10 **0.0564899628**, Precision@10 0.0301876676, Recall@10 0.0657283289 trên cùng 1.865 user/8.142 đích hợp lệ; thấp hơn Popularity 0.0623622664, cao hơn hai CF cấu hình đầu. Coverage@10 **82/15.398 = 0.5325367%**, ARP@10 317.0871850, ILD@10 0.7211057; danh sách vẫn tập trung mạnh. RMSE proxy bổ sung **1.2439097807**, không dùng chọn epoch. Train RMSE giảm 1.233116 → 0.864501 qua sáu epoch nhưng NDCG@10 giảm 0.056490 → 0.043140; [đường học](outputs/runs/svd_k32_validation_20261026/audit/learning_curve.png) minh họa sự khác biệt giữa fit điểm và ranking.
 
-Kiểm tra độc lập bằng số vô hướng tái hiện **445.650 cập nhật SGD** qua cả sáu epoch, train loss/validation NDCG, checkpoint và đủ 1.877 danh sách/score/reason/các chỉ số. Sai khác tham số tối đa 1.11023e-16; nạp lại không fit và chạy lại **10 tệp trùng hash**, gồm learning_curve.csv. **59 tests đạt; lint/format/mypy toàn mã nguồn đạt**. Kết quả, model và mã audit giữ cục bộ; tài liệu có số đo trong [data card](docs/data-card.md). Word giữ Bước 6; chưa tuning hoặc mở test. Dừng Bước 11; **Bước 12 PureSVD** cần cho phép riêng.
+Kiểm tra độc lập bằng số vô hướng tái hiện **445.650 cập nhật SGD** qua cả sáu epoch, train loss/validation NDCG, checkpoint và đủ 1.877 danh sách/score/reason/các chỉ số. Sai khác tham số tối đa 1.11023e-16; nạp lại không fit và chạy lại **10 tệp trùng hash**, gồm learning_curve.csv. **59 tests đạt; lint/format/mypy toàn mã nguồn đạt** tại Bước 11. Kết quả, model và mã audit giữ cục bộ; tài liệu có số đo trong [data card](docs/data-card.md). Word giữ Bước 6; chưa tuning hoặc mở test. Kết quả PureSVD nằm ở mục Bước 12 tiếp theo.
+
+## Chạy lại riêng Bước 12 PureSVD cấu hình đầu
+
+```powershell
+.venv/Scripts/python.exe -B scripts/run_pure_svd.py --representations-run outputs/runs/representations_20261024 --output-dir outputs/runs/pure_svd_new
+```
+
+Output phải chưa tồn tại và nằm ngoài nguồn Bước 5. [Cấu hình](configs/models/pure_svd.yaml) dùng **32 chiều, proxy_score train, seed 42**. Ma trận thưa R không trừ mean/chuẩn hóa hoặc thêm bias; các ô thiếu là 0 đại số trong bài toán phân rã, không phải quan sát không thích. SciPy svds/ARPACK lấy 32 trị suy biến lớn nhất, tolerance=1e-10, maxiter=10000, ncv mặc định; vector đầu PCG64(42), BLAS một luồng. Score là **R V32 V32.T**, tương đương tái dựng U32 Sigma32 V32.T; không nhân Sigma thêm lần nữa, không học bằng SGD/validation hoặc dừng sớm. User mới có score 0 và reason fallback riêng theo thứ tự ID; chưa phải M2. Score không clip, khóa sort 12 chữ số rồi mapping số.
+
+Run `outputs/runs/pure_svd_k32_proxy_validation_20261026` trả đủ 20 mục cho 1.877 user, đánh giá cùng 1.865 user/8.142 đích hợp lệ như năm baseline trước. NDCG@10 **0.1516922327**, Precision@10 0.0780160858, Recall@10 0.1694459339, cao hơn Popularity 0.0623622664 và SVD có độ lệch 0.0564899628 ở các cấu hình đầu. Coverage@10 **362/15.398 = 2.3509547%**, ARP@10 143.9861662, ILD@10 0.8189157. Chưa chốt mô hình cuối hoặc suy ra ổn định qua seed/dataset; độ phủ vẫn thấp và ILD thấp hơn hai CF. Không tính RMSE vì score là mức liên hệ, không phải dự đoán điểm proxy đã hiệu chuẩn.
+
+Kiểm tra độc lập bằng eigh của Gram user–user, không gọi svds/model/evaluator production: khớp 32 trị suy biến/không gian chiếu và đủ 1.877 danh sách/score/reason/chỉ số; sai khác score toàn catalog tối đa 1.54876e-13. Load không fit/phân rã lại; chạy lại **9 tệp trùng hash**. **63 tests đạt; lint/format/mypy toàn mã nguồn đạt**. Bằng chứng, giới hạn và chi phí ở [data card](docs/data-card.md); dataset/model/run giữ cục bộ, Word giữ Bước 6. Dừng Bước 12; **Bước 13 so sánh biểu diễn nhị phân/log/proxy** hoặc tuning số chiều cần cho phép riêng, chưa chạy.
 
 `dvc.yaml`, `validate_data.py` và `scripts/train.py` còn là khung cũ, chưa nối các CLI hiện hành; `scripts/evaluate.py` chỉ kiểm chứng toy, không thay stage evaluate trong DVC. Không dùng `dvc repro` hoặc `scripts/train.py` để chạy toàn bộ nghiên cứu.

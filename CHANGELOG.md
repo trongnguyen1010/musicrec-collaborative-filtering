@@ -7,6 +7,15 @@ Mọi thay đổi đáng chú ý của MusicRec được ghi trong file này the
 
 ### Changed
 
+- 2026-10-26: Hoàn thành Bước 12 PureSVD 32 chiều trên proxy train/seed 42,
+  zero-fill không centering/bias, score R V32 V32.T bằng svds/ARPACK thưa.
+  Không SGD/dừng sớm/RMSE; cold-start zero profile có reason riêng. NDCG@10
+  0.1516922327 cao hơn các cấu hình đầu đã chạy, Coverage@10 362 artist (2.3510%),
+  ARP 143.9862/ILD 0.8189; chưa chốt mô hình cuối. Kiểm tra độc lập qua dense
+  Gram user–user/eigh, 32 singular values/không gian chiếu và đủ 1.877 danh sách,
+  nạp lại không fit/phân rã; 9 tệp chạy lại trùng hash. 63 tests/lint/format/mypy
+  đạt; giữ mọi run cũ/Word, chưa tuning/so sánh biểu diễn hoặc mở test.
+
 - 2026-10-26: Hoàn thành Bước 11 SVD có độ lệch: 32 factors, lr=0.005,
   reg=0.02, seed=42; SGD chỉ trên proxy train quan sát với global mean/bias,
   cập nhật đồng thời factors và L2 theo quan sát. Chọn epoch bằng NDCG@10

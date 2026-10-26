@@ -23,14 +23,17 @@ from musicrec.evaluation.ranking import evaluate_ranking, ndcg_at_k, proxy_rmse
 from musicrec.recommenders.base import Recommender
 from musicrec.recommenders.item_cf import ItemCFRecommender
 from musicrec.recommenders.popularity import PopularityRecommender
+from musicrec.recommenders.pure_svd import PureSVDRecommender
 from musicrec.recommenders.random import RandomRecommender
 from musicrec.recommenders.svd import SVDRecommender
 from musicrec.recommenders.user_cf import UserCFRecommender
 
 
-def main(model_name: Literal["random", "popularity", "user_cf", "item_cf", "svd"]) -> None:
+def main(
+    model_name: Literal["random", "popularity", "user_cf", "item_cf", "svd", "pure_svd"],
+) -> None:
     """Verify source hashes, fit the train catalog and persist validation evidence."""
-    proxy_model = model_name in ("user_cf", "item_cf", "svd")
+    proxy_model = model_name in ("user_cf", "item_cf", "svd", "pure_svd")
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
         "--representations-run" if proxy_model else "--split-run",
@@ -153,6 +156,33 @@ def main(model_name: Literal["random", "popularity", "user_cf", "item_cf", "svd"
             "blas_threads": 1,
             "fit_scope": "train_only_validation_selects_epoch",
         }
+    if model_name == "pure_svd":
+        expected_config = {
+            "model": "pure_svd",
+            "seed": 42,
+            "seed_role": "arpack_start_vector",
+            "latent_factors": 32,
+            "representation": "prepared_train_proxy_score",
+            "missing_entries": "algebraic_zero_not_observed_dislike",
+            "centering": "none",
+            "normalization": "none",
+            "biases": "none",
+            "solver": "scipy_sparse_svds_arpack",
+            "which": "LM",
+            "tolerance": 1e-10,
+            "max_iter": 10000,
+            "ncv": "scipy_default",
+            "start_vector": "pcg64_standard_normal_min_dimension",
+            "singular_value_order": "descending",
+            "sign_rule": "largest_absolute_component_entry_positive",
+            "score": "train_row_times_right_subspace_projector",
+            "unknown_user_fallback": "zero_profile_numeric_mapping_order",
+            "score_clipping": "none",
+            "tie_break": "numeric_train_mapping_order",
+            "numeric_tie_decimals": 12,
+            "blas_threads": 1,
+            "fit_scope": "train_only_no_validation_epoch_selection",
+        }
     if config != expected_config:
         raise ValueError(f"Expected the agreed {model_name} validation configuration")
     evaluation_config = yaml.safe_load(args.evaluation_config.read_text(encoding="utf-8"))
@@ -208,6 +238,10 @@ def main(model_name: Literal["random", "popularity", "user_cf", "item_cf", "svd"
                     "init_std",
                 ]
             }
+        )
+    if model_name == "pure_svd":
+        model = PureSVDRecommender(
+            **{name: config[name] for name in ["latent_factors", "seed", "tolerance", "max_iter"]}
         )
     monitor_seconds = []
 
@@ -272,7 +306,14 @@ def main(model_name: Literal["random", "popularity", "user_cf", "item_cf", "svd"
                 "validation_monitor_seconds": sum(monitor_seconds),
             }
         )
-    if proxy_model:
+    if isinstance(model, PureSVDRecommender):
+        supplementary.update(
+            {
+                "fit_diagnostics": model.fit_diagnostics,
+                "rmse_not_applicable": "association_scores_are_not_calibrated_proxy_ratings",
+            }
+        )
+    if proxy_model and model_name != "pure_svd":
         known_targets = validation[validation.item_index.notna()]
         start = perf_counter()
         predicted = [
@@ -311,7 +352,9 @@ def main(model_name: Literal["random", "popularity", "user_cf", "item_cf", "svd"
     if model_name == "popularity":
         state["learned_values"] = "per-artist sum of log2(1 + raw train count); no user factors"
         state["scores"] = {item: model.predict("offline", item) for item in state["catalog"]}
-    if isinstance(model, (UserCFRecommender, ItemCFRecommender, SVDRecommender)):
+    if isinstance(
+        model, (UserCFRecommender, ItemCFRecommender, SVDRecommender, PureSVDRecommender)
+    ):
         model.save(out / "model")
         start = perf_counter()
         restored = type(model).load(out / "model")
@@ -330,6 +373,10 @@ def main(model_name: Literal["random", "popularity", "user_cf", "item_cf", "svd"
             )
             pd.DataFrame(model.learning_curve).to_csv(
                 out / "learning_curve.csv", index=False, lineterminator="\n"
+            )
+        if isinstance(model, PureSVDRecommender):
+            state["learned_values"] = (
+                "train proxy CSR, leading right singular vectors and projected histories; no biases"
             )
         state["artifact_directory"] = "model"
         shutil.copyfile(source / "transform.json", out / "transform.json")
@@ -358,9 +405,14 @@ def main(model_name: Literal["random", "popularity", "user_cf", "item_cf", "svd"
     write_json(
         "metrics.json",
         {
-            "step": {"random": 7, "popularity": 8, "user_cf": 9, "item_cf": 10, "svd": 11}[
-                model_name
-            ],
+            "step": {
+                "random": 7,
+                "popularity": 8,
+                "user_cf": 9,
+                "item_cf": 10,
+                "svd": 11,
+                "pure_svd": 12,
+            }[model_name],
             "scope": f"{model_name} on validation only; no tuning or test evaluation",
             "created_at_utc": datetime.now(UTC).isoformat(),
             "seed": config["seed"],
@@ -404,7 +456,7 @@ def main(model_name: Literal["random", "popularity", "user_cf", "item_cf", "svd"
                         "BLIS_NUM_THREADS",
                     ]
                 }
-                if model_name == "svd"
+                if model_name in ("svd", "pure_svd")
                 else None,
                 **{
                     name: importlib.metadata.version(name)
