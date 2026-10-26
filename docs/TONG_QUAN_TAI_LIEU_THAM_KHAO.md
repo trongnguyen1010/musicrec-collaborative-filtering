@@ -10,6 +10,23 @@
 
 Bổ sung hiện hành: [Khảo sát mô hình mở rộng ngày 24/10/2026](#khao-sat-mo-rong-20261024).
 
+Ưu tiên theo yêu cầu mới ngày 26/10/2026: [đối chiếu nghiên cứu gần đây cho lượt ALS](#doi-chieu-als-20261026); dùng nguồn 2022–2026, ưu tiên 2024–2026 phù hợp bài toán khi đề xuất thay đổi kế hoạch. Các phần cũ phía dưới giữ vai trò lịch sử/tổng quan, không tự trở thành căn cứ thực nghiệm mới.
+
+<a id="doi-chieu-als-20261026"></a>
+
+## Đối chiếu nghiên cứu gần đây cho lượt ALS ngày 26/10/2026
+
+Đã đọc nguồn gốc trước lượt fit ALS đầu tiên, giữ riêng ngày công bố và phiên bản. Không chuyển điểm số giữa các protocol hoặc coi bài mới hơn đương nhiên đáng tin hơn. Cấu hình 32 factors/reg=0.1/confidence_scale=1/seed 42 là lượt thăm dò đã chốt của nhóm, không phải cấu hình tối ưu được những bài này xác nhận.
+
+| Nghiên cứu | Nội dung được kiểm tra | Ảnh hưởng tới quyết định hiện tại |
+| --- | --- | --- |
+| [Anelli et al. (2022), Top-N Recommendation Algorithms: A Quest for the State-of-the-Art](https://arxiv.org/html/2203.01155v2), UMAP 2022 | So sánh nhiều baseline, gồm iALS, trên nhiều bộ dữ liệu và cả accuracy/beyond-accuracy; phần 4 lưu ý khác biệt theo dữ liệu và cơ hội tuning. | Giữ PureSVD/Popularity và cùng protocol; không loại họ ALS hoặc đổi nền từ một cấu hình/metric. |
+| [Lin et al. (2024), When Box Meets Graph Neural Network in Tag-aware Recommendation](https://arxiv.org/html/2406.12020), mục 5 | Có Last.fm/HetRec nhưng tương tác từ gán thẻ và mô hình tag-aware. | Có ích cho nhánh thẻ; không lấy điểm của tác giả làm chuẩn cho count nghe hoặc tự đưa GNN vào lượt ALS. |
+| [Martal & Najib (2025), Music Artist Recommendation System Based on Listening History Using SVD and MICE Imputation Approaches](https://journal.uim.ac.id/index.php/zeta/article/download/3106/1561/), Zeta 10(1), tr. 70–80, công thức (8) | “Accuracy” là độ trùng danh sách giữa các số chiều; dữ liệu mẫu có 500 user. | Không so “96%” với NDCG held-out hoặc lấy đó làm lý do thay pipeline bằng MICE. |
+| [Trapeznikov & Utushkin (2026), Planning over Matrix-Factorization MDPs for Candidate Generation](https://arxiv.org/abs/2607.02115), preprint v2 ngày 27/08/2026 | Dùng embedding iALS cố định để so static retrieval và planning/reranking; protocol thời gian khác dữ liệu nghe tĩnh của nhóm. | Xác nhận iALS còn được dùng làm nền trong nghiên cứu mới; chưa phải bằng chứng ALS thắng ở HetRec hoặc quyền triển khai MCTS/planning. |
+
+Đây là đối chiếu để thiết kế/diễn giải; kết quả thật của nhóm nằm trong data card và run ALS. Lượt hiện tại vẫn chỉ một cấu hình/seed, chọn checkpoint bằng validation theo quy tắc trước chạy; chưa tuning hoặc chọn lại test. Tài liệu kỹ thuật hiện thực là [mã implicit CPU ALS v0.7.3](https://github.com/benfred/implicit/blob/v0.7.3/implicit/cpu/als.py): CSR user × artist, confidence đã biến đổi, alpha thư viện = 1, native CG ba bước, float32/một luồng. Không gọi cấu hình riêng này là tái lập nguyên bài báo nào. Word giữ nguyên.
+
 1. [Phần 1: Nhóm tài liệu nền tảng (8 tài liệu)](#phần-1-nhóm-tài-liệu-nền-tảng-8-tài-liệu)
    - [1. Resnick et al. (1994)](#1-resnick-et-al-1994)
    - [2. Sarwar et al. (2001)](#2-sarwar-et-al-2001)

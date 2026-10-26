@@ -1,8 +1,10 @@
 # Data card HetRec 2011 Last.fm 2K
 
-## Trạng thái sau Bước 14 ngày 26/10/2026
+## Trạng thái sau Bước 14 và lượt ALS đầu tiên ngày 26/10/2026
 
-Đã hoàn thành Bước 1–14 theo yêu cầu người dùng. **Train có 74.275 cặp; validation và test mỗi tập 9.263 cặp; mapping gồm 1.877 user và 15.398 artist từ train.** Đã tổng hợp sáu họ baseline/tám cấu hình và xác nhận model seed 42/43/44 cho Random/SVD/PureSVD nhị phân. PureSVD nhị phân là ứng viên nền M1 trong phạm vi chưa tuning, NDCG@10 0.1564272628 ± 0 trên cùng split seed 42; chưa khóa nền hoặc mô hình cuối. Chưa tuning, học thẻ/M1/M2, chạy nhánh mở rộng hoặc đánh giá test. Các phần Bước 1–13 giữ bối cảnh lịch sử; kết quả mới nhất ở mục Bước 14 cuối tệp. Số dòng test kế thừa Bước 4, không mở lại test trong Bước 14. Word chỉ cập nhật khi được yêu cầu rõ ràng, hiện giữ bản Bước 6.
+Đã hoàn thành Bước 1–14 và lượt ALS đầu tiên theo phép riêng. **Train có 74.275 cặp; validation và test mỗi tập 9.263 cặp; mapping gồm 1.877 user và 15.398 artist từ train.** Đã tổng hợp sáu họ baseline/tám cấu hình và xác nhận model seed 42/43/44 cho Random/SVD/PureSVD nhị phân. PureSVD nhị phân là đối chứng hiện hành, NDCG@10 0.1564272628 ± 0; ALS seed 42 đạt 0.1974107044, chưa đủ xác nhận thay nền M1. Chưa tuning, học thẻ/M1/M2, chạy BPR/SLIM hoặc đánh giá test. Các phần trước giữ bối cảnh lịch sử; kết quả mới nhất nằm ở mục ALS cuối tệp. Số dòng test kế thừa Bước 4, không mở lại test trong lượt ALS. Word chỉ cập nhật khi được yêu cầu rõ ràng, hiện giữ bản Bước 6.
+
+Sau điểm dừng Bước 14, đã chạy một cấu hình implicit ALS được người dùng cho phép: NDCG@10 0.1974107044 ở seed 42, checkpoint vòng 18/dừng vòng 23. Cao hơn đối chứng PureSVD nhị phân 26,1997% tương đối; chưa xác nhận seed 43/44, tuning hoặc thay nền M1. Kết quả mới nhất ở mục lượt ALS cuối tệp, dữ liệu/Word/run cũ giữ nguyên. Căn cứ thực nghiệm mới ưu tiên nghiên cứu 2022–2026 theo yêu cầu; chưa chạy test, BPR/SLIM/M1/M2.
 
 Bằng chứng máy đọc được: [source_audit.json](../outputs/runs/source_audit_20261019_162917_245445/source_audit.json). Tệp ghi thời điểm, phiên bản mã, tình trạng thay đổi chưa commit, cách đọc, từng kiểm tra và mã băm. Dùng Python standard library để đọc/kiểm tra trực tiếp, không thêm pipeline hoặc thư viện mới. Không có thao tác ngẫu nhiên nên seed không áp dụng.
 
@@ -573,3 +575,52 @@ Fit SVD ở bảng tách phần theo dõi validation 45,015899 giây; tổng có
 Sáu run seed mới đều có kiểm chứng độc lập toàn bộ 1.877 danh sách/score/reason và các chỉ số user/K. Random dựng lại hoán vị bằng Python và tính metric bằng NumPy/CSR; SVD tái hiện **445.650 cập nhật SGD mỗi seed** bằng số vô hướng, cả sáu epoch/loss/validation/checkpoint, sai khác tham số tối đa 1,11023e-16; PureSVD dùng eigh Gram user–user không gọi svds/model/evaluator production, sai khác score toàn catalog tối đa 1,24345e-14. Cùng guard chặn mở test và kiểm hash nguồn/đầu ra/mã. Nạp lại SVD/PureSVD không fit và khớp đủ danh sách trong runner; mã audit giữ trong run/audit cục bộ.
 
 Kiểm toán tổng hợp độc lập không nhập helper production, đối chiếu **14 run, 42 dòng metric, 126 dòng nhóm và 72 dòng metric theo seed**, mọi count/mean/sample std/chi phí; kiểm danh sách PureSVD qua ba seed. Chạy lại script tổng hợp vào run `_recheck` cho **bốn CSV trùng hash**, không fit thêm. Đối chiếu **155 tệp cũ** xác nhận các đầu ra trước và 11 Word giữ nguyên. **69 tests đạt trong 149,96 giây; ruff check, ruff format --check và mypy 25 tệp nguồn đạt**. Các test mới kiểm nhóm trống, user trả rỗng, mean/std, chống lệch cohort và override seed của cả ba CLI mà vẫn giữ split/hashes cũ. Chỉ Git mã/config/các tài liệu làm việc hiện có; dataset/model/run giữ cục bộ. Word vẫn Bước 6; dừng Bước 14, chưa M1/M2/test hoặc mở rộng.
+
+## Lượt implicit ALS đầu tiên sau Bước 14 ngày 26/10/2026
+
+Run [implicit_als_k32_c1_r01_validation_20261026](../outputs/runs/implicit_als_k32_c1_r01_validation_20261026/metrics.json), [cấu hình](../configs/models/implicit_als.yaml), [model](../src/musicrec/recommenders/implicit_als.py), [CLI](../scripts/run_implicit_als.py), [kiểm chứng](../outputs/runs/implicit_als_k32_c1_r01_validation_20261026/verification.json) và [đề xuất điều chỉnh kế hoạch](../outputs/runs/implicit_als_k32_c1_r01_validation_20261026/plan_assessment.json). Người dùng cho chạy một cấu hình để đánh giá có nên đổi kế hoạch; ngân sách là **một fit dữ liệu thật, một cấu hình, seed 42**, không tuning hoặc tự chạy seed 43/44. Toy/CLI fixture trong unit test không phải thí nghiệm benchmark mới. experiment.json/audit ghi câu hỏi, đối chứng, cấu hình, ngân sách, tiêu chí và tài liệu trước khi chạy.
+
+Theo yêu cầu mới, căn cứ thực nghiệm hiện hành ưu tiên nghiên cứu gần đây. [Đối chiếu nguồn 2022–2026](TONG_QUAN_TAI_LIEU_THAM_KHAO.md#doi-chieu-als-20261026) đã kiểm năm/phiên bản, đơn vị tương tác và metric: Anelli et al. 2022 về so nhiều baseline/metric, Lin et al. 2024 về tag-aware Last.fm, Martal & Najib 2025 về SVD/MICE, preprint Trapeznikov & Utushkin 2026 về planning trên embedding ALS. Không lấy “accuracy” về độ trùng danh sách của bài 2025 làm NDCG held-out, không đổi sang GNN/MICE/planning chỉ do năm mới. Lượt này là thiết kế riêng, không tái lập nguyên bài hoặc nhận cấu hình tối ưu từ tác giả. Tài liệu kỹ thuật là [implicit CPU ALS v0.7.3](https://github.com/benfred/implicit/blob/v0.7.3/implicit/cpu/als.py), đã đối chiếu với wheel Windows thực cài; hash mã/PYD giữ trong audit.
+
+Đầu vào vẫn source Bước 5: chỉ train/validation/mapping/transform có hash, train 74.275 cặp và catalog 15.398 artist. Raw listening_count dùng làm confidence, bỏ qua proxy 1–5: c=1+ln(1+count), p=1 cho cặp quan sát; ô thiếu c=1,p=0. Confidence tính float64 rồi lưu CSR float32 user × artist; không lấy transpose làm đầu vào thư viện hoặc nhân confidence thêm lần nữa (alpha thư viện=1). Tối ưu tổng sai số bình phương có trọng số trên cả catalog và L2 **hệ số 0,1 không nhân số tương tác** cho mỗi vector. Đây khác MF SGD chỉ học proxy trên quan sát và khác PureSVD zero-fill. Giá trị p=0 ở ô thiếu là giả định học tin cậy thấp, không phải bằng chứng đã ghét artist.
+
+Native CPU conjugate gradient, **32 factors, reg=0.1, confidence_scale=1**, CG ba bước mỗi cập nhật luân phiên, float32, num_threads=1 và BLAS một luồng. Không dùng GPU. Khởi tạo Generator/PCG64(42), user trước item, uniform [0,0.01) float32. Thư viện chưa có trong môi trường nên cài wheel implicit==0.7.3, giữ nguyên dependency NumPy/SciPy hiện có; extra `als` khai báo implicit/psutil và CI cài extra này để không bỏ qua test ALS.
+
+Sau mỗi vòng đầy đủ user rồi item, kiểm factor/loss hữu hạn và chấm NDCG@10 validation; tăng nghiêm ngặt mới tốt hơn, hòa giữ vòng sớm nhất. Tối đa 50 vòng, patience 5, khôi phục factor của checkpoint tốt nhất. Validation không đóng góp cập nhật factor hoặc confidence. Curve giữ normalized training loss của thư viện và NDCG mỗi vòng; training loss chia tổng confidence trên mọi ô (cặp thiếu tính 1), không phải proxy RMSE hoặc thước chọn checkpoint. Điểm suy luận là dot float64 của factor float32 đã lưu, không bias/clip; sort làm tròn 12 chữ số rồi mapping số, giữ score gốc. Lọc train/seen trên toàn catalog, user mới score 0/ID-order và reason riêng; chưa fold-in/cold-start M2.
+
+### Kết quả và đối chứng cùng validation
+
+**Checkpoint tốt nhất vòng 18**, NDCG@10 **0.1974107044**; sau năm vòng 19–23 không vượt điểm đó thì dừng vòng 23, không chạy hết 50 hoặc fit thêm cấu hình. [Learning curve](../outputs/runs/implicit_als_k32_c1_r01_validation_20261026/learning_curve.csv) giữ đủ 23 vòng: NDCG@10 tăng từ 0.0755638972 ở vòng 1 lên 0.1563139612 ở vòng 2, 0.1855239150 ở vòng 4, 0.1974107044 ở vòng 18, rồi 0.1965278558 ở vòng 23. Đã khôi phục vòng 18, không xuất factor vòng cuối như thể tốt nhất.
+
+| K | Precision | Recall | NDCG | Coverage | Gini | ARP | Novelty | ILD |
+| ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| 5 | 0.1394101877 | 0.1537712243 | 0.1619384225 | 0.0363034160 | 0.9864190921 | 156.4810723861 | 9.5674216064 | 0.7792190928 |
+| 10 | 0.1003753351 | 0.2212064343 | **0.1974107044** | 0.0496817769 | 0.9821480593 | 138.0209115282 | 9.7882486716 | 0.8132041210 |
+| 20 | 0.0694638070 | 0.3060053619 | 0.2320008367 | 0.0672814651 | 0.9760501294 | 117.7618230563 | 10.0600598757 | 0.8499538777 |
+
+| Đối chứng tại K=10 | PureSVD binary k32/seed 42 | ALS k32/seed 42 |
+| --- | ---: | ---: |
+| NDCG | 0.1564272628 | **0.1974107044** |
+| Precision | 0.0809651475 | 0.1003753351 |
+| Recall | 0.1758891868 | 0.2212064343 |
+| Artist được phủ | 368/15.398 (2,3899%) | 765/15.398 (4,9682%) |
+| ARP (listener) | 145.3087935657 | 138.0209115282 |
+| ILD | 0.8172029176 | 0.8132041210 |
+
+Cả hai trả đủ 20 mục cho 1.877 user, cùng cohort 1.865 user và 8.142 đích hợp lệ, báo riêng 12 user không còn đích/1.121 đích ngoài catalog; không có mục trùng/seen/ngoài catalog hoặc danh sách thiếu/rỗng. Coverage dùng catalog train và số listener/ILD dùng binary train như baseline, không đổi evaluator theo confidence.
+
+NDCG@10 tăng **0.0409834416 tuyệt đối, 26,1997% tương đối**; coverage tăng, Gini/ARP giảm và novelty tăng. ILD giảm nhẹ khoảng 0.004, nên không tuyên bố tốt hơn mọi mục tiêu. So từng user với đối chứng: 763 tăng, 417 giảm, 685 hòa NDCG@10; [bảng paired](../outputs/runs/implicit_als_k32_c1_r01_validation_20261026/paired_validation_vs_pure_svd.csv) giữ giá trị/user/lịch sử. Chưa kiểm định, nhiều seed/split hoặc mở test; đây là checkpoint chọn bằng chính validation, không phải xác nhận độc lập hoặc chất lượng mô hình tối ưu. Điểm ứng viên nằm khoảng −0.88939 đến 1.36844, không phải xác suất và không tính RMSE proxy.
+
+### Chi phí, kiểm chứng và giới hạn kết luận
+
+Fit không tính theo dõi validation **2,083086 giây**, theo dõi 23 lần **174,467051 giây**, tổng fit có monitoring **176,550137 giây**. Recommend tổng 8,279076 giây, trung bình 4,410802 ms/user, p95 6,375380 ms; evaluator 3,270554 giây. Nạp/đối chiếu 1.877 danh sách 8,494865 giây. OS peak working set **186.646.528 byte = 178 MiB** của cả tiến trình tới sau fit/monitor/evaluator/load/snapshot, gồm interpreter/thư viện/dữ liệu/caches, không phải RAM riêng ALS hoặc peak của baseline. Ba tệp model chiếm **2.556.337 byte trên đĩa**. Các số đo thuộc lượt/máy/tải hiện tại, không phải benchmark có kiểm soát so với baseline hoặc độ trễ API; monitoring chiếm phần lớn thời gian, không gọi toàn bộ 176 giây là thời gian giải ALS thuần.
+
+Trước dữ liệu thật đã kiểm một vòng native CG trên toy hai chiều với phương trình chuẩn có trọng số giải độc lập bằng NumPy, gồm ô thiếu c=1 và tránh alpha hai lần; kiểm normalized loss trên toàn ma trận. Test kiểm điểm/seen/tie/cold-start, thay proxy/đảo dòng không đổi factor, strict-best/patience/khôi phục checkpoint và save/load không fit, checksum/không ghi đè, count không hữu hạn và CLI cố định không mở test/RMSE. **73 tests đạt trong 141,92 giây; ruff check, ruff format --check và mypy 26 tệp nguồn đạt**.
+
+[Audit độc lập](../outputs/runs/implicit_als_k32_c1_r01_validation_20261026/verification.json) không gọi model/evaluator production: tính confidence từ raw count và đối chiếu CSR, dot/reconstruct toàn bộ 1.877 danh sách/score/reason, mỗi metric từng user/K và global Coverage/Gini/ARP/Novelty/ILD. Kiểm quy tắc curve/patience/best_epoch và normalized weighted objective của checkpoint trên cả ô thiếu bằng Gram, sai khác loss **1,05447e-10**, score đã xuất tối đa **4,44089e-16**; metric khớp trong 1e-12. Không tái hiện toàn bộ vòng CG dữ liệu thật, không fit lại hoặc dùng test để audit. Load checkpoint không fit và khớp đủ 1.877 danh sách trong runner. Artifact số confidence.npz/factors.npz/state.json, curve/metric/dự đoán/mapping/transform, code snapshot/Git SHA/diff/runtime và mã audit/source-PYD hash cùng run. Guard chặn mở test kể cả băm; kiểm hash **201 tệp cũ** xác nhận mọi đầu ra trước đã chọn và 11 Word giữ nguyên.
+
+### Đánh giá có cần đổi kế hoạch
+
+**Có cơ sở điều chỉnh thứ tự ưu tiên, chưa có cơ sở thay toàn bộ kế hoạch hoặc khóa ALS làm nền M1.** Đề xuất bước riêng tiếp theo là xác nhận **chính cấu hình này ở seed 43/44**, thay vì tự chạy đủ lưới tám cấu hình hay đi ngay M1 trên nền cũ. Nếu mean NDCG qua 42/43/44 cao hơn baseline mạnh nhất và chênh dương ở ít nhất 2/3 seed theo tiêu chí trước chạy, tổng hợp lại validation để đề nghị đổi nền M1. Một seed hiện tại mới đáp ứng tín hiệu triển vọng, chưa đáp ứng đầy đủ tiêu chí giữ mô hình. Không chọn seed đẹp nhất.
+
+Sau xác nhận mới quyết định có cần tuning; nếu không ổn định thì giữ đầy đủ kết quả và cân nhắc lưới đã giới hạn hoặc trở lại nền PureSVD, theo phép riêng. Giữ M1/M2, ItemCF của M2, split/catalog/metric, các mốc 15/11/22/11/27/11 và test sau khóa. Chưa BPR/SLIM, planning/MCTS, MICE hoặc thẻ/GNN, không đổi thiết kế chỉ dựa năm bài báo. M1/ablation phải chạy trên nền được duyệt cuối, không suy từ mức NDCG tăng rằng reranker chắc chắn thành công. Ghi đề xuất trong plan_assessment.json/kế hoạch hiện có; **chưa chạy 43/44, tuning, M1/M2 hoặc test**. Word giữ Bước 6, kết quả lưu cục bộ theo .gitignore.

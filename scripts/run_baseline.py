@@ -22,6 +22,7 @@ import yaml
 from musicrec.data.contracts import Interaction
 from musicrec.evaluation.ranking import evaluate_ranking, ndcg_at_k, proxy_rmse
 from musicrec.recommenders.base import Recommender
+from musicrec.recommenders.implicit_als import ImplicitALSRecommender
 from musicrec.recommenders.item_cf import ItemCFRecommender
 from musicrec.recommenders.popularity import PopularityRecommender
 from musicrec.recommenders.pure_svd import PureSVDRecommender
@@ -31,10 +32,12 @@ from musicrec.recommenders.user_cf import UserCFRecommender
 
 
 def main(
-    model_name: Literal["random", "popularity", "user_cf", "item_cf", "svd", "pure_svd"],
+    model_name: Literal[
+        "random", "popularity", "user_cf", "item_cf", "svd", "pure_svd", "implicit_als"
+    ],
 ) -> None:
     """Verify source hashes, fit the train catalog and persist validation evidence."""
-    proxy_model = model_name in ("user_cf", "item_cf", "svd", "pure_svd")
+    proxy_model = model_name in ("user_cf", "item_cf", "svd", "pure_svd", "implicit_als")
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
         "--representations-run" if proxy_model else "--split-run",
@@ -195,6 +198,41 @@ def main(
             "blas_threads": 1,
             "fit_scope": "train_only_no_validation_epoch_selection",
         }
+    if model_name == "implicit_als":
+        expected_config = {
+            "model": "implicit_als",
+            "seed": 42,
+            "seed_role": "pcg64_uniform_float32_user_then_item_initialization",
+            "latent_factors": 32,
+            "regularization": 0.1,
+            "confidence_scale": 1,
+            "confidence": "one_plus_scale_times_ln_one_plus_raw_train_count",
+            "missing_entries": "preference_zero_confidence_one_not_observed_dislike",
+            "observed_preference": 1,
+            "library": "implicit",
+            "library_version": "0.7.3",
+            "library_alpha": 1,
+            "backend": "cpu_native_conjugate_gradient",
+            "cg_steps": 3,
+            "dtype": "float32",
+            "init_scale": 0.01,
+            "max_epochs": 50,
+            "patience": 5,
+            "selection_metric": "ndcg_at_10_validation_every_epoch",
+            "selection_ties": "earliest_epoch",
+            "restore_best_checkpoint": True,
+            "regularization_scaling": "constant_identity_not_interaction_count",
+            "score": "float64_dot_of_float32_factors_without_bias",
+            "unknown_user_fallback": "zero_profile_numeric_mapping_order",
+            "score_clipping": "none",
+            "tie_break": "numeric_train_mapping_order",
+            "numeric_tie_decimals": 12,
+            "blas_threads": 1,
+            "num_threads": 1,
+            "fit_scope": "train_only_validation_selects_epoch",
+        }
+        if importlib.metadata.version("implicit") != "0.7.3":
+            raise ValueError("Expected the pinned implicit 0.7.3 implementation")
     if config != expected_config:
         raise ValueError(f"Expected the agreed {model_name} validation configuration")
     if model_name in ("random", "svd", "pure_svd"):
@@ -266,9 +304,23 @@ def main(
             **{name: config[name] for name in ["latent_factors", "seed", "tolerance", "max_iter"]},
             representation=representation,
         )
+    if model_name == "implicit_als":
+        model = ImplicitALSRecommender(
+            **{
+                name: config[name]
+                for name in [
+                    "latent_factors",
+                    "regularization",
+                    "confidence_scale",
+                    "max_epochs",
+                    "patience",
+                    "seed",
+                ]
+            }
+        )
     monitor_seconds = []
 
-    def validation_ndcg(current: SVDRecommender) -> float:
+    def validation_ndcg(current: SVDRecommender | ImplicitALSRecommender) -> float:
         start_monitor = perf_counter()
         catalog = set(mappings["item_id_to_index"])
         values = []
@@ -288,7 +340,7 @@ def main(
         return score
 
     start = perf_counter()
-    if isinstance(model, SVDRecommender):
+    if isinstance(model, (SVDRecommender, ImplicitALSRecommender)):
         model.fit(interactions, validation_score=validation_ndcg)
     else:
         model.fit(interactions)
@@ -315,7 +367,7 @@ def main(
     result = evaluate_ranking(lists, targets, histories, ks=tuple(evaluation_config["ks"]))
     evaluator_seconds = perf_counter() - start
     supplementary = {}
-    if isinstance(model, SVDRecommender):
+    if isinstance(model, (SVDRecommender, ImplicitALSRecommender)):
         best_score = model.learning_curve[model.best_epoch - 1]["validation_ndcg_at_10"]
         if not isclose(result["at_k"]["10"]["ndcg"], best_score, rel_tol=0, abs_tol=1e-15):
             raise RuntimeError("Restored checkpoint disagrees with selected validation epoch")
@@ -336,7 +388,7 @@ def main(
                 "rmse_not_applicable": "association_scores_are_not_calibrated_proxy_ratings",
             }
         )
-    if proxy_model and model_name != "pure_svd":
+    if proxy_model and model_name not in ("pure_svd", "implicit_als"):
         known_targets = validation[validation.item_index.notna()]
         start = perf_counter()
         predicted = [
@@ -376,7 +428,14 @@ def main(
         state["learned_values"] = "per-artist sum of log2(1 + raw train count); no user factors"
         state["scores"] = {item: model.predict("offline", item) for item in state["catalog"]}
     if isinstance(
-        model, (UserCFRecommender, ItemCFRecommender, SVDRecommender, PureSVDRecommender)
+        model,
+        (
+            UserCFRecommender,
+            ItemCFRecommender,
+            SVDRecommender,
+            PureSVDRecommender,
+            ImplicitALSRecommender,
+        ),
     ):
         model.save(out / "model")
         start = perf_counter()
@@ -390,12 +449,16 @@ def main(
         supplementary["reload_verified_users"] = len(histories)
         supplementary["reload_verification_seconds"] = perf_counter() - start
         state["learned_values"] = "train proxy CSR, observed means and top-L cosine neighbors"
-        if isinstance(model, SVDRecommender):
+        if isinstance(model, (SVDRecommender, ImplicitALSRecommender)):
             state["learned_values"] = (
                 "train proxy CSR, global mean, user/item biases and factors; best validation epoch"
             )
             pd.DataFrame(model.learning_curve).to_csv(
                 out / "learning_curve.csv", index=False, lineterminator="\n"
+            )
+        if isinstance(model, ImplicitALSRecommender):
+            state["learned_values"] = (
+                "train confidence CSR and float32 user/item factors; best validation epoch"
             )
         if isinstance(model, PureSVDRecommender):
             label = "proxy" if representation == "proxy_score" else representation
@@ -427,6 +490,28 @@ def main(
     )
     if not unchanged:
         raise RuntimeError("Split inputs changed during the run")
+    if model_name == "implicit_als":
+        import psutil
+
+        if sys.platform == "win32":
+            supplementary["process_peak_working_set_bytes"] = (
+                psutil.Process().memory_info().peak_wset
+            )
+        else:
+            import resource
+
+            peak = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
+            supplementary["process_peak_working_set_bytes"] = int(
+                peak * (1 if sys.platform == "darwin" else 1024)
+            )
+        supplementary["peak_memory_scope"] = (
+            "whole process through fit, monitoring, evaluation, reload and source snapshot"
+        )
+        supplementary["model_artifact_bytes"] = sum(
+            p.stat().st_size for p in (out / "model").iterdir()
+        )
+        supplementary["implicit_version"] = importlib.metadata.version("implicit")
+        supplementary["rmse_not_applicable"] = "implicit_preference_scores_are_not_proxy_ratings"
     write_json(
         "metrics.json",
         {
@@ -439,6 +524,7 @@ def main(
                 "item_cf": 10,
                 "svd": 11,
                 "pure_svd": 12 if representation == "proxy_score" else 13,
+                "implicit_als": "extension_als_first",
             }[model_name],
             "scope": f"{model_name} on validation only; no tuning or test evaluation",
             "created_at_utc": datetime.now(UTC).isoformat(),
@@ -483,7 +569,7 @@ def main(
                         "BLIS_NUM_THREADS",
                     ]
                 }
-                if model_name in ("svd", "pure_svd")
+                if model_name in ("svd", "pure_svd", "implicit_als")
                 else None,
                 **{
                     name: importlib.metadata.version(name)

@@ -7,6 +7,19 @@ Mọi thay đổi đáng chú ý của MusicRec được ghi trong file này the
 
 ### Changed
 
+- 2026-10-26: Hoàn thành lượt implicit ALS đầu tiên sau Bước 14, đúng một
+  cấu hình/seed 42: 32 factors, reg 0.1, c=1+ln(1+raw count), alpha thư viện 1,
+  implicit CPU 0.7.3/native CG3/float32/một luồng. Chọn NDCG@10 mỗi vòng,
+  tốt nhất vòng 18/dừng 23; 0.1974107044 cao hơn PureSVD nhị phân 26,1997%,
+  coverage 4,9682%, ARP giảm/ILD giảm nhẹ. Fit+monitor 176,550137 giây,
+  OS peak working set cả tiến trình 178 MiB, model 2.556.337 byte.
+  Thêm model/config/CLI, extra als và CI kiểm thử; 73 tests/lint/format/mypy đạt,
+  kiểm toán confidence/loss/checkpoint/danh sách/metric độc lập khớp, load không fit.
+  Theo yêu cầu mới, đối chiếu nghiên cứu 2022–2026 và ghi rõ preprint/protocol;
+  không lấy “accuracy 96%” của bài MICE 2025 làm NDCG held-out.
+  Đề xuất xác nhận seed 43/44 trước tuning/đổi nền M1, chưa thực hiện.
+  Giữ mọi run cũ/Word và lịch chính; chưa test hoặc BPR/SLIM/M1/M2.
+
 - 2026-10-26: Hoàn thành Bước 14 tổng hợp validation của tám cấu hình thuộc
   sáu họ baseline, kiểm hash/protocol/cohort trên 14 run và phân tích chi phí,
   lịch sử train <40/=40/>40 (41/1.822/2 user hợp lệ). Thêm CLI tổng hợp và
