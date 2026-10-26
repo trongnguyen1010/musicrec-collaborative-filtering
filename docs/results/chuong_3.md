@@ -93,7 +93,7 @@ Ngoài các con số, ba nhận định định tính trong bản v15 cũng đư
 
 ## 4. Những điểm Chương 3 cần sửa
 
-Số liệu không sai, nhưng phần mô tả thiết kế ở 3.6–3.8 chưa khớp với những gì code đã làm. Bốn trong năm điểm dưới đây đã được chốt ngày 26/10; bảng tham số cuối và đề xuất sửa từng mục nằm ở [chuong_3_thiet_ke.md](chuong_3_thiet_ke.md). Mục 3.8 vẫn chờ trả lời Q5.
+Số liệu không sai, nhưng phần mô tả thiết kế ở 3.6–3.8 chưa khớp với những gì code đã làm. Bốn trong năm điểm dưới đây đã được chốt ngày 26/10; bảng tham số cuối và đề xuất sửa từng mục nằm ở [chuong_3_thiet_ke.md](chuong_3_thiet_ke.md). Mục 3.8 đã chốt theo Q5 (xem [chuong_4_m2.md](chuong_4_m2.md)).
 
 | Mục | Bản v15 viết | Code hiện tại | Câu hỏi |
 | --- | --- | --- | --- |
@@ -101,7 +101,7 @@ Số liệu không sai, nhưng phần mô tả thiết kế ở 3.6–3.8 chưa 
 | 3.6.3 | CF không có láng giềng thì chuyển sang M2 | Trong giao thức chính, CF dùng trung bình người dùng/trung bình chung | Sửa theo code |
 | 3.6.4 | PureSVD trên điểm đại diện | Tốt nhất trên validation là biểu diễn nhị phân | Q7: dùng nhị phân, k = 16 |
 | 3.7 | M1 dựa trên mô hình nền (đề cương: SVD) | M1 đang chạy trên nền ALS | Q4: đổi nền sang PureSVD k = 16 |
-| 3.8 | M2 đánh giá trên tập chính | M2 dùng phép chia người dùng riêng 1.501/187/189, catalog 13.210, chỉ ItemCF làm thành phần cộng tác | Q5: **chưa trả lời** |
+| 3.8 | M2 đánh giá trên tập chính | M2 dùng phép chia người dùng riêng 1.501/187/189, catalog 13.210, chỉ ItemCF làm thành phần cộng tác | Q5: giữ phép chia, chấm 189 người trên test |
 
 ## 5. Ghi chú về dữ liệu
 
