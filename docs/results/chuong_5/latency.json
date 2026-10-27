@@ -1,0 +1,77 @@
+{
+  "created_at_utc": "2026-10-27T07:06:10.428349+00:00",
+  "api_url": "http://127.0.0.1:8000",
+  "release": "demo-chinh-thuc-20261026",
+  "latency": {
+    "GET /health": {
+      "repeats": 50,
+      "median_ms": 2.2498000180348754,
+      "p95_ms": 3.181095019681379,
+      "max_ms": 3.2170999329537153
+    },
+    "GET /users": {
+      "repeats": 50,
+      "median_ms": 10.789700027089566,
+      "p95_ms": 30.060559953562915,
+      "max_ms": 50.461200065910816
+    },
+    "GET /users/{id}/history": {
+      "repeats": 50,
+      "median_ms": 7.025350001640618,
+      "p95_ms": 10.813404945656657,
+      "max_ms": 11.207500007003546
+    },
+    "GET /artists?q=": {
+      "repeats": 50,
+      "median_ms": 15.591450035572052,
+      "p95_ms": 25.01409998512827,
+      "max_ms": 26.030499953776598
+    },
+    "POST /recommend pure_svd": {
+      "repeats": 50,
+      "median_ms": 5.232849973253906,
+      "p95_ms": 6.507475074613467,
+      "max_ms": 6.824200041592121
+    },
+    "POST /recommend m1": {
+      "repeats": 50,
+      "median_ms": 7.269649999216199,
+      "p95_ms": 8.919470047112554,
+      "max_ms": 9.744200040586293
+    },
+    "POST /recommend implicit_als": {
+      "repeats": 50,
+      "median_ms": 5.933450011070818,
+      "p95_ms": 8.088975033024326,
+      "max_ms": 9.454699931666255
+    },
+    "POST /recommend m2 (3 artists)": {
+      "repeats": 50,
+      "median_ms": 9.092699969187379,
+      "p95_ms": 12.304610008141026,
+      "max_ms": 13.17890000063926
+    },
+    "POST /recommend popularity": {
+      "repeats": 50,
+      "median_ms": 2.7843000134453177,
+      "p95_ms": 3.776115010259673,
+      "max_ms": 3.882999997586012
+    }
+  },
+  "machine": {
+    "platform": "Windows-10-10.0.26200-SP0",
+    "processor": "Intel64 Family 6 Model 140 Stepping 1, GenuineIntel",
+    "cpu_count": 8,
+    "python": "3.11.9",
+    "fastapi": "0.141.1",
+    "uvicorn": "0.52.4",
+    "numpy": "2.4.6",
+    "scipy": "1.17.1",
+    "pandas": "2.3.3"
+  },
+  "command": [
+    "scripts/measure_latency.py",
+    "--output-dir",
+    "outputs/demo/latency_20261027"
+  ]
+}

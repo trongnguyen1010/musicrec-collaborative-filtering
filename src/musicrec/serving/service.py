@@ -1,30 +1,181 @@
-"""A small application service used by FastAPI and offline contract tests."""
+"""Route demo requests to the pinned models; shared by FastAPI, Streamlit and offline checks.
 
-from dataclasses import dataclass
+Branches follow the approved demo plan (docs/KE_HOACH_PROTOTYPE_DEMO.md, P1-P5):
+an existing train user gets PureSVD, M1 over that PureSVD, or ALS, with train and
+validation masked as in the official test; a new user with 1-5 chosen artists gets M2;
+an empty profile falls back to Popularity.
+"""
 
+import threading
+from collections.abc import Sequence
+from dataclasses import dataclass, field
+from typing import Literal
+
+import numpy as np
+
+from musicrec.data.contracts import Interaction
 from musicrec.recommenders.base import Recommendation, Recommender
+from musicrec.serving.release import Release
+
+ExistingModel = Literal["pure_svd", "m1", "implicit_als"]
+Branch = Literal["existing_user", "new_user", "popularity"]
+MAX_PROFILE_ARTISTS = 5
+_PROFILE_ID = "demo_new_user"
+
+
+class UnknownUserError(LookupError):
+    """The requested user is not one of the train users the checkpoints were fitted on."""
+
+
+@dataclass(frozen=True, slots=True)
+class ArtistInfo:
+    """Display data for one artist; listeners counts distinct train users (as ARP does)."""
+
+    item_id: str
+    name: str
+    url: str
+    picture_url: str
+    listeners: int
 
 
 @dataclass(frozen=True, slots=True)
 class RecommendationResult:
-    """Serialized-independent inference output."""
+    """Serialization-independent output of one routed request."""
 
-    model_version: str
-    recommendations: list[Recommendation]
+    release: str
+    branch: Branch
+    model: str
     fallback_used: bool
+    fallback_reason: str | None
+    recommendations: list[Recommendation]
+    ignored_item_ids: list[str] = field(default_factory=list)
 
 
-class RecommendationService:
-    """Keeps serving concerns out of HTTP route handlers."""
+@dataclass(frozen=True, slots=True)
+class ProfileEntry:
+    """One artist chosen by a new user; listening_count is optional in the demo."""
 
-    def __init__(self, recommender: Recommender, model_version: str) -> None:
-        self._recommender = recommender
-        self._model_version = model_version
+    item_id: str
+    listening_count: float | None = None
 
-    def recommend(self, user_id: str, k: int, seen_item_ids: set[str]) -> RecommendationResult:
-        recommendations = self._recommender.recommend(user_id, k, seen_item_ids)
-        return RecommendationResult(
-            model_version=self._model_version,
-            recommendations=recommendations,
-            fallback_used=False,
+
+class DemoService:
+    """Keeps model routing and masking out of HTTP handlers."""
+
+    def __init__(self, release: Release) -> None:
+        self.release = release
+        self._existing: dict[str, Recommender] = {
+            "pure_svd": release.pure_svd,
+            "m1": release.m1,
+            "implicit_als": release.implicit_als,
+        }
+        known = (
+            release.train[["user_id", "item_id"]],
+            release.validation[["user_id", "item_id"]],
         )
+        self._masks: dict[str, set[str]] = {}
+        for frame in known:
+            for user, group in frame.groupby("user_id"):
+                self._masks.setdefault(str(user), set()).update(group.item_id)
+        self._train_users = set(release.train.user_id)
+        self._listeners = release.train.groupby("item_id").user_id.nunique().to_dict()
+        self._m2_catalog = set(release.m2.catalog)
+        # Unknown counts get the middle proxy level: log2(1+c) halfway between the
+        # 40% and 60% train quantiles that M2 uses as proxy thresholds.
+        low, high = release.m2.thresholds[1], release.m2.thresholds[2]
+        self.default_listening_count = float(2 ** ((low + high) / 2) - 1)
+        self._m2_lock = threading.Lock()
+
+    @property
+    def users(self) -> list[str]:
+        """Train users in numeric order."""
+        return sorted(self._train_users, key=lambda u: (not u.isdecimal(), len(u), u))
+
+    def masked_items(self, user_id: str) -> set[str]:
+        """Train plus validation artists of a user, the official test mask."""
+        return set(self._masks.get(user_id, set()))
+
+    def artist(self, item_id: str) -> ArtistInfo:
+        """Name and train popularity of one artist; unnamed ids keep the id as name."""
+        row = self.release.artists.get(item_id, {})
+        return ArtistInfo(
+            item_id,
+            row.get("name", item_id),
+            row.get("url", ""),
+            row.get("picture_url", ""),
+            int(self._listeners.get(item_id, 0)),
+        )
+
+    def search_artists(self, query: str, limit: int) -> list[ArtistInfo]:
+        """Case-insensitive substring search over the M2 catalog, most listened first."""
+        needle = query.casefold().strip()
+        matches = [
+            self.artist(item)
+            for item in self._m2_catalog
+            if needle in self.release.artists.get(item, {}).get("name", item).casefold()
+        ]
+        matches.sort(key=lambda a: (-a.listeners, a.name.casefold(), a.item_id))
+        return matches[:limit]
+
+    def recommend_existing(
+        self, user_id: str, k: int, model: ExistingModel
+    ) -> RecommendationResult:
+        """Rank the unseen train catalog for a known user with one pinned model."""
+        if user_id not in self._train_users:
+            raise UnknownUserError(user_id)
+        recommendations = self._existing[model].recommend(user_id, k, self.masked_items(user_id))
+        return RecommendationResult(
+            self.release.version, "existing_user", model, False, None, recommendations
+        )
+
+    def recommend_popular(self, k: int, reason: str, seen: set[str]) -> RecommendationResult:
+        """Popularity over train, flagged as a fallback with the cause."""
+        recommendations = self.release.popularity.recommend(_PROFILE_ID, k, seen)
+        return RecommendationResult(
+            self.release.version, "popularity", "popularity", True, reason, recommendations
+        )
+
+    def recommend_new(self, profile: Sequence[ProfileEntry], k: int) -> RecommendationResult:
+        """M2 on every chosen artist, exactly as evaluated; Popularity for an empty profile.
+
+        Artists outside the M2 catalog still count toward the profile size (as in the
+        official M2 test) but carry no signal; if none is known, M2 reduces to its
+        popularity component and the result is flagged as a fallback.
+        """
+        if len(profile) > MAX_PROFILE_ARTISTS:
+            raise ValueError(f"A new-user profile holds at most {MAX_PROFILE_ARTISTS} artists")
+        if len({entry.item_id for entry in profile}) != len(profile):
+            raise ValueError("Duplicate profile artist")
+        if not profile:
+            return self.recommend_popular(k, "empty_profile", set())
+        ignored = [entry.item_id for entry in profile if entry.item_id not in self._m2_catalog]
+        rows = [
+            Interaction(
+                _PROFILE_ID,
+                entry.item_id,
+                entry.listening_count or self.default_listening_count,
+            )
+            for entry in profile
+        ]
+        with self._m2_lock:
+            self.release.m2.set_profile(_PROFILE_ID, rows)
+            try:
+                recommendations = self.release.m2.recommend(_PROFILE_ID, k, set())
+            finally:
+                self.release.m2.set_profile(_PROFILE_ID, [])
+        degenerate = len(ignored) == len(profile)
+        return RecommendationResult(
+            self.release.version,
+            "new_user",
+            "m2",
+            degenerate,
+            "no_profile_artist_in_m2_catalog" if degenerate else None,
+            recommendations,
+            ignored,
+        )
+
+    def mean_listeners(self, recommendations: Sequence[Recommendation]) -> float | None:
+        """Mean train listeners of one list, i.e. ARP restricted to a single user."""
+        if not recommendations:
+            return None
+        return float(np.mean([self._listeners.get(r.item_id, 0) for r in recommendations]))

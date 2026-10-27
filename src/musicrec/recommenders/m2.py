@@ -75,6 +75,11 @@ class M2Recommender(Recommender):
         self._tagged = np.asarray(self._features.getnnz(axis=1) > 0)
         self._profiles = {}
 
+    @property
+    def catalog(self) -> list[str]:
+        """Learning-catalog artists; profile artists outside it carry no CF or tag signal."""
+        return self._items.copy()
+
     def _proxy(self, row: Interaction) -> Interaction:
         if not isfinite(row.listening_count):
             raise ValueError("Profile and train counts must be finite")
