@@ -16,6 +16,8 @@ Số liệu tĩnh trong `src/data/results.json` do `python scripts/export_fronte
 
 ## Chạy cục bộ
 
+Gói mô hình `artifacts/releases/demo-chinh-thuc-20261026` đã có sẵn trong repo, nên pull về là chạy được. Lần đầu cài thư viện Python ở thư mục gốc: `pip install -e ".[dev]"`.
+
 ```bash
 # Thư mục gốc: backend
 uvicorn musicrec.api.main:app --port 8000
