@@ -23,6 +23,7 @@ data/raw/*
 data/interim/*
 data/processed/*
 artifacts/releases/*
+!artifacts/releases/demo-chinh-thuc-20261026/
 !data/README.md
 !artifacts/README.md
 
