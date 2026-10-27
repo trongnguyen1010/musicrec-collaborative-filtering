@@ -1,0 +1,388 @@
+{
+  "sources": [
+    "outputs/chinh_thuc_cloud_20261026/chuong_3/run/split/metrics.json",
+    "docs/results/chinh_thuc_cloud_20261026/test/metrics.csv",
+    "docs/results/chinh_thuc_cloud_20261026/m2/test/metrics.csv",
+    "docs/results/chuong_5/latency.json",
+    "docs/results/chuong_5/check_release.json",
+    "docs/results/chuong_5/release_manifest.json",
+    "docs/results/chinh_thuc_cloud_20261026/m1_metrics.csv"
+  ],
+  "release": "demo-chinh-thuc-20261026",
+  "dataset": {
+    "interactions": 92801,
+    "users": 1877,
+    "artists": 17617,
+    "train_catalog_artists": 15398,
+    "train_users": 1877,
+    "splits": {
+      "train": 74275,
+      "validation": 9263,
+      "test": 9263
+    },
+    "test_users_with_targets": 1855
+  },
+  "models": {
+    "pure_svd": {
+      "source": "outputs/chinh_thuc_cloud_20261026/chuong_4/tuning/pure_svd/pure_svd_lat16/model",
+      "seed": 42,
+      "latent_factors": 16
+    },
+    "m1": {
+      "source": "outputs/chinh_thuc_cloud_20261026/chuong_4/m1_pure_svd/seed_42/selected_model",
+      "base": "pure_svd",
+      "lambda": 0.75,
+      "beta": 0.5,
+      "candidate_size": 100
+    },
+    "implicit_als": {
+      "source": "outputs/chinh_thuc_cloud_20261026/chuong_4/tuning/implicit_als/implicit_als_lat32_reg0.1_con1/model",
+      "seed": 42,
+      "latent_factors": 32,
+      "regularization": 0.1,
+      "confidence_scale": 1
+    },
+    "m2": {
+      "source": "outputs/chinh_thuc_cloud_20261026/chuong_4/m2_tuning/model",
+      "alpha": 0.75,
+      "history_threshold": 10,
+      "validation_mean_ndcg_at_10_n135": 0.045491914679283825
+    },
+    "popularity": {
+      "source": "refit on release train.parquet (as in the official test)"
+    }
+  },
+  "warm_test_k10": [
+    {
+      "model": "random",
+      "precision": 0.0004312668463611,
+      "recall": 0.0010062893081761,
+      "ndcg": 0.0005967732406219,
+      "catalog_coverage": 0.7032082088582933,
+      "arp": 4.513045822102426,
+      "novelty": 14.8225936660066,
+      "ild": 0.9984094125588244
+    },
+    {
+      "model": "popularity",
+      "precision": 0.0359029649595687,
+      "recall": 0.0784097035040431,
+      "ndcg": 0.0687747910159069,
+      "catalog_coverage": 0.0018833614755163,
+      "arp": 348.34943396226413,
+      "novelty": 8.023139810000606,
+      "ild": 0.6658823905087866
+    },
+    {
+      "model": "user_cf",
+      "precision": 0.0127223719676549,
+      "recall": 0.0286792452830188,
+      "ndcg": 0.0188500018081498,
+      "catalog_coverage": 0.1219638914144694,
+      "arp": 47.92803234501348,
+      "novelty": 12.212098124796784,
+      "ild": 0.9547539107505124
+    },
+    {
+      "model": "item_cf",
+      "precision": 0.0095956873315363,
+      "recall": 0.0220575022461814,
+      "ndcg": 0.0175017061745941,
+      "catalog_coverage": 0.2456812573061436,
+      "arp": 50.767978436657685,
+      "novelty": 12.544784366928162,
+      "ild": 0.8493076143397753
+    },
+    {
+      "model": "svd",
+      "precision": 0.0310512129380053,
+      "recall": 0.0680413297394429,
+      "ndcg": 0.0626499309808508,
+      "catalog_coverage": 0.0038316664501883,
+      "arp": 319.7679245283019,
+      "novelty": 8.192547428381493,
+      "ild": 0.713450473813388
+    },
+    {
+      "model": "pure_svd",
+      "precision": 0.0883557951482479,
+      "recall": 0.1942048517520215,
+      "ndcg": 0.1827800474999705,
+      "catalog_coverage": 0.01857384075854,
+      "arp": 174.2100269541779,
+      "novelty": 9.229875246926673,
+      "ild": 0.7948125983147686
+    },
+    {
+      "model": "m1",
+      "precision": 0.0882479784366576,
+      "recall": 0.1938724168912848,
+      "ndcg": 0.1814162230270514,
+      "catalog_coverage": 0.0294194051175477,
+      "arp": 146.87363881401618,
+      "novelty": 9.527329314879475,
+      "ild": 0.8135185884830187
+    },
+    {
+      "model": "implicit_als",
+      "precision": 0.1070619946091644,
+      "recall": 0.2374932614555256,
+      "ndcg": 0.2174534816027892,
+      "catalog_coverage": 0.0514352513313417,
+      "arp": 131.96851752021564,
+      "novelty": 9.84566002552501,
+      "ild": 0.8234133413774686
+    }
+  ],
+  "m2_test_k10": [
+    {
+      "n": 0,
+      "method": "popularity",
+      "users": 187,
+      "precision": 0.0304812834224598,
+      "recall": 0.0655080213903743,
+      "ndcg": 0.0565078988572418,
+      "catalog_coverage": 0.0007570022710068,
+      "arp": 295.7,
+      "novelty": 7.943613445609834,
+      "ild": 0.6447198509407308
+    },
+    {
+      "n": 0,
+      "method": "m2",
+      "users": 187,
+      "precision": 0.0304812834224598,
+      "recall": 0.0655080213903743,
+      "ndcg": 0.0565078988572418,
+      "catalog_coverage": 0.0007570022710068,
+      "arp": 295.7,
+      "novelty": 7.943613445609834,
+      "ild": 0.6447198509407308
+    },
+    {
+      "n": 1,
+      "method": "popularity",
+      "users": 187,
+      "precision": 0.0304812834224598,
+      "recall": 0.0655080213903743,
+      "ndcg": 0.0565078988572418,
+      "catalog_coverage": 0.0008327024981074,
+      "arp": 295.5176470588235,
+      "novelty": 7.9445232330351025,
+      "ild": 0.6441122056575088
+    },
+    {
+      "n": 1,
+      "method": "m2",
+      "users": 187,
+      "precision": 0.0245989304812834,
+      "recall": 0.0546345811051693,
+      "ndcg": 0.0433173902386568,
+      "catalog_coverage": 0.0479939439818319,
+      "arp": 167.27058823529413,
+      "novelty": 10.065511658402968,
+      "ild": 0.7489514380387855
+    },
+    {
+      "n": 3,
+      "method": "popularity",
+      "users": 187,
+      "precision": 0.0320855614973262,
+      "recall": 0.0689839572192513,
+      "ndcg": 0.0585724258683223,
+      "catalog_coverage": 0.0009084027252081,
+      "arp": 294.91229946524066,
+      "novelty": 7.94749296800263,
+      "ild": 0.6449131458047048
+    },
+    {
+      "n": 3,
+      "method": "m2",
+      "users": 187,
+      "precision": 0.027807486631016,
+      "recall": 0.0628342245989304,
+      "ndcg": 0.0498539152477213,
+      "catalog_coverage": 0.0554882664647993,
+      "arp": 129.09732620320855,
+      "novelty": 10.5980730425474,
+      "ild": 0.7821191680040422
+    },
+    {
+      "n": 5,
+      "method": "popularity",
+      "users": 187,
+      "precision": 0.0326203208556149,
+      "recall": 0.0716577540106951,
+      "ndcg": 0.0597495843221639,
+      "catalog_coverage": 0.0009841029523088,
+      "arp": 294.3336898395722,
+      "novelty": 7.950476696984969,
+      "ild": 0.6475064342097426
+    },
+    {
+      "n": 5,
+      "method": "m2",
+      "users": 187,
+      "precision": 0.0294117647058823,
+      "recall": 0.0655080213903743,
+      "ndcg": 0.0495623284545872,
+      "catalog_coverage": 0.0650264950794852,
+      "arp": 97.54385026737968,
+      "novelty": 11.139049806590528,
+      "ild": 0.8248742611343461
+    }
+  ],
+  "m1_validation_grid_k10": [
+    {
+      "lambda": 0.5,
+      "beta": 0.0,
+      "precision": 0.0819302949061662,
+      "recall": 0.1775692582663092,
+      "ndcg": 0.1595955675645647,
+      "catalog_coverage": 0.0208468632289907,
+      "arp": 170.1418766756032,
+      "novelty": 9.258589350725853,
+      "ild": 0.8236977203242252
+    },
+    {
+      "lambda": 0.5,
+      "beta": 0.1,
+      "precision": 0.0824128686327077,
+      "recall": 0.1784986595174263,
+      "ndcg": 0.1597878975868056,
+      "catalog_coverage": 0.0248733601766463,
+      "arp": 161.90584450402145,
+      "novelty": 9.347547893039504,
+      "ild": 0.8269650310748622
+    },
+    {
+      "lambda": 0.5,
+      "beta": 0.25,
+      "precision": 0.0802144772117962,
+      "recall": 0.1740214477211796,
+      "ndcg": 0.157874765916095,
+      "catalog_coverage": 0.0403299129757111,
+      "arp": 147.5180160857909,
+      "novelty": 9.539366305424412,
+      "ild": 0.8354033648850063
+    },
+    {
+      "lambda": 0.5,
+      "beta": 0.5,
+      "precision": 0.0703485254691689,
+      "recall": 0.1528775692582663,
+      "ndcg": 0.1437544856182838,
+      "catalog_coverage": 0.0577347707494479,
+      "arp": 116.44434316353887,
+      "novelty": 10.082331804213904,
+      "ild": 0.8618212040648872
+    },
+    {
+      "lambda": 0.75,
+      "beta": 0.0,
+      "precision": 0.085254691689008,
+      "recall": 0.184798927613941,
+      "ndcg": 0.165962201773877,
+      "catalog_coverage": 0.0183140667619171,
+      "arp": 177.97254691689008,
+      "novelty": 9.193703932473117,
+      "ild": 0.796611148120881
+    },
+    {
+      "lambda": 0.75,
+      "beta": 0.1,
+      "precision": 0.0860589812332439,
+      "recall": 0.1866309204647006,
+      "ndcg": 0.1668650425869262,
+      "catalog_coverage": 0.0192232757500974,
+      "arp": 173.02418230563003,
+      "novelty": 9.24238841504979,
+      "ild": 0.7980363558116946
+    },
+    {
+      "lambda": 0.75,
+      "beta": 0.25,
+      "precision": 0.0865415549597855,
+      "recall": 0.1877837354781054,
+      "ndcg": 0.1679114969482586,
+      "catalog_coverage": 0.0207169762306793,
+      "arp": 165.46155495978553,
+      "novelty": 9.319704153494683,
+      "ild": 0.7998775429187214
+    },
+    {
+      "lambda": 0.75,
+      "beta": 0.5,
+      "precision": 0.0862734584450402,
+      "recall": 0.1873369079535299,
+      "ndcg": 0.1674769869105296,
+      "catalog_coverage": 0.029094687621769,
+      "arp": 152.49571045576408,
+      "novelty": 9.476829873717255,
+      "ild": 0.8047044606087119
+    },
+    {
+      "lambda": 1.0,
+      "beta": 0.0,
+      "precision": 0.0857908847184986,
+      "recall": 0.1857819481680071,
+      "ndcg": 0.1666114714247273,
+      "catalog_coverage": 0.0178594622678269,
+      "arp": 181.12986595174263,
+      "novelty": 9.171254390090809,
+      "ild": 0.7844295918854757
+    },
+    {
+      "lambda": 1.0,
+      "beta": 0.1,
+      "precision": 0.0862734584450402,
+      "recall": 0.1868632707774798,
+      "ndcg": 0.1672815255765533,
+      "catalog_coverage": 0.0182491232627614,
+      "arp": 177.98364611260052,
+      "novelty": 9.202541928874366,
+      "ild": 0.7852321530602242
+    },
+    {
+      "lambda": 1.0,
+      "beta": 0.25,
+      "precision": 0.0869168900804289,
+      "recall": 0.1879356568364611,
+      "ndcg": 0.168324722026336,
+      "catalog_coverage": 0.0188985582543187,
+      "arp": 172.59260053619303,
+      "novelty": 9.257485728633307,
+      "ild": 0.7867312253307747
+    },
+    {
+      "lambda": 1.0,
+      "beta": 0.5,
+      "precision": 0.0867024128686327,
+      "recall": 0.1875513851653262,
+      "ndcg": 0.1684586155297542,
+      "catalog_coverage": 0.0205221457332121,
+      "arp": 163.24857908847184,
+      "novelty": 9.356958252766011,
+      "ild": 0.7890371722360293
+    }
+  ],
+  "check": {
+    "passed": true,
+    "warm_users": 1877,
+    "warm_rows": 12,
+    "m2_users": 189,
+    "m2_rows": 9,
+    "tolerance": 1e-12
+  },
+  "latency_median_ms": {
+    "GET /health": 2.2,
+    "GET /users": 10.8,
+    "GET /users/{id}/history": 7.0,
+    "GET /artists?q=": 15.6,
+    "POST /recommend pure_svd": 5.2,
+    "POST /recommend m1": 7.3,
+    "POST /recommend implicit_als": 5.9,
+    "POST /recommend m2 (3 artists)": 9.1,
+    "POST /recommend popularity": 2.8
+  }
+}

@@ -1,7 +1,8 @@
 """FastAPI entry point serving a verified demo release (see scripts/export_release.py).
 
 Environment: MUSICREC_RELEASE_DIR (release directory) and MUSICREC_CORS_ORIGINS
-(comma-separated origins allowed to call the API from a browser).
+(comma-separated origins allowed to call the API from a browser, e.g. the Vercel domain).
+Local frontends on localhost or 127.0.0.1 are allowed on any port.
 """
 
 import os
@@ -35,7 +36,7 @@ from musicrec.serving.service import (
 )
 
 DEFAULT_RELEASE_DIR = "artifacts/releases/demo-chinh-thuc-20261026"
-DEFAULT_CORS_ORIGINS = "http://localhost:3000,http://127.0.0.1:3000"
+LOCAL_ORIGIN_REGEX = r"http://(localhost|127\.0\.0\.1)(:\d+)?"
 
 
 def _load_from_environment() -> DemoService:
@@ -55,10 +56,11 @@ def create_app(load_service: Callable[[], DemoService] = _load_from_environment)
         yield
 
     app = FastAPI(title="MusicRec API", version="0.2.0", lifespan=lifespan)
-    origins = os.getenv("MUSICREC_CORS_ORIGINS", DEFAULT_CORS_ORIGINS)
+    origins = os.getenv("MUSICREC_CORS_ORIGINS", "")
     app.add_middleware(
         CORSMiddleware,
         allow_origins=[origin.strip() for origin in origins.split(",") if origin.strip()],
+        allow_origin_regex=LOCAL_ORIGIN_REGEX,
         allow_methods=["GET", "POST"],
         allow_headers=["Content-Type"],
     )
@@ -152,7 +154,12 @@ def create_app(load_service: Callable[[], DemoService] = _load_from_environment)
         svc = service(request)
         try:
             if body.user_id:
-                result = svc.recommend_existing(body.user_id, body.k, body.model)
+                params = (
+                    None
+                    if body.m1_lambda is None or body.m1_beta is None
+                    else (body.m1_lambda, body.m1_beta)
+                )
+                result = svc.recommend_existing(body.user_id, body.k, body.model, params)
             else:
                 profile = [
                     ProfileEntry(entry.item_id, entry.listening_count)

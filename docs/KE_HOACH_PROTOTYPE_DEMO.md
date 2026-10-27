@@ -1,6 +1,6 @@
 # Kế hoạch prototype demo: backend FastAPI, Streamlit dự phòng, frontend Next.js
 
-Ngày lập: 27/10/2026, cập nhật P1, P4, A2, A3 cùng ngày. Trạng thái: **đã duyệt 27/10/2026**. Giai đoạn A xong ngày 27/10/2026, kết quả ở [chuong_5_backend.md](results/chuong_5_backend.md).
+Ngày lập: 27/10/2026, cập nhật P1, P4, A2, A3 cùng ngày. Trạng thái: **đã duyệt 27/10/2026**. Giai đoạn A xong ngày 27/10/2026, kết quả ở [chuong_5_backend.md](results/chuong_5_backend.md). Giai đoạn B (trừ deploy) xong cùng ngày, kết quả ở [chuong_5_frontend.md](results/chuong_5_frontend.md).
 
 Hướng đã được người dùng đồng ý ngày 27/10/2026: frontend Next.js deploy lên Vercel; backend FastAPI chạy riêng ở một host Python hoặc chạy cục bộ; giữ một trang Streamlit tối giản làm bản dự phòng. Mốc lấy từ [kế hoạch hiện hành](WEEKLY_IMPLEMENTATION_PLAN.md): chốt mô hình 15/11, bản tích hợp đầu 20/11, demo đủ luồng 22/11, sẵn sàng nội bộ 27/11, dự phòng 28–30/11.
 

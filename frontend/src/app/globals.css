@@ -1,0 +1,158 @@
+@import "tailwindcss";
+
+/* Bright blue theme on a flat dark background: ice = primary bright blue (PureSVD, accuracy),
+   lilac = light blue (M2, secondary), mint = green (M1, gains), blush = pink (popularity bias). */
+:root {
+  color-scheme: dark;
+  --bg: #0b1120;
+  --surface: #121a2e;
+  --surface-2: #1a2440;
+  --border: rgba(147, 197, 253, 0.14);
+  --text: #eef4ff;
+  --muted: #a8b6d4;
+  --ice: #4da3ff;
+  --ice-soft: rgba(77, 163, 255, 0.16);
+  --lilac: #8cc8ff;
+  --lilac-soft: rgba(140, 200, 255, 0.16);
+  --mint: #4ade80;
+  --mint-soft: rgba(74, 222, 128, 0.14);
+  --blush: #f472b6;
+  --blush-soft: rgba(244, 114, 182, 0.14);
+  --danger: #ff8fa3;
+  --danger-soft: rgba(255, 143, 163, 0.14);
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-border: var(--border);
+  --color-text: var(--text);
+  --color-muted: var(--muted);
+  --color-ice: var(--ice);
+  --color-ice-soft: var(--ice-soft);
+  --color-lilac: var(--lilac);
+  --color-lilac-soft: var(--lilac-soft);
+  --color-mint: var(--mint);
+  --color-mint-soft: var(--mint-soft);
+  --color-blush: var(--blush);
+  --color-blush-soft: var(--blush-soft);
+  --color-danger: var(--danger);
+  --color-danger-soft: var(--danger-soft);
+  --font-sans: var(--font-jakarta);
+  --font-mono: var(--font-jetbrains);
+}
+
+html {
+  font-size: 17px;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+}
+
+.glass {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+.glow-ice {
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06), 0 0 40px -14px rgba(77, 163, 255, 0.45);
+}
+.glow-mint {
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06), 0 0 40px -14px rgba(74, 222, 128, 0.35);
+}
+.glow-blush {
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06), 0 0 40px -14px rgba(244, 114, 182, 0.35);
+}
+
+/* Never starts fully transparent, so content stays readable if animations are paused. */
+@keyframes rise {
+  from {
+    opacity: 0.35;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.rise {
+  animation: rise 0.35s ease-out both;
+}
+
+/* Data beam: dashes marching left to right along an SVG line to show the flow direction. */
+@keyframes beam {
+  from {
+    stroke-dashoffset: 0;
+  }
+  to {
+    stroke-dashoffset: -14;
+  }
+}
+
+.beam {
+  stroke-dasharray: 8 6;
+  animation: beam 0.7s linear infinite;
+}
+
+/* Hide the browser's datalist arrow; suggestions still appear while typing. */
+.no-picker::-webkit-calendar-picker-indicator {
+  display: none !important;
+}
+
+/* Glowing pulse travelling along a lit connector (horizontal on wide screens, vertical below). */
+@keyframes pulse-x {
+  from {
+    left: -5px;
+    opacity: 0;
+  }
+  15%,
+  85% {
+    opacity: 1;
+  }
+  to {
+    left: calc(100% - 5px);
+    opacity: 0;
+  }
+}
+
+@keyframes pulse-y {
+  from {
+    top: -5px;
+    opacity: 0;
+  }
+  15%,
+  85% {
+    opacity: 1;
+  }
+  to {
+    top: calc(100% - 5px);
+    opacity: 0;
+  }
+}
+
+.pulse {
+  left: -4px;
+  top: -5px;
+  box-shadow: 0 0 10px 3px var(--ice);
+  animation: pulse-y 1.4s ease-in-out infinite;
+}
+
+@media (min-width: 768px) {
+  .pulse {
+    top: -4px;
+    animation-name: pulse-x;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pulse,
+  .rise,
+  .beam {
+    animation: none;
+  }
+}
