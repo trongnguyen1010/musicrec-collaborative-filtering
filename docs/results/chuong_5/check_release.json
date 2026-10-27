@@ -1,0 +1,44 @@
+{
+  "created_at_utc": "2026-10-27T07:01:45.378913+00:00",
+  "release": "demo-chinh-thuc-20261026",
+  "release_manifest_files": 17,
+  "tolerance": 1e-12,
+  "warm": {
+    "users": 1877,
+    "rows_compared": 12,
+    "mismatches": []
+  },
+  "m2": {
+    "users": 189,
+    "rows_compared": 9,
+    "mismatches": []
+  },
+  "passed": true,
+  "load_seconds": 0.7347926000365987,
+  "recommend_seconds": {
+    "popularity": 0.03941159998066723,
+    "pure_svd": 4.85643250006251,
+    "m1": 9.133297500084154,
+    "implicit_als": 5.571211999980733,
+    "m2_n1": 0.9992658999981359,
+    "m2_n3": 0.9990445000585169,
+    "m2_n5": 1.059451499953866
+  },
+  "runtime": {
+    "python": "3.11.9",
+    "platform": "Windows-10-10.0.26200-SP0",
+    "processor": "Intel64 Family 6 Model 140 Stepping 1, GenuineIntel",
+    "numpy": "2.4.6",
+    "scipy": "1.17.1",
+    "pandas": "2.3.3",
+    "pyarrow": "19.0.1",
+    "fastapi": "0.141.1"
+  },
+  "command": [
+    "scripts/check_release.py",
+    "--release",
+    "artifacts/releases/demo-chinh-thuc-20261026",
+    "--output-dir",
+    "outputs/demo/check_release_20261027"
+  ]
+}
