@@ -59,6 +59,12 @@ def test_request_validation(client: TestClient) -> None:
     duplicate = [{"item_id": "1"}, {"item_id": "1"}]
     assert client.post("/recommend", json={"history": duplicate}).status_code == 422
     assert client.post("/recommend", json={"user_id": "1", "model": "svd"}).status_code == 422
+    off_grid = {"user_id": "1", "model": "m1", "m1_lambda": 0.6, "m1_beta": 0.5}
+    assert client.post("/recommend", json=off_grid).status_code == 422
+    half = {"user_id": "1", "model": "m1", "m1_lambda": 0.75}
+    assert client.post("/recommend", json=half).status_code == 422
+    grid = {"user_id": "1", "model": "m1", "m1_lambda": 0.5, "m1_beta": 0.25, "k": 2}
+    assert client.post("/recommend", json=grid).status_code == 200
 
 
 def test_users_history_and_artist_search(client: TestClient) -> None:
@@ -74,9 +80,20 @@ def test_users_history_and_artist_search(client: TestClient) -> None:
     assert [a["item_id"] for a in found] == ["1"]
 
 
-def test_cors_allows_local_frontend(client: TestClient) -> None:
+@pytest.mark.parametrize(
+    ("origin", "allowed"),
+    [
+        ("http://localhost:3000", True),
+        ("http://localhost:3001", True),
+        ("http://127.0.0.1:3000", True),
+        ("http://evil.example", False),
+        ("http://localhost.evil.example", False),
+    ],
+)
+def test_cors_allows_local_frontends_on_any_port(
+    client: TestClient, origin: str, allowed: bool
+) -> None:
     response = client.options(
-        "/recommend",
-        headers={"Origin": "http://localhost:3000", "Access-Control-Request-Method": "POST"},
+        "/recommend", headers={"Origin": origin, "Access-Control-Request-Method": "POST"}
     )
-    assert response.headers["access-control-allow-origin"] == "http://localhost:3000"
+    assert (response.headers.get("access-control-allow-origin") == origin) is allowed

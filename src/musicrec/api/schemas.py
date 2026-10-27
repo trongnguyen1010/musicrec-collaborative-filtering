@@ -19,11 +19,15 @@ class RecommendRequest(BaseModel):
     history: list[HistoryEntry] | None = Field(default=None, max_length=MAX_PROFILE_ARTISTS)
     k: int = Field(default=10, ge=1, le=100)
     model: Literal["pure_svd", "m1", "implicit_als"] = "pure_svd"
+    m1_lambda: float | None = None
+    m1_beta: float | None = None
 
     @model_validator(mode="after")
     def has_profile(self) -> "RecommendRequest":
         if not self.user_id and self.history is None:
             raise ValueError("either user_id or history is required")
+        if (self.m1_lambda is None) != (self.m1_beta is None):
+            raise ValueError("m1_lambda and m1_beta must be given together")
         return self
 
 

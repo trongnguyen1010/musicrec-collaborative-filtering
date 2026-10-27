@@ -119,3 +119,18 @@ def test_artist_search_and_listeners(service: DemoService) -> None:
     assert [a.listeners for a in found] == sorted((a.listeners for a in found), reverse=True)
     assert service.artist("1").listeners == 4 and service.artist("1").name == "Artist 1"
     assert service.mean_listeners([]) is None
+
+
+def test_m1_grid_point_matches_pinned_model_and_base(service: DemoService) -> None:
+    pinned = service.recommend_existing("1", 3, "m1").recommendations
+    assert service.recommend_existing("1", 3, "m1", (0.75, 0.5)).recommendations == pinned
+    base = service.recommend_existing("1", 3, "pure_svd").recommendations
+    unchanged = service.recommend_existing("1", 3, "m1", (1.0, 0.0)).recommendations
+    assert [r.item_id for r in unchanged] == [r.item_id for r in base]
+
+
+def test_m1_grid_rejects_points_outside_validation_grid(service: DemoService) -> None:
+    with pytest.raises(ValueError, match="grid"):
+        service.recommend_existing("1", 3, "m1", (0.6, 0.5))
+    with pytest.raises(ValueError, match="grid"):
+        service.recommend_existing("1", 3, "pure_svd", (0.75, 0.5))

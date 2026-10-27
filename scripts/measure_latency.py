@@ -1,7 +1,7 @@
 """Measure end-to-end HTTP latency of a running demo API and record the machine it ran on.
 
-    uvicorn musicrec.api.main:app --port 8000   (in another shell)
-    python scripts/measure_latency.py --output-dir outputs/demo/latency_<date>
+uvicorn musicrec.api.main:app --port 8000   (in another shell)
+python scripts/measure_latency.py --output-dir outputs/demo/latency_<date>
 """
 
 import argparse
@@ -19,6 +19,7 @@ from typing import Any
 import requests
 
 REPEATS = 50
+M2_PROFILE = [{"item_id": i} for i in ["89", "289", "292"]]  # Lady Gaga, Britney, Christina
 CALLS: list[tuple[str, str, dict[str, Any]]] = [
     ("GET /health", "/health", {}),
     ("GET /users", "/users?limit=2000", {}),
@@ -26,10 +27,10 @@ CALLS: list[tuple[str, str, dict[str, Any]]] = [
     ("GET /artists?q=", "/artists?q=the&limit=20", {}),
     ("POST /recommend pure_svd", "/recommend", {"user_id": "2", "k": 10, "model": "pure_svd"}),
     ("POST /recommend m1", "/recommend", {"user_id": "2", "k": 10, "model": "m1"}),
-    ("POST /recommend implicit_als", "/recommend", {"user_id": "2", "k": 10, "model": "implicit_als"}),
-    ("POST /recommend m2 (3 artists)", "/recommend", {"history": [{"item_id": i} for i in ["89", "289", "292"]], "k": 10}),
+    ("POST /recommend implicit_als", "/recommend", {"user_id": "2", "model": "implicit_als"}),
+    ("POST /recommend m2 (3 artists)", "/recommend", {"history": M2_PROFILE, "k": 10}),
     ("POST /recommend popularity", "/recommend", {"history": [], "k": 10}),
-]  # fmt: skip
+]
 
 
 def main() -> None:

@@ -15,11 +15,15 @@ import numpy as np
 
 from musicrec.data.contracts import Interaction
 from musicrec.recommenders.base import Recommendation, Recommender
+from musicrec.recommenders.m1 import rerank_candidates
 from musicrec.serving.release import Release
 
 ExistingModel = Literal["pure_svd", "m1", "implicit_als"]
 Branch = Literal["existing_user", "new_user", "popularity"]
 MAX_PROFILE_ARTISTS = 5
+# The validation grid of configs/models/m1_pure_svd.yaml; only these points have metrics.
+M1_LAMBDAS = (0.5, 0.75, 1.0)
+M1_BETAS = (0.0, 0.1, 0.25, 0.5)
 _PROFILE_ID = "demo_new_user"
 
 
@@ -118,12 +122,32 @@ class DemoService:
         return matches[:limit]
 
     def recommend_existing(
-        self, user_id: str, k: int, model: ExistingModel
+        self,
+        user_id: str,
+        k: int,
+        model: ExistingModel,
+        m1_params: tuple[float, float] | None = None,
     ) -> RecommendationResult:
-        """Rank the unseen train catalog for a known user with one pinned model."""
+        """Rank the unseen train catalog for a known user with one pinned model.
+
+        m1_params=(lambda, beta) re-ranks the same PureSVD top-100 pool with another point
+        of the M1 validation grid; None keeps the selected (pinned) configuration.
+        """
         if user_id not in self._train_users:
             raise UnknownUserError(user_id)
-        recommendations = self._existing[model].recommend(user_id, k, self.masked_items(user_id))
+        if m1_params is not None:
+            lambda_weight, beta = m1_params
+            if model != "m1" or lambda_weight not in M1_LAMBDAS or beta not in M1_BETAS:
+                raise ValueError("m1 lambda/beta must be a point of the M1 validation grid")
+            m1 = self.release.m1
+            if k > m1.candidate_size:
+                raise ValueError("k must not exceed the M1 candidate size")
+            pool = m1.prepare_candidates(user_id, self.masked_items(user_id))
+            recommendations = rerank_candidates(pool, k, lambda_weight, beta)
+        else:
+            recommendations = self._existing[model].recommend(
+                user_id, k, self.masked_items(user_id)
+            )
         return RecommendationResult(
             self.release.version, "existing_user", model, False, None, recommendations
         )
