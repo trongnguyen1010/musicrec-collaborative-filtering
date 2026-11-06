@@ -1,5 +1,7 @@
 # Phiên bản báo cáo khóa luận
 
+Xem [Quy tắc viết báo cáo khóa luận](QUY_TAC_VIET_BAO_CAO.md) trước khi soạn, cập nhật hoặc rà soát báo cáo.
+
 Tên tệp: `33_BaoCaoKhoaLuan_CaoTrongNguyen_LeKhacGiaKhang_vNN_DD-MM-YYYY.docx`. Mỗi lần cập nhật báo cáo thì tăng số phiên bản và thêm một dòng vào bảng dưới đây (quy tắc ở [DEVELOPMENT_RULES.md](../../DEVELOPMENT_RULES.md#lưu-phiên-bản-báo-cáo-khóa-luận)).
 
 ## Các bản đang giữ
