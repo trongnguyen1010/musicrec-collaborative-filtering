@@ -143,7 +143,7 @@ Trước khi có triển khai được phép, cần kiểm các phần sau mà k
 5. Lưu toàn bộ cấu hình/điểm validation, kể cả ngoài biên và bị trội; khóa cấu hình trước xác nhận/test. Kiểm provenance của backbone đã dùng validation để chọn epoch.
 6. Đo runtime/RAM/model size khi thực sự chạy; không benchmark hai tiến trình tranh tài nguyên rồi so như cùng điều kiện. Không phát sinh model fit mới chỉ để kiểm tài liệu.
 
-Chỉ thay đổi Markdown trong lượt hợp nhất này. Không thêm module/config chạy, không fit, không đọc dataset test, không sửa Word và không commit.
+Chỉ thay đổi Markdown trong lượt hợp nhất này. Không thêm module/config chạy, không fit, không đọc dataset test và không sửa Word. Lượt hợp nhất đã được commit (`b2c0dbb`) và push lên origin khi người dùng chưa cho phép; sau đó người dùng quyết định giữ nguyên commit và thư mục `khao-sat-huong-moi/`.
 
 ## 11. Nhãn bằng chứng và kết thúc debate
 

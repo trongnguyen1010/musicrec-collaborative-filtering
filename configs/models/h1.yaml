@@ -1,0 +1,26 @@
+# H1 round 1 (DAC_TA_H1_THONG_NHAT_SAU_DEBATE.md, sections 3-6), validation seed 42 only.
+model: h1_spectral
+base_model: implicit_als_lat32_reg0.1_con1
+base_class: implicit_als
+representations_run: outputs/chinh_thuc_cloud_20261026/chuong_3/run/representations
+lock: docs/results/chinh_thuc_cloud_20261026/test/lock.json
+base_runs:
+  42: outputs/chinh_thuc_cloud_20261026/chuong_4/tuning/implicit_als/implicit_als_lat32_reg0.1_con1
+  43: outputs/chinh_thuc_cloud_20261026/chuong_4/tuning/implicit_als/implicit_als_lat32_reg0.1_con1_seed43
+  44: outputs/chinh_thuc_cloud_20261026/chuong_4/tuning/implicit_als/implicit_als_lat32_reg0.1_con1_seed44
+selection_seed: 42
+confirmation_seeds: [43, 44]
+gamma_modes: [global, deviation]
+gamma0_grid: [0.0, 0.1, 0.25, 0.5, 0.75, 1.0]
+direct_beta_grid: [0.0, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1.0]
+spectral_score: s_minus_gamma_u_sigma1_l1_r1_of_unmasked_PQt_via_thin_qr
+gate: deviation_g_top10_minus_h_train_clip0_over_q90_positive_linear_capped_1_frozen
+popularity: log1p_train_distinct_listeners_divided_by_log1p_catalog_max_listeners
+direct_score: per_user_minmax_over_train_unseen_catalog_flat_equals_one_minus_beta_popularity
+head_share: 0.2
+head_rule: shortest_prefix_by_train_distinct_listeners_ties_at_cut_join_head
+primary_k: 10
+max_relative_ndcg_drop: 0.05
+epsilon: 1.0e-12
+ks: [5, 10, 20]
+bootstrap: {resamples: 10000, seed: 42}
