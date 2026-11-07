@@ -1,0 +1,104 @@
+{
+  "created_at_utc": "2026-11-07T07:50:34.987085+00:00",
+  "api_url": "http://127.0.0.1:8000",
+  "release": "demo-chinh-thuc-20261026",
+  "latency": {
+    "GET /health": {
+      "warmup": 20,
+      "repeats": 200,
+      "mean_ms": 3.927294488530606,
+      "median_ms": 3.8421499775722623,
+      "stdev_ms": 0.9095455449564203,
+      "p95_ms": 5.906710086856037,
+      "max_ms": 6.74300012178719
+    },
+    "GET /users": {
+      "warmup": 20,
+      "repeats": 200,
+      "mean_ms": 17.94179750024341,
+      "median_ms": 14.70780000090599,
+      "stdev_ms": 11.70866134429223,
+      "p95_ms": 25.449710013344884,
+      "max_ms": 86.36129996739328
+    },
+    "GET /users/{id}/history": {
+      "warmup": 20,
+      "repeats": 200,
+      "mean_ms": 9.127954995492473,
+      "median_ms": 8.62245005555451,
+      "stdev_ms": 1.8474016021390913,
+      "p95_ms": 12.979684886522591,
+      "max_ms": 17.34700007364154
+    },
+    "GET /artists?q=": {
+      "warmup": 20,
+      "repeats": 200,
+      "mean_ms": 23.25673999148421,
+      "median_ms": 21.861149929463863,
+      "stdev_ms": 5.687513848111293,
+      "p95_ms": 34.89393503405154,
+      "max_ms": 66.54189992696047
+    },
+    "POST /recommend pure_svd": {
+      "warmup": 20,
+      "repeats": 200,
+      "mean_ms": 8.276063502999023,
+      "median_ms": 8.058950072154403,
+      "stdev_ms": 1.5751488469058377,
+      "p95_ms": 11.228625173680484,
+      "max_ms": 12.806399958208203
+    },
+    "POST /recommend m1": {
+      "warmup": 20,
+      "repeats": 200,
+      "mean_ms": 11.973861003061756,
+      "median_ms": 11.463750037364662,
+      "stdev_ms": 4.336670975186313,
+      "p95_ms": 18.07799009839073,
+      "max_ms": 48.501200042665005
+    },
+    "POST /recommend implicit_als": {
+      "warmup": 20,
+      "repeats": 200,
+      "mean_ms": 8.343302499270067,
+      "median_ms": 7.514600059948862,
+      "stdev_ms": 3.4045229522154066,
+      "p95_ms": 13.069624942727387,
+      "max_ms": 33.244699938222766
+    },
+    "POST /recommend m2 (3 artists)": {
+      "warmup": 20,
+      "repeats": 200,
+      "mean_ms": 11.352328998036683,
+      "median_ms": 10.879850015044212,
+      "stdev_ms": 2.1408048941366036,
+      "p95_ms": 15.982545062433928,
+      "max_ms": 18.29439983703196
+    },
+    "POST /recommend popularity": {
+      "warmup": 20,
+      "repeats": 200,
+      "mean_ms": 3.8664459984283894,
+      "median_ms": 3.781349863857031,
+      "stdev_ms": 0.9205418208862581,
+      "p95_ms": 5.575484980363399,
+      "max_ms": 6.618099985644221
+    }
+  },
+  "machine": {
+    "platform": "Windows-10-10.0.26200-SP0",
+    "processor": "Intel64 Family 6 Model 140 Stepping 1, GenuineIntel",
+    "cpu_count": 8,
+    "python": "3.11.9",
+    "fastapi": "0.141.1",
+    "uvicorn": "0.52.4",
+    "numpy": "2.4.6",
+    "scipy": "1.17.1",
+    "pandas": "2.3.3"
+  },
+  "command": [
+    "scripts/measure_latency.py",
+    "--output-dir",
+    "outputs/demo/latency_20261107"
+  ]
+}
