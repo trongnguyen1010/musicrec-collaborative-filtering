@@ -97,7 +97,7 @@ P(
     "Các số liệu huấn luyện, tinh chỉnh và kiểm thử của chương đến từ một lần chạy liên tục trên "
     "máy ảo đám mây (Linux 6.18 x86_64, bộ xử lý Intel Xeon 2,10 GHz với 4 luồng logic, khoảng "
     "15,7 GiB RAM), bắt đầu từ dữ liệu gốc và đi qua tiền xử lý, chia tập, tinh chỉnh, khóa cấu "
-    "hình và kiểm thử. Mã nguồn dùng Python 3.11.17 cùng NumPy 2.4.6, SciPy 1.17.1, pandas 2.3.3, "
+    "hình và kiểm thử. Mã nguồn dùng Python 3.11.17 cùng NumPy 2.4.6, SciPy 1.17.1 [31], pandas 2.3.3, "
     "pyarrow 19.0.1, scikit-learn 1.9.1 và implicit 0.7.3 [30] cho mô hình ALS. Phân rã PureSVD "
     "dùng hàm svds của SciPy với bộ giải ARPACK. Mọi bước đặt thư viện đại số tuyến tính chạy một "
     "luồng để kết quả tái lập được. Toàn bộ lần chạy mất khoảng 48 phút, trong đó tinh chỉnh chiếm "

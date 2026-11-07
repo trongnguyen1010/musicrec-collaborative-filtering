@@ -12,13 +12,13 @@ import platform
 import sys
 from datetime import UTC, datetime
 from pathlib import Path
-from statistics import median, quantiles
+from statistics import fmean, median, quantiles, stdev
 from time import perf_counter
 from typing import Any
 
 import requests
 
-REPEATS = 50
+WARMUP, REPEATS = 20, 200
 M2_PROFILE = [{"item_id": i} for i in ["89", "289", "292"]]  # Lady Gaga, Britney, Christina
 CALLS: list[tuple[str, str, dict[str, Any]]] = [
     ("GET /health", "/health", {}),
@@ -37,13 +37,15 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--api-url", default="http://127.0.0.1:8000")
     parser.add_argument("--output-dir", type=Path, required=True)
+    parser.add_argument("--warmup", type=int, default=WARMUP)
+    parser.add_argument("--repeats", type=int, default=REPEATS)
     args = parser.parse_args()
     args.output_dir.mkdir(parents=True, exist_ok=False)
     session = requests.Session()
     results = {}
     for label, path, body in CALLS:
         timings = []
-        for _ in range(REPEATS + 1):
+        for _ in range(args.warmup + args.repeats):
             start = perf_counter()
             response = (
                 session.post(args.api_url + path, json=body, timeout=30)
@@ -53,10 +55,13 @@ def main() -> None:
             elapsed = (perf_counter() - start) * 1000
             response.raise_for_status()
             timings.append(elapsed)
-        timings = timings[1:]  # first call warms connection and caches
+        timings = timings[args.warmup :]  # warm-up calls fill connection and caches
         results[label] = {
-            "repeats": REPEATS,
+            "warmup": args.warmup,
+            "repeats": args.repeats,
+            "mean_ms": fmean(timings),
             "median_ms": median(timings),
+            "stdev_ms": stdev(timings),
             "p95_ms": quantiles(timings, n=20)[-1],
             "max_ms": max(timings),
         }

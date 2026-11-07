@@ -213,37 +213,95 @@ for r in body.iter(q("r")):
     if "chi tiết ở Bảng 4.4" in text(r):
         r.find("w:rPr/w:color", NS).set(q("val"), "000000")
 
-# ---- 2. Rewrite Chapter 4 ----
-kids = list(body)
-start = kids.index(find_para("CHƯƠNG 4 HUẤN LUYỆN"))
-end = kids.index(find_para("CHƯƠNG 5 XÂY DỰNG"))
-for e in kids[start + 1 : end]:
-    body.remove(e)
-anchor = kids[start]
-
-content = []
+# ---- 2. Rewrite chapters (Chapter 4, and Chapter 5 when a second content file is given) ----
+CHAPTERS = [("CHƯƠNG 4 HUẤN LUYỆN", "CHƯƠNG 5 XÂY DỰNG", "4", content_file)]
+if len(sys.argv) > 3:
+    CHAPTERS.append(("CHƯƠNG 5 XÂY DỰNG", "TÀI LIỆU THAM KHẢO", "5", sys.argv[3]))
+chapter = ["4"]
+content: list = []
+new_refs: list[str] = []
 H2 = lambda s: content.append(heading(h2_tpl, s))  # noqa: E731
 H3 = lambda s: content.append(heading(h3_tpl, s))  # noqa: E731
 P = lambda s: content.append(para(s))  # noqa: E731
 N = lambda s: content.append(note(s))  # noqa: E731
 
 
+def CODE(s):
+    """Monospace block, 11 pt, left aligned, one paragraph per line."""
+    for line in s.split("\n"):
+        p = para("")
+        rpr = copy.deepcopy(run_rpr)
+        fonts = rpr.find("w:rFonts", NS)
+        if fonts is None:
+            fonts = etree.Element(q("rFonts"))
+            rpr.insert(0, fonts)
+        for attr in ["ascii", "hAnsi", "cs"]:
+            fonts.set(q(attr), "Consolas")
+        for tag in ["sz", "szCs"]:
+            el = rpr.find(f"w:{tag}", NS)
+            if el is None:
+                el = etree.SubElement(rpr, q(tag))
+            el.set(q("val"), "21")
+        p.append(make_run(line or " ", rpr=rpr))
+        pPr = p.find("w:pPr", NS)
+        sp = pPr.find("w:spacing", NS)
+        if sp is None:
+            sp = etree.SubElement(pPr, q("spacing"))
+        sp.attrib.update(
+            {q("before"): "0", q("after"): "0", q("line"): "240", q("lineRule"): "auto"}
+        )
+        jc = pPr.find("w:jc", NS)
+        if jc is None:
+            jc = etree.SubElement(pPr, q("jc"))
+        jc.set(q("val"), "left")
+        ind = pPr.find("w:ind", NS)
+        if ind is None:
+            ind = etree.SubElement(pPr, q("ind"))
+        ind.attrib.update({q("firstLine"): "0", q("left"): "284"})
+        content.append(p)
+
+
 def T(title, widths, header, rows, source, align=None):
-    content.append(caption(cap_tpl, "Bảng 4.", "Bang", title))
+    content.append(caption(cap_tpl, f"Bảng {chapter[0]}.", "Bang", title))
     content.append(table(widths, header, rows, align))
     N("Nguồn: " + source)
 
 
 def F(png, title, source, width_cm=15.5):
-    content.append(picture(Path(png), width_cm, f"Hình 4.{counters['Hinh'] + 1} {title}"))
-    content.append(caption(fig_cap_tpl, "Hình 4.", "Hinh", title))
+    number = f"Hình {chapter[0]}.{counters['Hinh'] + 1} {title}"
+    content.append(picture(Path(png), width_cm, number))
+    content.append(caption(fig_cap_tpl, f"Hình {chapter[0]}.", "Hinh", title))
     N("Nguồn: " + source)
 
 
-exec(open(content_file, encoding="utf-8").read())
-for e in content:
-    anchor.addnext(e)
-    anchor = e
+for start_text, end_text, number, source_file in CHAPTERS:
+    kids = list(body)
+    start = kids.index(find_para(start_text))
+    end = kids.index(find_para(end_text))
+    for e in kids[start + 1 : end]:
+        body.remove(e)
+    anchor = kids[start]
+    chapter[0] = number
+    counters.update({"Bang": 0, "Hinh": 0})
+    content = []
+    scope = {**globals(), "content": content}
+    exec(open(source_file, encoding="utf-8").read(), scope)
+    new_refs.extend(scope.get("REFS", []))
+    for e in content:
+        anchor.addnext(e)
+        anchor = e
+
+# ---- 3. New references after [30] ----
+ref_tpl = strip_ids(copy.deepcopy(find_para("[30] Frederickson")))
+anchor = find_para("[30] Frederickson")
+for s in new_refs:
+    p = fill(copy.deepcopy(ref_tpl), s, rpr=copy.deepcopy(ref_tpl.find("w:r/w:rPr", NS)))
+    anchor.addnext(p)
+    anchor = p
+
+# ---- 4. Edits outside the rewritten chapters (optional fourth argument) ----
+if len(sys.argv) > 4:
+    exec(open(sys.argv[4], encoding="utf-8").read(), globals())
 
 tree.write(str(doc_path), xml_declaration=True, encoding="UTF-8", standalone=True)
 rels.write(str(rels_path), xml_declaration=True, encoding="UTF-8", standalone=True)
