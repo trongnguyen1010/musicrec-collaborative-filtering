@@ -1,0 +1,20 @@
+{
+  "created_at_utc": "2026-11-07T07:12:45.980067+00:00",
+  "command": [
+    "scripts/report_ch4_extras.py"
+  ],
+  "git_sha": "60b175c78f6637f32069d801c32496b7cc163f39",
+  "git_status": " M docs/bao-cao/README.md\n?? SHA256SUMS_checkpoints_demo.txt\n?? docs/bao-cao/33_BaoCaoKhoaLuan_CaoTrongNguyen_LeKhacGiaKhang_v17_07-11-2026.docx\n?? docs/bao-cao/GOP_Y_GVHD_06-11-2026.md\n?? docs/bao-cao/GopY_GVHD_06-11-2026_KLTN_TrongNguyen_GiaKhang.docx\n?? docs/bao-cao/KE_HOACH_SUA_THEO_GOP_Y_GVHD.md\n?? docs/bao-cao/nguon_v17/\n?? docs/results/chuong_4_bo_sung.md\n?? scripts/rebuild_locked_runs.py\n?? scripts/report_ch4_extras.py\n",
+  "runtime": {
+    "python": "3.11.9",
+    "platform": "Windows-10-10.0.26200-SP0",
+    "processor": "Intel64 Family 6 Model 140 Stepping 1, GenuineIntel",
+    "numpy": "2.4.6",
+    "scipy": "1.17.1",
+    "pandas": "2.3.3",
+    "pyarrow": "19.0.1",
+    "implicit": "0.7.3",
+    "matplotlib": "3.11.2"
+  },
+  "lock": "outputs\\chinh_thuc_cloud_20261026\\chuong_4\\test\\lock.json"
+}

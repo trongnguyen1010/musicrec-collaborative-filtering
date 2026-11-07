@@ -1,0 +1,23 @@
+{
+  "popularity": {
+    "ild_tag": 0.6177090183699511,
+    "ild_tag_lists": 1855
+  },
+  "pure_svd": {
+    "ild_tag": 0.6952946691296072,
+    "ild_tag_lists": 1855
+  },
+  "tag_features": {
+    "tag_rows_input": 184941,
+    "tag_rows_allowed_nonempty": 58928,
+    "tag_rows_rejected_or_empty": 126013,
+    "distinct_allowed_user_artist_tag_triples": 58926,
+    "normalized_tags_before_df_filter": 6886,
+    "vocabulary_size": 2778,
+    "tagged_catalog_artists": 5650,
+    "untagged_catalog_artists": 9748,
+    "learning_users": 1877,
+    "learning_interactions": 74275
+  },
+  "definition": "1 - cosine of L2-normalised TF-IDF tag vectors, pairs of tagged artists only, mean per list then over lists with at least one such pair; tag vocabulary df>=2 fitted on all train pairs (M2 recipe)"
+}

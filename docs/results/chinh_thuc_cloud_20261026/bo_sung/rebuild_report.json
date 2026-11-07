@@ -1,0 +1,37 @@
+{
+  "user_cf": {
+    "model": "user_cf",
+    "run": "user_cf_nei20_shr0",
+    "seed": 42,
+    "ndcg_at_10": 0.017488321672763516,
+    "recall_at_10": 0.027247542448614836,
+    "best_epoch": null,
+    "wall_seconds": 25.544331,
+    "official_ndcg_at_10": 0.017488321672763516,
+    "equal": true
+  },
+  "item_cf": {
+    "model": "item_cf",
+    "run": "item_cf_nei20_shr0",
+    "seed": 42,
+    "ndcg_at_10": 0.015364109803005505,
+    "recall_at_10": 0.019061662198391425,
+    "best_epoch": null,
+    "wall_seconds": 22.347118,
+    "official_ndcg_at_10": 0.015364109803005505,
+    "equal": true
+  },
+  "svd": {
+    "model": "svd",
+    "run": "svd_lat16_lea0.001925_reg0.01025",
+    "seed": 42,
+    "ndcg_at_10": 0.060665866476874455,
+    "recall_at_10": 0.06792672028596962,
+    "best_epoch": 2,
+    "wall_seconds": 82.364711,
+    "official_ndcg_at_10": 0.060665866476874455,
+    "equal": true
+  },
+  "svd_curve_matches_patience_run": true,
+  "svd_curve_check_note": "recomputed from the written CSV files: max abs difference 0.0 over epochs 1-7"
+}
