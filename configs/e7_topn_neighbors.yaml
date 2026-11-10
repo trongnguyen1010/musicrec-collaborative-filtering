@@ -1,0 +1,20 @@
+# E7 (feedback of the advisor, plan of 10/11/2026, section 2): top-N neighborhood scoring.
+# Separate from configs/tuning.yaml; the locked Chapter 4 UserCF/ItemCF stay unchanged.
+# aggregation 'sum': UserCF s_ui = sum_{v in N_L(u)} sim(u,v) x_vi,
+#                    ItemCF s_ui = sum_{j in H_u and N_L(i)} sim(i,j) x_uj,
+# x binary (1) or log_count (log2(1 + listening count)), used for both cosine and scores;
+# candidates without support score 0. 2 x 5 x 2 = 20 configurations per model, 40 in all.
+# Selection: NDCG@10 on validation, seed 42 (deterministic models, no confirmation seeds),
+# ties broken by the order below (first configuration wins).
+representations_run: outputs/chinh_thuc_cloud_20261026/chuong_3/run/representations
+selection_metric: ndcg_at_10_validation
+selection_seed: 42
+aggregation: sum
+ks: [5, 10, 20]
+models: [user_cf, item_cf]
+grid:
+  representation: [binary, log_count]
+  neighbors: [10, 20, 50, 100, 200]
+  shrinkage: [0, 10]
+test_masks: train_plus_validation
+refit_on_validation: false

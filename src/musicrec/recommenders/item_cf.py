@@ -3,7 +3,7 @@
 import hashlib
 import json
 from collections.abc import Iterable
-from math import isfinite
+from math import isfinite, log2
 from pathlib import Path
 from typing import Any
 
@@ -15,6 +15,8 @@ from musicrec.data.contracts import Interaction
 from musicrec.recommenders.base import Recommendation, Recommender
 
 NUMERIC_TIE_DECIMALS = 12
+AGGREGATIONS = ("mean", "sum")
+REPRESENTATIONS = {"mean": ("proxy",), "sum": ("binary", "log_count")}
 
 
 class ItemCFRecommender(Recommender):
@@ -25,17 +27,51 @@ class ItemCFRecommender(Recommender):
     weights; zero support uses the observed user mean (global mean for new users).
     """
 
-    def __init__(self, neighbors: int = 40, shrinkage: float = 0.0) -> None:
+    def __init__(
+        self,
+        neighbors: int = 40,
+        shrinkage: float = 0.0,
+        aggregation: str = "mean",
+        representation: str | None = None,
+    ) -> None:
+        """aggregation='mean' (default, locked Chapter 4 model) or 'sum' (top-N, E7).
+
+        'sum' uses representation 'binary' (x = 1) or 'log_count' (x = log2(1 + count)) for
+        both cosine and scores, with no division and score 0 without support.
+        """
         if type(neighbors) is not int or neighbors <= 0:
             raise ValueError("neighbors must be a positive integer")
         if not isfinite(shrinkage) or shrinkage < 0:
             raise ValueError("shrinkage must be finite and non-negative")
+        if aggregation not in AGGREGATIONS:
+            raise ValueError("aggregation must be 'mean' or 'sum'")
+        representation = representation or REPRESENTATIONS[aggregation][0]
+        if representation not in REPRESENTATIONS[aggregation]:
+            raise ValueError(f"representation {representation!r} is not valid for {aggregation}")
         self.neighbors = neighbors
         self.shrinkage = float(shrinkage)
+        self.aggregation = aggregation
+        self.representation = representation
         self._users: list[str] = []
         self._items: list[str] = []
         self._ratings: csr_matrix[np.float64]
         self._weights: csr_matrix[np.float64]
+
+    def _value(self, row: Interaction) -> float:
+        """Matrix entry of one interaction in this model's representation."""
+        if self.representation == "binary":
+            return 1.0
+        if self.representation == "log_count":
+            return log2(1 + row.listening_count)
+        if row.proxy_score is None:
+            raise ValueError("proxy representation requires proxy_score")
+        return float(row.proxy_score)
+
+    def _extra_state(self) -> dict[str, str]:
+        """Only non-default modes are persisted, so legacy state.json files stay byte-equal."""
+        if self.aggregation == "mean":
+            return {}
+        return {"aggregation": self.aggregation, "representation": self.representation}
 
     @staticmethod
     def _id_key(value: str) -> tuple[bool, int, str]:
@@ -54,7 +90,9 @@ class ItemCFRecommender(Recommender):
     def fit(self, interactions: Iterable[Interaction]) -> "ItemCFRecommender":
         """Learn item neighbors from observed proxy_score, never from raw listening counts."""
         rows = list(interactions)
-        if not rows or any(row.proxy_score is None for row in rows):
+        if not rows or (
+            self.representation == "proxy" and any(row.proxy_score is None for row in rows)
+        ):
             raise ValueError("ItemCF requires non-empty train interactions with proxy_score")
         if len({(row.user_id, row.item_id) for row in rows}) != len(rows):
             raise ValueError("Duplicate user-artist pair")
@@ -64,7 +102,7 @@ class ItemCFRecommender(Recommender):
         item_index = {item: index for index, item in enumerate(self._items)}
         self._ratings = csr_matrix(
             (
-                np.array([row.proxy_score for row in rows], dtype=np.float64),
+                np.array([self._value(row) for row in rows], dtype=np.float64),
                 (
                     [user_index[row.user_id] for row in rows],
                     [item_index[row.item_id] for row in rows],
@@ -113,11 +151,14 @@ class ItemCFRecommender(Recommender):
         if not user_id:
             raise ValueError("user_id must be non-empty")
         if user_id not in self._user_index:
-            return np.full(len(self._items), self._global_mean), np.zeros(
-                len(self._items), dtype=bool
-            )
+            fill = 0.0 if self.aggregation == "sum" else self._global_mean
+            return np.full(len(self._items), fill), np.zeros(len(self._items), dtype=bool)
         user = self._user_index[user_id]
         numerator = (self._ratings.getrow(user) @ self._incoming).toarray().ravel()
+        if self.aggregation == "sum":
+            # s_ui = sum over j in H_u and N_L(i) of sim(i, j) * x_uj; no support -> 0.
+            support = (self._binary.getrow(user) @ self._incoming).toarray().ravel()
+            return numerator, support > 0
         denominator = (self._binary.getrow(user) @ self._incoming).toarray().ravel()
         supported = denominator > 0
         scores = np.full(len(self._items), self._means[user])
@@ -142,6 +183,8 @@ class ItemCFRecommender(Recommender):
         """
         if not self._users:
             raise RuntimeError("Fit ItemCF before profile inference")
+        if self.aggregation != "mean":
+            raise ValueError("Profile scoring is defined for the mean aggregation only")
         rows = list(interactions)
         if (
             any(r.proxy_score is None for r in rows)
@@ -181,11 +224,12 @@ class ItemCFRecommender(Recommender):
         ranked = candidates[
             np.argsort(-np.round(scores[candidates], NUMERIC_TIE_DECIMALS), kind="stable")[:k]
         ]
-        fallback = (
-            "item_cf_user_mean_fallback"
-            if user_id in self._user_index
-            else "item_cf_global_mean_cold_start"
-        )
+        if self.aggregation == "sum":
+            fallback = "item_cf_no_support"
+        elif user_id in self._user_index:
+            fallback = "item_cf_user_mean_fallback"
+        else:
+            fallback = "item_cf_global_mean_cold_start"
         return [
             Recommendation(
                 self._items[i], float(scores[i]), "item_cf" if supported[i] else fallback
@@ -206,6 +250,7 @@ class ItemCFRecommender(Recommender):
             "numeric_tie_decimals": NUMERIC_TIE_DECIMALS,
             "neighbors": self.neighbors,
             "shrinkage": self.shrinkage,
+            **self._extra_state(),
             "users": self._users,
             "items": self._items,
             "user_means": self._means.tolist(),
@@ -218,6 +263,14 @@ class ItemCFRecommender(Recommender):
         with (directory / "state.json").open("x", encoding="utf-8") as handle:
             json.dump(state, handle, indent=2, allow_nan=False)
             handle.write("\n")
+
+    def _valid_values(self, values: NDArray[np.float64]) -> bool:
+        """Stored entries must match the representation (proxy 1-5, binary 1, log > 0)."""
+        if self.representation == "proxy":
+            return bool(np.isin(values, [1, 2, 3, 4, 5]).all())
+        if self.representation == "binary":
+            return bool((values == 1).all())
+        return bool(np.isfinite(values).all() and (values >= 1).all())
 
     @classmethod
     def load(cls, directory: Path) -> "ItemCFRecommender":
@@ -232,7 +285,12 @@ class ItemCFRecommender(Recommender):
         for name in ["ratings.npz", "neighbors.npz"]:
             if hashlib.sha256((directory / name).read_bytes()).hexdigest() != state["sha256"][name]:
                 raise ValueError(f"Model checksum mismatch: {name}")
-        model = cls(state["neighbors"], state["shrinkage"])
+        model = cls(
+            state["neighbors"],
+            state["shrinkage"],
+            state.get("aggregation", "mean"),
+            state.get("representation"),
+        )
         model._users, model._items = state["users"], state["items"]
         for ids in [model._users, model._items]:
             if (
@@ -247,7 +305,7 @@ class ItemCFRecommender(Recommender):
         if (
             model._ratings.shape != (len(model._users), len(model._items))
             or not model._ratings.has_canonical_format
-            or not np.isin(model._ratings.data, [1, 2, 3, 4, 5]).all()
+            or not model._valid_values(model._ratings.data)
             or (np.diff(model._ratings.indptr) == 0).any()
             or (np.asarray(model._ratings.getnnz(axis=0)) == 0).any()
             or model._weights.shape != (len(model._items), len(model._items))

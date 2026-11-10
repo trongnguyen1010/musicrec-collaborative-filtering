@@ -50,6 +50,12 @@ def main(
     parser.add_argument("--config", type=Path, default=Path(f"configs/models/{model_name}.yaml"))
     parser.add_argument("--evaluation-config", type=Path, default=Path("configs/evaluation.yaml"))
     parser.add_argument("--output-dir", type=Path, required=True)
+    parser.add_argument(
+        "--tuning-config",
+        type=Path,
+        default=TUNING_CONFIG,
+        help="grid file that bounds tunable values (default configs/tuning.yaml)",
+    )
     if model_name in ("random", "svd", "pure_svd", "implicit_als"):
         parser.add_argument("--model-seed", type=int, choices=[42, 43, 44], default=42)
     args = parser.parse_args()
@@ -236,7 +242,7 @@ def main(
         if importlib.metadata.version("implicit") != "0.7.3":
             raise ValueError("Expected the pinned implicit 0.7.3 implementation")
     tuned = {}
-    tuning = yaml.safe_load(TUNING_CONFIG.read_text(encoding="utf-8"))["models"]
+    tuning = yaml.safe_load(args.tuning_config.read_text(encoding="utf-8"))["models"]
     if model_name in tuning:
         space = tuning[model_name]
         for key, allowed in space.get("grid", {}).items():

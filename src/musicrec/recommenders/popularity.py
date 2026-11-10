@@ -15,7 +15,11 @@ class PopularityRecommender(Recommender):
     or predicted ratings. Unseen users receive the same non-personalized list.
     """
 
-    def __init__(self) -> None:
+    def __init__(self, score: str = "log_count_sum") -> None:
+        """score='log_count_sum' (default, locked) or 'listeners' (distinct train users c_i)."""
+        if score not in ("log_count_sum", "listeners"):
+            raise ValueError("score must be 'log_count_sum' or 'listeners'")
+        self.score = score
         self._scores: dict[str, float] = {}
         self._ranked: list[str] = []
         self._users: set[str] = set()
@@ -34,7 +38,10 @@ class PopularityRecommender(Recommender):
             values[interaction.item_id].append(log2(1 + interaction.listening_count))
         if not values:
             raise ValueError("Expected non-empty training interactions")
-        self._scores = {item: fsum(sorted(counts)) for item, counts in values.items()}
+        self._scores = {
+            item: float(len(counts)) if self.score == "listeners" else fsum(sorted(counts))
+            for item, counts in values.items()
+        }
         self._ranked = sorted(
             self._scores,
             key=lambda item: (

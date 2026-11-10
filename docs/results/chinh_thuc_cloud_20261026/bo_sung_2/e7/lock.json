@@ -1,0 +1,42 @@
+{
+  "locked_at_utc": "2026-11-10T12:09:45.549136+00:00",
+  "selection_sha256": "18abcbdb045fbe24ab5404cae58f43f9a9e63b478ee1c791e7df6b38d9bf2470",
+  "winners": {
+    "user_cf": {
+      "selected": {
+        "representation": "log_count",
+        "neighbors": 20,
+        "shrinkage": 10,
+        "metrics_sha256": "7aac4c0c12cbfa9dfb8afe48853e6636cbceda518750bfb2f1179acba44366e7"
+      },
+      "validation_ndcg_at_10_seed42": 0.17388596631972966
+    },
+    "item_cf": {
+      "selected": {
+        "representation": "log_count",
+        "neighbors": 100,
+        "shrinkage": 10,
+        "metrics_sha256": "077114f8991a15f802a266d017af4fa09cb66f73977312daf4a054eb2a82e829"
+      },
+      "validation_ndcg_at_10_seed42": 0.1742123345699557
+    }
+  },
+  "test_masks": "train_plus_validation",
+  "refit_on_validation": false,
+  "runtime": {
+    "python": "3.11.9",
+    "platform": "Windows-10-10.0.26200-SP0",
+    "processor": "Intel64 Family 6 Model 140 Stepping 1, GenuineIntel",
+    "cpu_count": 8,
+    "threads": {
+      "OPENBLAS_NUM_THREADS": "1",
+      "OMP_NUM_THREADS": "1"
+    },
+    "numpy": "2.4.6",
+    "scipy": "1.17.1",
+    "pandas": "2.3.3",
+    "pyarrow": "19.0.1",
+    "git_sha": "26af632e9b0e90df58fb2532f68d682d1d7bbcea",
+    "git_status": " M scripts/evaluate_m2_test.py\n M scripts/report_ch4_extras.py\n M scripts/test_statistics.py\n M src/musicrec/recommenders/item_cf.py\n M src/musicrec/recommenders/user_cf.py\n?? SHA256SUMS_checkpoints_demo.txt\n?? configs/e7_topn_neighbors.yaml\n?? docs/results/chuong_4_bo_sung_2.md\n?? scripts/compare_statistics.py\n?? scripts/run_e7_topn.py\n?? src/musicrec/evaluation/paired.py\n?? tests/unit/test_given_n_e7_scripts.py\n?? tests/unit/test_neighborhood_sum.py\n?? tests/unit/test_paired.py\n"
+  }
+}

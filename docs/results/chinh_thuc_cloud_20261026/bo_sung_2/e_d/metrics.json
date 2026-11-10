@@ -1,0 +1,189 @@
+{
+  "raw": {
+    "users": 1892,
+    "artists_catalog": 17632,
+    "artists_with_interactions": 17632,
+    "interactions": 92834,
+    "density_pct": 0.2782815119924182,
+    "density_active_artists_pct": 0.2782815119924182,
+    "mean_artists_per_user": 49.06659619450317,
+    "median_artists_per_user": 50.0,
+    "min_artists_per_user": 1,
+    "max_artists_per_user": 50,
+    "users_exactly_50_artists": 1829,
+    "users_exactly_50_artists_pct": 96.67019027484145,
+    "mean_listeners_per_artist_catalog": 5.265086206896552,
+    "mean_listeners_per_active_artist": 5.265086206896552,
+    "median_listeners_per_active_artist": 1.0,
+    "single_listener_artists": 10679,
+    "total_listens": 69183975,
+    "max_pair_listening_count": 352698,
+    "median_pair_listening_count": 260.0,
+    "mean_total_listens_per_user": 36566.58298097252,
+    "median_total_listens_per_user": 21573.0
+  },
+  "after_cleaning": {
+    "users": 1877,
+    "artists_catalog": 17632,
+    "artists_with_interactions": 17617,
+    "interactions": 92801,
+    "density_pct": 0.28040567979756864,
+    "density_active_artists_pct": 0.28064443129878697,
+    "mean_artists_per_user": 49.4411294619073,
+    "median_artists_per_user": 50.0,
+    "min_artists_per_user": 5,
+    "max_artists_per_user": 50,
+    "users_exactly_50_artists": 1829,
+    "users_exactly_50_artists_pct": 97.44272775705913,
+    "mean_listeners_per_artist_catalog": 5.263214609800363,
+    "mean_listeners_per_active_artist": 5.267695975478231,
+    "median_listeners_per_active_artist": 1.0,
+    "single_listener_artists": 10667,
+    "total_listens": 69138727,
+    "max_pair_listening_count": 352698,
+    "median_pair_listening_count": 260.0,
+    "mean_total_listens_per_user": 36834.69738945125,
+    "median_total_listens_per_user": 21722.0
+  },
+  "tags": {
+    "tag_assignment_rows_raw": 186479,
+    "tag_assignment_rows_joined_catalog": 184941,
+    "tag_rows_outside_catalog": 1538,
+    "catalog_artists_with_tags": 12133,
+    "catalog_artists_without_tags": 5499,
+    "active_artists_without_tags": 5493
+  },
+  "tag_ild_coverage": {
+    "source": "outputs\\chuong_4_bo_sung_2\\thong_ke\\phan_tich\\ild_the_mo_hinh.json",
+    "train_catalog_artists": 15398,
+    "train_catalog_with_tag_vector_df2": 5650,
+    "share_pct": 36.693077022989996,
+    "note": "tag vectors use train user-artist pairs only and tags with df >= 2"
+  },
+  "draft_checks": [
+    {
+      "so_lieu": "users_raw",
+      "ban_nhap": 1892,
+      "tinh_lai": 1892,
+      "khop": true
+    },
+    {
+      "so_lieu": "artists_catalog_raw",
+      "ban_nhap": 17632,
+      "tinh_lai": 17632,
+      "khop": true
+    },
+    {
+      "so_lieu": "artists_with_interactions_after",
+      "ban_nhap": 17617,
+      "tinh_lai": 17617,
+      "khop": true
+    },
+    {
+      "so_lieu": "interactions_raw",
+      "ban_nhap": 92834,
+      "tinh_lai": 92834,
+      "khop": true
+    },
+    {
+      "so_lieu": "interactions_after",
+      "ban_nhap": 92801,
+      "tinh_lai": 92801,
+      "khop": true
+    },
+    {
+      "so_lieu": "density_raw_pct",
+      "ban_nhap": 0.2783,
+      "tinh_lai": 0.2782815119924182,
+      "khop": true
+    },
+    {
+      "so_lieu": "mean_artists_per_user_raw",
+      "ban_nhap": 49.07,
+      "tinh_lai": 49.06659619450317,
+      "khop": true
+    },
+    {
+      "so_lieu": "users_exactly_50_artists_raw",
+      "ban_nhap": 1829,
+      "tinh_lai": 1829,
+      "khop": true
+    },
+    {
+      "so_lieu": "users_exactly_50_artists_raw_pct",
+      "ban_nhap": 96.67,
+      "tinh_lai": 96.67019027484145,
+      "khop": true
+    },
+    {
+      "so_lieu": "mean_listeners_per_artist_raw",
+      "ban_nhap": 5.27,
+      "tinh_lai": 5.265086206896552,
+      "khop": true
+    },
+    {
+      "so_lieu": "median_listeners_per_artist_raw",
+      "ban_nhap": 1,
+      "tinh_lai": 1.0,
+      "khop": true
+    },
+    {
+      "so_lieu": "total_listens",
+      "ban_nhap": 69138727,
+      "tinh_lai": 69138727,
+      "khop": true
+    },
+    {
+      "so_lieu": "max_pair_listening_count",
+      "ban_nhap": 352698,
+      "tinh_lai": 352698,
+      "khop": true
+    },
+    {
+      "so_lieu": "tag_assignment_rows_raw",
+      "ban_nhap": 186479,
+      "tinh_lai": 186479,
+      "khop": true
+    },
+    {
+      "so_lieu": "tag_assignment_rows_joined_catalog",
+      "ban_nhap": 184941,
+      "tinh_lai": 184941,
+      "khop": true
+    },
+    {
+      "so_lieu": "catalog_artists_without_tags",
+      "ban_nhap": 5499,
+      "tinh_lai": 5499,
+      "khop": true
+    },
+    {
+      "so_lieu": "active_artists_without_tags",
+      "ban_nhap": 5493,
+      "tinh_lai": 5493,
+      "khop": true
+    }
+  ],
+  "created_at_utc": "2026-11-10T12:24:50.823462+00:00",
+  "command": [
+    "scripts/report_e_d_data.py",
+    "--output-dir",
+    "outputs/chuong_4_bo_sung_2/e_d"
+  ],
+  "runtime": {
+    "python": "3.11.9",
+    "platform": "Windows-10-10.0.26200-SP0",
+    "processor": "Intel64 Family 6 Model 140 Stepping 1, GenuineIntel",
+    "cpu_count": 8,
+    "threads": {
+      "OPENBLAS_NUM_THREADS": "1",
+      "OMP_NUM_THREADS": "1"
+    },
+    "numpy": "2.4.6",
+    "scipy": "1.17.1",
+    "pandas": "2.3.3",
+    "pyarrow": "19.0.1",
+    "git_sha": "26af632e9b0e90df58fb2532f68d682d1d7bbcea",
+    "git_status": " M scripts/evaluate_m2_test.py\n M scripts/report_ch4_extras.py\n M scripts/run_baseline.py\n M scripts/test_statistics.py\n M src/musicrec/recommenders/item_cf.py\n M src/musicrec/recommenders/user_cf.py\n?? SHA256SUMS_checkpoints_demo.txt\n?? configs/e7_topn_neighbors.yaml\n?? configs/e_s_sensitivity.yaml\n?? docs/results/chuong_4_bo_sung_2.md\n?? scripts/compare_statistics.py\n?? scripts/report_e_c_groups.py\n?? scripts/report_e_d_data.py\n?? scripts/run_e7_topn.py\n?? scripts/run_e_b_m1_beta.py\n?? scripts/run_e_s_sensitivity.py\n?? src/musicrec/evaluation/paired.py\n?? tests/unit/test_given_n_e7_scripts.py\n?? tests/unit/test_neighborhood_sum.py\n?? tests/unit/test_paired.py\n"
+  }
+}

@@ -1,0 +1,26 @@
+{
+  "rule": "max_ndcg_at_10_validation_seed42_ties_first_in_grid_order",
+  "winners": {
+    "user_cf": {
+      "selected": {
+        "representation": "log_count",
+        "neighbors": 20,
+        "shrinkage": 10,
+        "metrics_sha256": "7aac4c0c12cbfa9dfb8afe48853e6636cbceda518750bfb2f1179acba44366e7"
+      },
+      "validation_ndcg_at_10_seed42": 0.17388596631972966
+    },
+    "item_cf": {
+      "selected": {
+        "representation": "log_count",
+        "neighbors": 100,
+        "shrinkage": 10,
+        "metrics_sha256": "077114f8991a15f802a266d017af4fa09cb66f73977312daf4a054eb2a82e829"
+      },
+      "validation_ndcg_at_10_seed42": 0.1742123345699557
+    }
+  },
+  "test_file_read": false,
+  "created_at_utc": "2026-11-10T12:09:31.379381+00:00",
+  "config_sha256": "1132b5302c2bc0c4b889386464afd88ad5337b21b6f1d51287fa84e0969eeda9"
+}
