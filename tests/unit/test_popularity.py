@@ -154,3 +154,15 @@ def test_popularity_cli_train_only_no_test_file_hashes_reproducibility_and_guard
     bad = subprocess.run(command, cwd=root, capture_output=True, text=True)
     assert bad.returncode != 0 and "checksum mismatch" in bad.stderr
     assert not Path(command[-1]).exists()
+
+
+def test_listeners_score_counts_distinct_users_and_default_is_unchanged() -> None:
+    from musicrec.data.contracts import Interaction as Row
+    from musicrec.recommenders.popularity import PopularityRecommender as Pop
+
+    rows = [Row("1", "1", 1000.0), Row("1", "2", 1.0), Row("2", "2", 1.0), Row("3", "2", 1.0)]
+    assert [r.item_id for r in Pop("listeners").fit(rows).recommend("9", 2, set())] == ["2", "1"]
+    assert Pop("listeners").fit(rows).predict("9", "2") == 3.0
+    assert [r.item_id for r in Pop().fit(rows).recommend("9", 2, set())] == ["1", "2"]
+    with pytest.raises(ValueError):
+        Pop("median")

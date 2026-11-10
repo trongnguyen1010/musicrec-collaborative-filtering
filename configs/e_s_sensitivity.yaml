@@ -1,0 +1,51 @@
+# E-S (plan of 10/11/2026, section 5): sensitivity around the grid boundaries, VALIDATION ONLY.
+# Separate from configs/tuning.yaml; nothing here changes a locked configuration.
+# `models.*.grid` bounds the values the existing runners accept (run_baseline.py
+# --tuning-config); `points` lists the configurations actually run, seed 42 only.
+selection_seed: 42
+models:
+  pure_svd:
+    grid:
+      latent_factors: [4, 8]
+    points:
+      - {latent_factors: 4}
+      - {latent_factors: 8}
+  user_cf:
+    grid:
+      neighbors: [5, 10]
+      shrinkage: [0, 10, 50]
+    points: &neighbors_points
+      - {neighbors: 5, shrinkage: 0}
+      - {neighbors: 5, shrinkage: 10}
+      - {neighbors: 5, shrinkage: 50}
+      - {neighbors: 10, shrinkage: 0}
+      - {neighbors: 10, shrinkage: 10}
+      - {neighbors: 10, shrinkage: 50}
+  item_cf:
+    grid:
+      neighbors: [5, 10]
+      shrinkage: [0, 10, 50]
+    points: *neighbors_points
+  implicit_als:
+    # Locked winner: factors 32, regularization 0.1, confidence_scale 1 (all on a grid edge).
+    # 2 x 2 x 2 block below the old grid, plus one-at-a-time neighbors of the winner.
+    grid:
+      latent_factors: [8, 16]
+      regularization: [1, 10]
+      confidence_scale: [0.1, 0.5]
+    points:
+      - {latent_factors: 8, regularization: 1, confidence_scale: 0.1}
+      - {latent_factors: 8, regularization: 1, confidence_scale: 0.5}
+      - {latent_factors: 8, regularization: 10, confidence_scale: 0.1}
+      - {latent_factors: 8, regularization: 10, confidence_scale: 0.5}
+      - {latent_factors: 16, regularization: 1, confidence_scale: 0.1}
+      - {latent_factors: 16, regularization: 1, confidence_scale: 0.5}
+      - {latent_factors: 16, regularization: 10, confidence_scale: 0.1}
+      - {latent_factors: 16, regularization: 10, confidence_scale: 0.5}
+      - {latent_factors: 16, regularization: 0.1, confidence_scale: 1}
+      - {latent_factors: 32, regularization: 1, confidence_scale: 1}
+      - {latent_factors: 32, regularization: 0.1, confidence_scale: 0.5}
+m2:
+  # Locked: alpha 0.75, n_min 10 (corner of the old grid). Tuning users, validation targets.
+  alpha: [0.75, 0.9, 1.0]
+  history_threshold: [10, 15, 20]

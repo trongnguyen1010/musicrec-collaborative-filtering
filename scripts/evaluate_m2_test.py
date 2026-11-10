@@ -2,10 +2,15 @@
 
 The saved Step 16 model is loaded, never refit. The lock (selected alpha/threshold, model
 hashes, cohort rule and predeclared comparisons) is written before test.parquet is opened.
-Reserved users supply nested train profiles (N = 0/1/3/5); their test pairs are the targets.
-Learning-user statistics stay the only source of catalog, popularity, novelty and ILD.
-Per comparison: mean per-user NDCG@10 difference, 95% user bootstrap CI (1,000 resamples,
-seed 42), two-sided Wilcoxon signed-rank p and Holm adjustment over all predeclared pairs.
+Reserved users supply nested train profiles (N = 0/1/3/5). Target modes:
+- test_pairs (default, the locked Step 17 protocol): T_u = test pairs of u.
+- all_but_profile (Given-N, section 3.14): T_u^N = (train u validation u test of u) minus
+  the N supplied artists; only the supplied artists are masked.
+Both intersect the learning catalog. Learning-user statistics stay the only source of
+catalog, popularity, novelty and ILD. Per comparison: mean per-user NDCG@10 difference,
+95%/90% user bootstrap CIs (1,000 resamples, seed 42, one index matrix shared by every
+pair of the same cohort), rank-biserial r, two-sided Wilcoxon signed-rank p and Holm
+adjustment over all predeclared pairs.
 """
 
 import os
@@ -20,13 +25,13 @@ import json  # noqa: E402
 import platform  # noqa: E402
 import subprocess  # noqa: E402
 import sys  # noqa: E402
+import time  # noqa: E402
 from datetime import UTC, datetime  # noqa: E402
 from pathlib import Path  # noqa: E402
 from typing import Any  # noqa: E402
 
 import numpy as np  # noqa: E402
 import pandas as pd  # noqa: E402
-from scipy.stats import wilcoxon  # noqa: E402
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
@@ -35,6 +40,8 @@ from test_statistics import holm  # noqa: E402
 from musicrec.data.cold_start import partition_users, profile_order  # noqa: E402
 from musicrec.data.contracts import Interaction  # noqa: E402
 from musicrec.evaluation.cold_start import evaluate_cold_start  # noqa: E402
+from musicrec.evaluation.inference import resample_indices  # noqa: E402
+from musicrec.evaluation.paired import paired_comparison  # noqa: E402
 from musicrec.recommenders.m2 import M2Recommender  # noqa: E402
 
 PROFILE_SIZES = [0, 1, 3, 5]
@@ -43,6 +50,10 @@ PAIRS: list[tuple[str, str, int]] = [
     ("m2", b, n) for n in [1, 3, 5] for b in ["popularity", "content", "item_cf"]
 ]
 PRIMARY = ("m2", "popularity", 3)
+TARGET_MODES = {
+    "test_pairs": "test_pairs_intersect_learning_catalog",
+    "all_but_profile": "train_validation_test_minus_supplied_profile_intersect_learning_catalog",
+}
 RESAMPLES = 1000
 SEED = 42
 
@@ -61,24 +72,26 @@ def tree_hashes(directory: Path) -> dict[str, str]:
     }
 
 
-def compare(a: dict[str, float], b: dict[str, float], rng: np.random.Generator) -> dict[str, Any]:
-    """Paired difference, bootstrap CI and Wilcoxon p on one shared eligible cohort."""
-    if a.keys() != b.keys():
-        raise ValueError("Paired methods must share the eligible cohort")
-    users = sorted(a, key=int)
-    diff = np.array([a[u] - b[u] for u in users])
-    boot = diff[rng.integers(0, len(diff), size=(RESAMPLES, len(diff)))].mean(axis=1)
-    nonzero = int(np.count_nonzero(diff))
-    return {
-        "users": len(users),
-        "nonzero_differences": nonzero,
-        "mean_a": float(np.mean([a[u] for u in users])),
-        "mean_b": float(np.mean([b[u] for u in users])),
-        "mean_difference": float(diff.mean()),
-        "ci95_low": float(np.percentile(boot, 2.5)),
-        "ci95_high": float(np.percentile(boot, 97.5)),
-        "wilcoxon_p": float(wilcoxon(diff, zero_method="wilcox").pvalue) if nonzero else 1.0,
-    }
+def compare(a: dict[str, float], b: dict[str, float], indices: Any) -> dict[str, Any]:
+    """Paired comparison on one shared bootstrap index matrix (musicrec.evaluation.paired)."""
+    return paired_comparison(a, b, indices)
+
+
+def given_n_targets(
+    mode: str,
+    users: list[str],
+    provided: dict[str, set[str]],
+    test_items: dict[str, set[str]],
+    all_items: dict[str, set[str]],
+) -> dict[str, set[str]]:
+    """Targets of one profile size; catalog intersection happens in evaluate_cold_start."""
+    if mode == "test_pairs":
+        return {u: test_items[u] for u in users}
+    if mode == "all_but_profile":
+        if any(not provided[u] <= all_items[u] for u in users):
+            raise ValueError("Supplied artists must come from the user's own interactions")
+        return {u: all_items[u] - provided[u] for u in users}
+    raise ValueError(f"Unknown target mode: {mode}")
 
 
 def main() -> None:
@@ -86,6 +99,16 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--m2-run", type=Path, required=True)
     parser.add_argument("--output-dir", type=Path, required=True)
+    parser.add_argument("--target-mode", choices=sorted(TARGET_MODES), default="test_pairs")
+    parser.add_argument(
+        "--validation",
+        type=Path,
+        default=None,
+        help="validation.parquet of the split (all_but_profile only; checked by SHA-256)",
+    )
+    parser.add_argument(
+        "--max-users", type=int, default=None, help="timing sample: first users by id only"
+    )
     args = parser.parse_args()
     m2_run, out = args.m2_run.resolve(), args.output_dir.resolve()
     out.mkdir(parents=True, exist_ok=False)
@@ -110,7 +133,9 @@ def main() -> None:
         "model_sha256": tree_hashes(m2_run / "model"),
         "cohort": "reserved_users_with_at_least_five_train_interactions",
         "profiles": "profile_order_seed_42_nested_prefix_of_train_artists",
-        "targets": "test_pairs_intersect_learning_catalog",
+        "targets": TARGET_MODES[args.target_mode],
+        "target_mode": args.target_mode,
+        "max_users": args.max_users,
         "profile_sizes": PROFILE_SIZES,
         "methods": METHODS,
         "comparison_pairs": PAIRS,
@@ -129,15 +154,24 @@ def main() -> None:
             raise ValueError(f"Checksum mismatch: {name}")
     train = pd.read_parquet(split / "train.parquet")
     test = pd.read_parquet(split / "test.parquet")
+    frames = [train, test]
+    if args.target_mode == "all_but_profile":
+        validation_path = args.validation or split / "validation.parquet"
+        if sha256(validation_path) != split_meta["output_sha256"]["validation.parquet"]:
+            raise ValueError("Checksum mismatch: validation.parquet")
+        frames.append(pd.read_parquet(validation_path))
     roles = json.loads((m2_run / "user_roles.json").read_text(encoding="utf-8"))
     if roles != partition_users(sorted(train.user_id.unique(), key=int), config["seed"]):
         raise RuntimeError("Saved user roles differ from the deterministic partition")
     learn = train[train.user_id.isin(roles["learning"])]
     reserved = train[train.user_id.isin(roles["reserved"])]
     counts = reserved.groupby("user_id").size()
-    users = sorted(counts[counts >= 5].index, key=int)
+    users = sorted(counts[counts >= 5].index, key=int)[: args.max_users]
     histories = {str(u): set(g.item_id.astype(str)) for u, g in learn.groupby("user_id")}
-    targets = {u: set(test.loc[test.user_id == u, "item_id"].astype(str)) for u in users}
+    test_items = {u: set(test.loc[test.user_id == u, "item_id"].astype(str)) for u in users}
+    combined = pd.concat(frames, ignore_index=True)
+    combined = combined[combined.user_id.isin(users)]
+    all_items = {u: set(g.item_id.astype(str)) for u, g in combined.groupby("user_id")}
     model = M2Recommender.load(m2_run / "model")
     if (model.alpha, model.history_threshold) != (
         lock["selected"]["alpha"],
@@ -152,8 +186,11 @@ def main() -> None:
 
     rows: list[dict[str, Any]] = []
     per_user: dict[tuple[str, int], dict[str, float]] = {}
+    timing: dict[str, float] = {}
     for n in PROFILE_SIZES:
+        started = time.perf_counter()
         provided = {u: {r.item_id for r in profiles[u][:n]} for u in users}
+        targets = given_n_targets(args.target_mode, users, provided, test_items, all_items)
         ranks: dict[str, dict[str, list[str]]] = {m: {} for m in METHODS}
         for user in users:
             model.set_profile(user, profiles[user][:n])
@@ -195,11 +232,21 @@ def main() -> None:
                     }
                 )
             print(f"N={n} {name} NDCG@10={result['at_k']['10']['ndcg']:.10f}", flush=True)
+        timing[f"n_{n}"] = time.perf_counter() - started
     pd.DataFrame(rows).to_csv(out / "metrics.csv", index=False)
 
-    rng = np.random.default_rng(SEED)
+    # Pairs at the same N share one cohort; one index matrix per cohort (same seed).
     stats = [
-        {"a": a, "b": b, "n": n, **compare(per_user[(a, n)], per_user[(b, n)], rng)}
+        {
+            "a": a,
+            "b": b,
+            "n": n,
+            **compare(
+                per_user[(a, n)],
+                per_user[(b, n)],
+                resample_indices(len(per_user[(a, n)]), RESAMPLES, SEED),
+            ),
+        }
         for a, b, n in PAIRS
     ]
     for row, adjusted in zip(stats, holm([r["wilcoxon_p"] for r in stats]), strict=True):
@@ -208,7 +255,12 @@ def main() -> None:
         json.dumps(
             {
                 "metric": "ndcg@10",
-                "bootstrap": {"resamples": RESAMPLES, "seed": SEED, "unit": "user"},
+                "bootstrap": {
+                    "resamples": RESAMPLES,
+                    "seed": SEED,
+                    "unit": "user",
+                    "indices": "shared_across_pairs",
+                },
                 "test": "two_sided_wilcoxon_signed_rank_zero_differences_dropped",
                 "adjustment": "holm_over_predeclared_pairs",
                 "primary": PRIMARY,
@@ -229,9 +281,12 @@ def main() -> None:
                 "lock_unchanged": sha256(out / "lock.json") == lock_hash,
                 "reserved_users_total": len(roles["reserved"]),
                 "reserved_users_evaluated": len(users),
+                "target_mode": args.target_mode,
+                "eligible_users_by_n": {str(n): len(per_user[("m2", n)]) for n in PROFILE_SIZES},
+                "timing_seconds": timing,
                 "learning_users": len(roles["learning"]),
                 "catalog_size": len(model._items),
-                "test_pairs_of_cohort": sum(len(v) for v in targets.values()),
+                "test_pairs_of_cohort": sum(len(v) for v in test_items.values()),
                 "input_sha256": {
                     name: sha256(split / name) for name in ["train.parquet", "test.parquet"]
                 },
@@ -241,6 +296,8 @@ def main() -> None:
                 "runtime": {
                     "python": sys.version,
                     "platform": platform.platform(),
+                    "processor": platform.processor(),
+                    "cpu_count": os.cpu_count(),
                     **{
                         p: importlib.metadata.version(p)
                         for p in ["numpy", "scipy", "pandas", "pyarrow"]

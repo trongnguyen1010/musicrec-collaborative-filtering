@@ -40,7 +40,6 @@ import matplotlib.pyplot as plt  # noqa: E402
 import numpy as np  # noqa: E402
 import pandas as pd  # noqa: E402
 from matplotlib.ticker import FuncFormatter, ScalarFormatter  # noqa: E402
-from scipy.stats import wilcoxon  # noqa: E402
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
@@ -48,6 +47,12 @@ from test_statistics import holm  # noqa: E402
 
 from musicrec.data.cold_start import partition_users, profile_order  # noqa: E402
 from musicrec.data.contracts import Interaction  # noqa: E402
+from musicrec.evaluation.inference import resample_indices  # noqa: E402
+from musicrec.evaluation.paired import (  # noqa: E402
+    equivalence_test,
+    mean_interval,
+    paired_comparison,
+)  # noqa: E402
 from musicrec.evaluation.ranking import evaluate_ranking  # noqa: E402
 from musicrec.recommenders.base import Recommender  # noqa: E402
 from musicrec.recommenders.implicit_als import ImplicitALSRecommender  # noqa: E402
@@ -81,6 +86,7 @@ M1_VARIANTS = {
 }
 METRICS = ["precision", "recall", "ndcg", "catalog_coverage", "gini", "arp", "novelty", "ild"]
 RESAMPLES, SEED = 1000, 42
+EQUIVALENCE_MARGIN = 0.05
 BLUE, ORANGE, AQUA, YELLOW = "#2a78d6", "#eb6834", "#1baf7a", "#eda100"
 INK, MUTED, GRID = "#1f1f1e", "#6b6a63", "#e4e3dd"
 
@@ -106,23 +112,33 @@ def save(fig: Any, out: Path, name: str) -> None:
     plt.close(fig)
 
 
-def compare(a: dict[str, float], b: dict[str, float], rng: np.random.Generator) -> dict[str, Any]:
-    """Same paired procedure as scripts/test_statistics.py."""
-    if a.keys() != b.keys():
-        raise ValueError("Paired models must share the eligible cohort")
-    users = sorted(a, key=int)
-    diff = np.array([a[u] - b[u] for u in users])
-    boot = diff[rng.integers(0, len(diff), size=(RESAMPLES, len(diff)))].mean(axis=1)
-    nonzero = int(np.count_nonzero(diff))
+def compare(a: dict[str, float], b: dict[str, float], indices: Any) -> dict[str, Any]:
+    """Paired comparison on one shared bootstrap index matrix (musicrec.evaluation.paired)."""
+    return paired_comparison(a, b, indices)
+
+
+def holm_families(first: list[dict[str, Any]], second: list[dict[str, Any]]) -> dict[str, Any]:
+    """Size of each Holm family and the unordered pairs that appear in both."""
+    key = lambda r: tuple(sorted((r["a"], r["b"])))  # noqa: E731
+    shared = sorted(set(map(key, first)) & set(map(key, second)))
     return {
-        "users": len(users),
-        "nonzero_differences": nonzero,
-        "mean_a": float(np.mean([a[u] for u in users])),
-        "mean_b": float(np.mean([b[u] for u in users])),
-        "mean_difference": float(diff.mean()),
-        "ci95_low": float(np.percentile(boot, 2.5)),
-        "ci95_high": float(np.percentile(boot, 97.5)),
-        "wilcoxon_p": float(wilcoxon(diff, zero_method="wilcox").pvalue) if nonzero else 1.0,
+        "predeclared": {"pairs": len(first), "members": [[r["a"], r["b"]] for r in first]},
+        "supplementary": {"pairs": len(second), "members": [[r["a"], r["b"]] for r in second]},
+        "pairs_in_both_families": [list(p) for p in shared],
+        "note": "Holm is applied within each family separately; a pair listed in both "
+        "families has the same raw Wilcoxon p but a Holm p from each family.",
+    }
+
+
+def m1_equivalence(predeclared: list[dict[str, Any]], base_mean: float) -> dict[str, Any]:
+    """TOST for M1 - PureSVD on NDCG@10 with delta = 5% of PureSVD's mean NDCG@10."""
+    row = next(r for r in predeclared if (r["a"], r["b"]) == ("m1", "pure_svd"))
+    return {
+        "pair": ["m1", "pure_svd"],
+        "base_model": "pure_svd",
+        "base_mean_ndcg10": base_mean,
+        "relative_margin": EQUIVALENCE_MARGIN,
+        **equivalence_test(row["ci90_low"], row["ci90_high"], EQUIVALENCE_MARGIN * base_mean),
     }
 
 
@@ -234,45 +250,45 @@ def main() -> None:
     ).rename_axis("user_id").to_csv(out / "ndcg10_tung_nguoi_dung.csv")
 
     # 2. Statistics.
-    rng = np.random.default_rng(SEED)
+    indices = resample_indices(len(per_user["pure_svd"]), RESAMPLES, SEED)
     predeclared = [
-        {"a": a, "b": b, **compare(per_user[a], per_user[b], rng)}
+        {"a": a, "b": b, **compare(per_user[a], per_user[b], indices)}
         for a, b in lock["comparison_pairs"]
     ]
     for row, adjusted in zip(
         predeclared, holm([r["wilcoxon_p"] for r in predeclared]), strict=True
     ):
         row["holm_p"] = adjusted
-    rng = np.random.default_rng(SEED)
     others = ["random", "popularity", "user_cf", "item_cf", "svd"]
     family = [
-        {"a": "pure_svd", "b": b, **compare(per_user["pure_svd"], per_user[b], rng)} for b in others
+        {"a": "pure_svd", "b": b, **compare(per_user["pure_svd"], per_user[b], indices)}
+        for b in others
     ]
     for row, adjusted in zip(family, holm([r["wilcoxon_p"] for r in family]), strict=True):
         row["holm_p"] = adjusted
-    rng = np.random.default_rng(SEED)
-    intervals = {}
-    for model in MODELS:
-        values = np.array([per_user[model][u] for u in eligible])
-        boot = values[rng.integers(0, len(values), size=(RESAMPLES, len(values)))].mean(axis=1)
-        intervals[model] = {
-            "mean": float(values.mean()),
-            "ci95_low": float(np.percentile(boot, 2.5)),
-            "ci95_high": float(np.percentile(boot, 97.5)),
-        }
+    intervals = {
+        model: mean_interval([per_user[model][u] for u in eligible], indices) for model in MODELS
+    }
     official_stats = json.loads((DOCS / "test/statistics_ndcg_at_10.json").read_text("utf-8"))
+    # Bootstrap-free fields only: the official file drew a fresh bootstrap per pair.
     reproduced = all(
         abs(a["holm_p"] - b["holm_p"]) <= 1e-12 * max(1.0, b["holm_p"])
         and abs(a["mean_difference"] - b["mean_difference"]) <= 1e-12
-        and abs(a["ci95_low"] - b["ci95_low"]) <= 1e-12
         for a, b in zip(predeclared, official_stats["pairs"], strict=True)
     )
     stats = {
-        "bootstrap": {"resamples": RESAMPLES, "seed": SEED, "unit": "user"},
+        "bootstrap": {
+            "resamples": RESAMPLES,
+            "seed": SEED,
+            "unit": "user",
+            "indices": "shared_across_pairs",
+        },
         "test": "two_sided_wilcoxon_signed_rank_zero_differences_dropped",
         "predeclared_pairs_recomputed": predeclared,
         "predeclared_equal_official": reproduced,
         "supplementary_family_pure_svd_vs_others_holm": family,
+        "holm_families": holm_families(predeclared, family),
+        "m1_pure_svd_equivalence": m1_equivalence(predeclared, intervals["pure_svd"]["mean"]),
         "mean_ndcg10_bootstrap_ci": intervals,
     }
     (out / "kiem_dinh_bo_sung.json").write_text(json.dumps(stats, indent=2) + "\n", "utf-8")
@@ -358,9 +374,8 @@ def main() -> None:
         }
     if variant_lists["m1_day_du"] != lists["m1"]:
         raise RuntimeError("Refitted full M1 differs from the locked M1 checkpoint")
-    rng = np.random.default_rng(SEED)
     m1_tests = [
-        {"a": f"m1_{n}", "b": "m1_nen", **compare(per_user[f"m1_{n}"], per_user["m1_nen"], rng)}
+        {"a": f"m1_{n}", "b": "m1_nen", **compare(per_user[f"m1_{n}"], per_user["m1_nen"], indices)}
         for n in ["chi_da_dang", "chi_phat_pho_bien", "m1_day_du"]
     ]
     for row, adjusted in zip(m1_tests, holm([r["wilcoxon_p"] for r in m1_tests]), strict=True):
