@@ -355,10 +355,10 @@ T(
         ],
         [
             "Deshpande và Karypis [39], 2004",
-            "[…]",
+            "Tám bộ dữ liệu thực",
             "ItemCF top-N: tổng độ tương đồng, chuẩn hóa ma trận tương đồng",
             "Tỷ lệ trúng (HR), ARHR",
-            "[…]",
+            "Nhanh hơn tới hai bậc độ lớn so với láng giềng người dùng, chất lượng tương đương hoặc tốt hơn",
             "Cơ sở của biến thể top-N trong E7",
         ],
         [
