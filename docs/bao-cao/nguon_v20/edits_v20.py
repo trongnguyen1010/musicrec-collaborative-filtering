@@ -10,8 +10,8 @@ import pandas as _pd
 FIG = "docs/results/chinh_thuc_cloud_20261026/bo_sung_2/hinh_bao_cao/"
 LOAD = _json.loads(open("docs/results/chuong_5/load_test.json", encoding="utf-8").read())
 EXAMPLE = _json.loads(open("docs/results/chuong_5/vi_du_recommend.json", encoding="utf-8").read())
-TITLE_VI = "MUSICREC: XÂY DỰNG HỆ THỐNG KHUYẾN NGHỊ NGHỆ SĨ DỰA TRÊN LỌC CỘNG TÁC"
-TITLE_VI_SENT = "MusicRec: Xây dựng hệ thống khuyến nghị nghệ sĩ dựa trên lọc cộng tác"
+TITLE_VI = "XÂY DỰNG HỆ THỐNG KHUYẾN NGHỊ NGHỆ SĨ ÂM NHẠC DỰA TRÊN LỌC CỘNG TÁC"  # đề cương V2
+TITLE_VI_SENT = "Xây dựng hệ thống khuyến nghị nghệ sĩ âm nhạc dựa trên lọc cộng tác"
 
 
 def vn(x, d=2):
@@ -86,6 +86,10 @@ set_text(ORIG[52], "CAO TRONG NGUYEN – STUDENT ID: 22671461")
 set_text(ORIG[53], "LE KHAC GIA KHANG – STUDENT ID: 22690991")
 set_text(ORIG[54], "CLASS: DHKHMT18BTT – COHORT: 18")
 set_text(ORIG[63], "HO CHI MINH CITY, DECEMBER 2026")
+set_text(ORIG[55], "A COLLABORATIVE FILTERING-BASED")  # same title, no "MusicRec:"
+set_text(
+    ORIG[65], "A Collaborative Filtering-based Music Artist Recommendation System"
+)  # đề cương V2
 remove(ORIG[21])
 
 # =====================================================================================
@@ -189,6 +193,9 @@ sub_text(
     "số người dùng tài khoản đăng ký nghe nhạc trực tuyến trả phí đạt 837 triệu",
 )
 sub_text(ORIG[335], "(mục 4.8)", "(mục 4.8 và 4.11)")
+sub_text(
+    ORIG[329], "“Xây dựng hệ thống khuyến nghị nghệ sĩ dựa trên lọc cộng tác”", f"“{TITLE_VI_SENT}”"
+)
 remove(ORIG[331])
 
 
@@ -833,11 +840,11 @@ core.write_text(ct, encoding="utf-8")
 # Running header: same title as the covers
 for hdr in sorted((root_dir / "word").glob("header*.xml")):
     h = hdr.read_text(encoding="utf-8")
-    if "Xây dựng hệ thống khuyến nghị nghệ sĩ" in h and "MusicRec:" not in h:
+    if "Xây dựng hệ thống khuyến nghị nghệ sĩ" in h and "âm nhạc" not in h:
         hdr.write_text(
             h.replace(
                 "Xây dựng hệ thống khuyến nghị nghệ sĩ",
-                "MusicRec: Xây dựng hệ thống khuyến nghị nghệ sĩ",
+                "Xây dựng hệ thống khuyến nghị nghệ sĩ âm nhạc",
                 1,
             ),
             encoding="utf-8",
