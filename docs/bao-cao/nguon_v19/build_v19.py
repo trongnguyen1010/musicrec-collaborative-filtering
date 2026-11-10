@@ -231,7 +231,7 @@ def math_inline(s):
 
 
 def fill(p, s, rpr=None):
-    """Replace runs of p with s; **x** marks bold, //x// italic, ⟦...⟧ inline maths."""
+    """Replace runs of p with s; **x** marks bold, ⟦...⟧ inline maths (URLs stay intact)."""
     for c in list(p):
         if c.tag != q("pPr"):
             p.remove(c)
@@ -240,9 +240,8 @@ def fill(p, s, rpr=None):
             p.append(math_inline(seg))
             continue
         for k, part in enumerate(re.split(r"\*\*", seg)):
-            for j, sub in enumerate(re.split(r"//", part)):
-                if sub:
-                    p.append(make_run(sub, bold=k % 2 == 1, italic=j % 2 == 1, rpr=rpr))
+            if part:
+                p.append(make_run(part, bold=k % 2 == 1, rpr=rpr))
     return p
 
 
@@ -467,8 +466,8 @@ for e in content:
     anchor = e
 
 # ---- edits outside Chapters 2-4 ----
-if len(sys.argv) > 5:
-    exec(open(sys.argv[5], encoding="utf-8").read(), scope)
+for edits in sys.argv[5:]:
+    exec(open(edits, encoding="utf-8").read(), scope)
 
 tree.write(str(doc_path), xml_declaration=True, encoding="UTF-8", standalone=True)
 rels.write(str(rels_path), xml_declaration=True, encoding="UTF-8", standalone=True)

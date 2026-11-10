@@ -1,0 +1,55 @@
+{
+  "created_at_utc": "2026-11-10T17:06:31.145769+00:00",
+  "command": [
+    "scripts/load_test.py",
+    "--output-dir",
+    "outputs/demo/load_20261111",
+    "--requests",
+    "1000",
+    "--warmup",
+    "50"
+  ],
+  "endpoint": "POST /recommend, existing user, pure_svd, k=10",
+  "server": "uvicorn, one worker process, same machine as the client",
+  "release": "demo-chinh-thuc-20261026",
+  "levels": [
+    {
+      "concurrency": 1,
+      "requests": 1000,
+      "wall_seconds": 5.065112499985844,
+      "throughput_rps": 197.42898109425897,
+      "median_ms": 4.903399967588484,
+      "p95_ms": 6.566865055356175,
+      "error_rate_pct": 0.0
+    },
+    {
+      "concurrency": 8,
+      "requests": 1000,
+      "wall_seconds": 2.879238700028509,
+      "throughput_rps": 347.3140313062958,
+      "median_ms": 22.193749900907278,
+      "p95_ms": 33.42019501142204,
+      "error_rate_pct": 0.0
+    },
+    {
+      "concurrency": 32,
+      "requests": 1000,
+      "wall_seconds": 3.0188831000123173,
+      "throughput_rps": 331.2483348546752,
+      "median_ms": 90.33175010699779,
+      "p95_ms": 145.99492504494265,
+      "error_rate_pct": 0.0
+    }
+  ],
+  "runtime": {
+    "python": "3.11.9",
+    "platform": "Windows-10-10.0.26200-SP0",
+    "processor": "Intel64 Family 6 Model 140 Stepping 1, GenuineIntel",
+    "cpu_count": 8,
+    "fastapi": "0.141.1",
+    "uvicorn": "0.52.4",
+    "requests": "2.34.2",
+    "numpy": "2.4.6",
+    "scipy": "1.17.1"
+  }
+}

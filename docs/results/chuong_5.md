@@ -70,3 +70,15 @@ Báo cáo [v18](../bao-cao/33_BaoCaoKhoaLuan_CaoTrongNguyen_LeKhacGiaKhang_v18_0
 - Bỏ Phụ lục C. Thêm trang Abstract tiếng Anh theo mẫu khoa. Sửa câu cuối Lời cảm ơn.
 
 **Còn lại**: mục “Các nghiên cứu liên quan” trên Last.fm HetRec 2011 ở Chương 2 (cần đọc bài gốc để ghi giao thức và chỉ số; chữ đỏ của GVHD tại đầu Chương 2 vẫn giữ), và khối nhận xét tổng quát của GVHD ở đầu báo cáo (sẽ xóa khi xong toàn bộ).
+
+## Kiểm thử tải (11/11/2026, bổ sung theo góp ý GVHD ngày 10/11)
+
+Lệnh: `uvicorn musicrec.api.main:app --port 8010` (một tiến trình) rồi `python scripts/load_test.py --output-dir outputs/demo/load_20261111 --requests 1000 --warmup 50`. Yêu cầu: `POST /recommend`, người dùng có sẵn, PureSVD, K = 10, mã người dùng luân phiên trong 200 người đầu. Máy: Windows 11, Intel Core i5-11300H, 8 luồng logic; Python 3.11.9, FastAPI 0.141.1, uvicorn, requests, numpy, scipy theo phiên bản ghi trong tệp nguồn. Chương trình gửi và dịch vụ chạy trên cùng máy. Mẫu thử 100 yêu cầu ở mức 1 và 8 chạy hết 1,6 giây nên chạy đủ ngay.
+
+| Số yêu cầu đồng thời | Số yêu cầu | Thông lượng (yêu cầu/giây) | Trung vị (ms) | P95 (ms) | Lỗi (%) |
+| --- | --- | --- | --- | --- | --- |
+| 1 | 1.000 | 197,4 | 4,90 | 6,57 | 0,00 |
+| 8 | 1.000 | 347,3 | 22,19 | 33,42 | 0,00 |
+| 32 | 1.000 | 331,2 | 90,33 | 146,00 | 0,00 |
+
+Nguồn: [chuong_5/load_test.json](chuong_5/load_test.json). Ví dụ phản hồi thật dùng cho Đoạn mã 5.1 của báo cáo: [chuong_5/vi_du_recommend.json](chuong_5/vi_du_recommend.json) (người dùng mới chọn Lady Gaga, Britney Spears, Christina Aguilera; K = 3; kết quả Madonna, Rihanna, Katy Perry).
