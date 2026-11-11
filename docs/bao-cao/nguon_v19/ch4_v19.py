@@ -609,15 +609,18 @@ lo_t, mid_t, hi_t = ec_tests["Thấp"], ec_tests["Trung bình"], ec_tests["Cao"]
 P(
     "Theo gợi ý của Kowald và cộng sự [9], nhóm chia người dùng thành ba nhóm có cỡ mẫu gần bằng nhau theo "
     "mức ưa chuộng nghệ sĩ phổ biến, đo bằng số người nghe trung bình (trên tập huấn luyện) của các nghệ sĩ "
-    "trong lịch sử huấn luyện của người dùng. Bảng 4.10 cho thấy mọi mô hình đều kém hơn rõ rệt ở nhóm ưa "
-    "chuộng thấp. Popularity gần như không hữu ích cho nhóm này (NDCG@10 "
+    "trong lịch sử huấn luyện của người dùng. Bảng 4.10 cho thấy đa số mô hình kém hơn rõ rệt ở nhóm ưa "
+    "chuộng thấp; hai ngoại lệ là Random, vốn gần bằng 0 ở cả ba nhóm, và ItemCF, có NDCG@10 ở nhóm thấp "
+    f"({f(msi.loc[('ItemCF', 'Thấp')]['mean'])}) cao hơn nhóm cao ({f(msi.loc[('ItemCF', 'Cao')]['mean'])}) "
+    "nhưng khác biệt giữa ba nhóm không có ý nghĩa thống kê. Popularity gần như không hữu ích cho nhóm thấp "
+    "(NDCG@10 "
     f"{f(msi.loc[('Popularity', 'Thấp')]['mean'])} so với {f(msi.loc[('Popularity', 'Cao')]['mean'])} ở "
-    f"nhóm cao). Ở nhóm thấp, ItemCF ({f(msi.loc[('ItemCF', 'Thấp')]['mean'])}) vượt Popularity, ngược với "
-    "kết quả trung bình toàn bộ. Kiểm định Kruskal–Wallis giữa ba nhóm, hiệu chỉnh Holm trên tám mô hình, "
+    "nhóm cao). Ở nhóm thấp, ItemCF vượt Popularity, ngược với kết quả trung bình toàn bộ. Kiểm định Kruskal–Wallis giữa ba nhóm, hiệu chỉnh Holm trên tám mô hình, "
     f"có ý nghĩa với mọi mô hình trừ Random (p sau Holm {pv(kw.loc['Random', 'holm_p'])}) và ItemCF "
     f"({pv(kw.loc['ItemCF', 'holm_p'])})."
 )
 MS = [
+    ("random", "Random"),
     ("popularity", "Popularity"),
     ("user_cf", "UserCF"),
     ("item_cf", "ItemCF"),
@@ -646,8 +649,10 @@ P(
     "Kiểm định M1 − PureSVD riêng trong từng nhóm (hiệu chỉnh Holm trên ba nhóm) cho thấy hai hiệu ứng ngược "
     f"chiều. Ở nhóm ưa chuộng thấp, M1 cao hơn PureSVD {f(lo_t['mean_difference'])}, khoảng tin cậy 95% "
     f"{ci(lo_t)}, ⟦r_rb⟧ = {f(lo_t['rank_biserial'], 3)}, {pv_text(lo_t['holm_p'])} sau Holm. Ở nhóm trung "
-    f"bình, chênh lệch là {f(mid_t['mean_difference'])} ({pv_text(mid_t['holm_p'])}). Ở nhóm cao, M1 thấp "
-    f"hơn PureSVD {f(-hi_t['mean_difference'])}, khoảng tin cậy {ci(hi_t)}, {pv_text(hi_t['holm_p'])}. Như "
+    f"bình, chênh lệch là {f(mid_t['mean_difference'])}, khoảng tin cậy {ci(mid_t)}, "
+    f"⟦r_rb⟧ = {f(mid_t['rank_biserial'], 3)}, {pv_text(mid_t['holm_p'])}. Ở nhóm cao, M1 thấp hơn PureSVD "
+    f"{f(-hi_t['mean_difference'])}, khoảng tin cậy {ci(hi_t)}, ⟦r_rb⟧ = {f(hi_t['rank_biserial'], 3)}, "
+    f"{pv_text(hi_t['holm_p'])}. Như "
     "vậy M1 giúp người dùng ít ưa chuộng nghệ sĩ phổ biến tìm lại được nhiều đích hơn, đổi lại một phần độ "
     "chính xác ở nhóm ưa chuộng cao; hai hiệu ứng này gần bù trừ nhau trên toàn bộ người dùng (mục 4.7). "
     "Đây là phân tích sau khi đã mở tập kiểm thử nên được xem là bằng chứng bổ sung."
@@ -678,7 +683,7 @@ P(
 F(
     B2 + "e_b/hinh_4_6.png",
     "Đánh đổi giữa NDCG@10 và ARP của các cấu hình M1 trên tập xác thực",
-    note="Điểm màu xanh là 12 cấu hình của lưới đã khóa, điểm màu cam là 12 cấu hình β mở rộng (phân tích sau khi khóa); điểm rỗng nằm dưới ngưỡng. Đường nét đứt là ngưỡng giảm 5% NDCG@10 so với mô hình nền (λ = 1, β = 0).",
+    note="Điểm màu xanh là 12 cấu hình của lưới đã khóa, điểm màu cam là 12 cấu hình β mở rộng (phân tích sau khi khóa); điểm rỗng nằm dưới ngưỡng. Đường nét đứt là ngưỡng giảm 5% NDCG@10 so với mô hình nền (λ = 1, β = 0). Đường xám nối các cấu hình λ = 0,75 theo β tăng dần; dấu × là điểm cắt ngưỡng nội suy tuyến tính giữa β = 0,75 và β = 1.",
 )
 P(
     "Bảng 4.11 so sánh bốn biến thể trên tập kiểm thử: mô hình nền, chỉ thành phần đa dạng, chỉ phạt phổ "
@@ -737,8 +742,10 @@ P(
     f"95% {ci(t_full)}, ⟦r_rb⟧ = {f(t_full['rank_biserial'], 3)}, p sau Holm {pv(t_full['holm_p'])} trong họ "
     "bốn cặp khai báo trước), nên chưa phát hiện được khác biệt có ý nghĩa thống kê. Trong kiểm định bổ "
     "sung của hai biến thể còn lại so với mô hình nền (hiệu chỉnh Holm trong họ ba cặp), chỉ đa dạng có "
-    f"chênh lệch {f(t_div['mean_difference'])} với khoảng tin cậy 95% {ci(t_div)} và p sau Holm "
-    f"{pv(t_div['holm_p'])}; chỉ phạt phổ biến có p sau Holm {pv(t_pop['holm_p'])}. Khoảng tin cậy của biến "
+    f"chênh lệch {f(t_div['mean_difference'])} với khoảng tin cậy 95% {ci(t_div)}, "
+    f"⟦r_rb⟧ = {f(t_div['rank_biserial'], 3)} và p sau Holm {pv(t_div['holm_p'])}; chỉ phạt phổ biến có "
+    f"chênh lệch {f(t_pop['mean_difference'])}, khoảng tin cậy {ci(t_pop)}, "
+    f"⟦r_rb⟧ = {f(t_pop['rank_biserial'], 3)} và p sau Holm {pv(t_pop['holm_p'])}. Khoảng tin cậy của biến "
     "thể chỉ đa dạng không chứa 0 nhưng p sau Holm lớn hơn 0,05 vì khoảng tin cậy bootstrap không được hiệu "
     "chỉnh cho nhiều phép so sánh (mục 2.6). Trên tập xác thực, M1 đầy đủ tăng NDCG@10 0,52%, còn trên tập "
     "kiểm thử giảm 0,75%."
@@ -1245,7 +1252,7 @@ P(
     "trình này dùng bộ dữ liệu con, giao thức chia, cách chọn đích và chỉ số khác nhau nên các con số không "
     "so sánh trực tiếp được. Điểm có thể đối chiếu là xu hướng: tương tự nhận xét của Kowald và cộng sự [9] "
     "về thiên lệch phổ biến trong gợi ý âm nhạc, người dùng ít ưa chuộng nghệ sĩ phổ biến nhận kết quả kém "
-    "hơn rõ rệt ở mọi mô hình trong thực nghiệm của nhóm (Bảng 4.10)."
+    "hơn rõ rệt ở đa số mô hình trong thực nghiệm của nhóm, trừ Random và ItemCF (Bảng 4.10)."
 )
 P(
     "Các giới hạn của thực nghiệm được nhóm lại theo ba loại mối đe dọa đối với tính hợp lệ. Về tính hợp lệ "

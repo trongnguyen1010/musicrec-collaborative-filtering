@@ -24,7 +24,7 @@ Các lệnh này không thay thế việc kiểm tra nguồn, EDA và xác minh 
 
 - [Kế hoạch từng bước](docs/WEEKLY_IMPLEMENTATION_PLAN.md): vận dụng hướng dẫn của cô, lộ trình dữ liệu → EDA → mô hình → thực nghiệm → prototype.
 - [Quy tắc phát triển](DEVELOPMENT_RULES.md): phạm vi được phép, giải thích cuối bước và lưu phiên bản báo cáo.
-- Đề tài **33**: [báo cáo hiện hành v15, ngày 25/10/2026](docs/bao-cao/33_BaoCaoKhoaLuan_CaoTrongNguyen_LeKhacGiaKhang_v15_25-10-2026.docx); lịch sử phiên bản ở [docs/bao-cao/README.md](docs/bao-cao/README.md). Tên báo cáo theo mẫu `33_BaoCaoKhoaLuan_CaoTrongNguyen_LeKhacGiaKhang_vNN_DD-MM-YYYY.docx`. Tài liệu tham khảo nghiên cứu nằm trong [docs/tai-lieu-tham-khao/](docs/tai-lieu-tham-khao/), đề cương trong [docs/de-cuong/](docs/de-cuong/), hướng dẫn và mẫu của GVHD trong [docs/huong-dan-gvhd/](docs/huong-dan-gvhd/).
+- Đề tài **33**: [báo cáo hiện hành v22, ngày 11/11/2026](docs/bao-cao/33_BaoCaoKhoaLuan_CaoTrongNguyen_LeKhacGiaKhang_v22_11-11-2026.docx); lịch sử phiên bản ở [docs/bao-cao/README.md](docs/bao-cao/README.md). Tên báo cáo theo mẫu `33_BaoCaoKhoaLuan_CaoTrongNguyen_LeKhacGiaKhang_vNN_DD-MM-YYYY.docx`. Tài liệu tham khảo nghiên cứu nằm trong [docs/tai-lieu-tham-khao/](docs/tai-lieu-tham-khao/), đề cương trong [docs/de-cuong/](docs/de-cuong/), hướng dẫn và mẫu của GVHD trong [docs/huong-dan-gvhd/](docs/huong-dan-gvhd/).
   Theo yêu cầu mới nhất, chỉ cập nhật Word khi người dùng yêu cầu rõ ràng, không tự cập nhật sau mỗi bước hoặc khi chạy hết mô hình. Kết quả Bước 7–16 nằm trong run và tài liệu làm việc, chưa đưa vào Word.
 - [Data card](docs/data-card.md): thông tin nguồn và các mục còn chờ xác minh.
 - [Ôn tập và câu hỏi bảo vệ](docs/SEMINAR_CHUONG_1_2.md).

@@ -395,10 +395,10 @@ T(
         ],
         [
             "da Silva và cộng sự [24], 2017",
-            "Last.fm HetRec 2011, […]",
-            "PoissonMF-CS (nội dung và mạng xã hội)",
-            "[…]",
-            "[…]",
+            "Last.fm HetRec 2011 (1.892 người dùng, 17.632 nghệ sĩ), tương tác nhị phân hóa",
+            "PoissonMF-CS (nội dung từ thẻ và mạng xã hội)",
+            "Chia ngẫu nhiên 85/15, lặp 30 lần; Recall@M trung bình trên người dùng",
+            "Vượt rõ CTR và CTR-SMF (số liệu đối sánh lấy từ bài gốc của CTR-SMF)",
             "Cùng bộ dữ liệu, giao thức khác",
         ],
         [
@@ -410,7 +410,6 @@ T(
             "Hướng phát triển",
         ],
     ],
-    note="“[…]” là thông tin chưa được đối chiếu với bài gốc.",
     align=["left"] * 6,
     size=20,
 )

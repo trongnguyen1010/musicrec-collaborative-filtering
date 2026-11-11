@@ -686,7 +686,10 @@ def _appC():
         ]
     )
     P(
-        "Trên máy đám mây ở mục 4.1.1, bốn bước làm sạch, chia tập, biến đổi và khám phá dữ liệu mất dưới 13 giây, tinh chỉnh 48 cấu hình mất 42,8 phút, chấm tập kiểm thử mất 1,5 phút và toàn bộ lần chạy khoảng 48 phút. Các phân tích bổ sung ở mục 4.11 dùng các script report_ch4_extras.py, run_e7_topn.py, run_e_s_sensitivity.py, run_e_b_m1_beta.py, report_e_c_groups.py, report_e_d_data.py và evaluate_m2_test.py với tùy chọn --target-mode all_but_profile; trên máy cá nhân, lưới E7 mất 5 phút 42 giây, phần ALS của phân tích độ nhạy khoảng 21 phút, các phần còn lại mỗi phần dưới 4 phút."
+        "Hai tệp configs/models/m1_pure_svd.yaml và configs/models/m2.yaml đang ghi cố định đường dẫn đầu vào: tệp M1 trỏ tới thư mục biểu diễn và ba mô hình PureSVD của lần chạy chính thức (representations_run, base_runs), còn tệp M2 trỏ tới một lần làm sạch và chia dữ liệu thử trước đó (clean_run, split_run). Vì vậy, khi chạy lại với thư mục <run> mới, cần sao chép hai tệp này, sửa representations_run thành outputs/chuong_3/<run>/run/representations, ba đường dẫn base_runs thành outputs/chuong_4/tuning_<run>/pure_svd/pure_svd_lat16 (và hai thư mục _seed43, _seed44 cùng chỗ), clean_run và split_run thành outputs/chuong_3/<run>/run/cleaning và outputs/chuong_3/<run>/run/split, rồi truyền tệp đã sửa vào --config. Bản cấu hình đã dùng trong lần chạy chính thức được lưu kèm trong thư mục kết quả (chuong_4/m1_config.yaml và chuong_4/m2_config.yaml)."
+    )
+    P(
+        "Trên máy đám mây ở mục 4.1.1, bốn bước làm sạch, chia tập, biến đổi và khám phá dữ liệu mất dưới 13 giây, tinh chỉnh 48 cấu hình mất 42,8 phút, chấm tập kiểm thử mất 1,5 phút và toàn bộ lần chạy khoảng 48 phút. Các phân tích bổ sung ở mục 4.11 dùng các script report_ch4_extras.py, run_e7_topn.py, run_e_s_sensitivity.py, run_e_b_m1_beta.py, report_e_c_groups.py, report_e_d_data.py và evaluate_m2_test.py với tùy chọn --target-mode all_but_profile; trên máy cá nhân, lưới E7 mất 5 phút 42 giây, phần ALS của phân tích độ nhạy khoảng 21 phút, các phần còn lại mỗi phần dưới 4 phút. Thí nghiệm hậu xử lý phổ trên ALS ở mục 4.9 dùng script run_h1.py với cấu hình configs/models/h1.yaml; lần chạy ngày 27/10/2026 trên máy cá nhân mất khoảng 217 giây, kết quả, môi trường và mã băm được ghi trong docs/results/h1_vong_1.md."
     )
     H2("C.4 Chạy dịch vụ và giao diện")
     CODE(
@@ -697,6 +700,9 @@ def _appC():
             "npm install",
             "npm run dev                                    # giao diện: http://localhost:3000",
         ]
+    )
+    P(
+        "Script export_release.py chỉ đóng gói từ lần chạy chính thức đã khóa (mặc định outputs/chinh_thuc_cloud_20261026): script đọc chuong_4/test/lock.json và chuong_4/m2_test/lock.json, kiểm mã băm từng tệp mô hình và chuyển các đường dẫn đã ghi trên máy đám mây sang thư mục kho mã. Một lần chạy mới trên máy khác chưa đóng gói được bằng script này nếu không sửa mã; vì gói demo-chinh-thuc-20261026 đã có sẵn trong artifacts/releases/, có thể bỏ qua lệnh đầu tiên và chạy thẳng dịch vụ."
     )
     P(
         "Biến môi trường MUSICREC_RELEASE_DIR chọn gói mô hình (mặc định artifacts/releases/demo-chinh-thuc-20261026), MUSICREC_CORS_ORIGINS khai báo địa chỉ giao diện được phép gọi API, còn NEXT_PUBLIC_API_URL của giao diện trỏ tới dịch vụ (mặc định http://127.0.0.1:8000)."
@@ -842,11 +848,43 @@ for hdr in sorted((root_dir / "word").glob("header*.xml")):
     h = hdr.read_text(encoding="utf-8")
     if "Xây dựng hệ thống khuyến nghị nghệ sĩ" in h and "âm nhạc" not in h:
         hdr.write_text(
-            h.replace(
-                "Xây dựng hệ thống khuyến nghị nghệ sĩ",
-                "Xây dựng hệ thống khuyến nghị nghệ sĩ âm nhạc",
-                1,
-            ),
+            h.replace("Xây dựng hệ thống khuyến nghị nghệ sĩ", TITLE_VI_SENT, 1),
             encoding="utf-8",
         )
         print("header updated", hdr.name)
+
+# Page numbers: the content section (Chapter 1 to the references, the only section with a
+# running header) restarts at 1 in arabic numerals, as in the faculty template.
+content_sections = [
+    sp
+    for sp in body.iter(q("sectPr"))
+    if sp.getparent() is not body and sp.find(q("headerReference")) is not None
+]
+assert len(content_sections) == 1, len(content_sections)
+sp = content_sections[0]
+pg = sp.find(q("pgNumType"))
+if pg is None:
+    pg = etree.Element(q("pgNumType"))
+    later = [
+        q(n)
+        for n in [
+            "cols",
+            "formProt",
+            "vAlign",
+            "noEndnote",
+            "titlePg",
+            "textDirection",
+            "bidi",
+            "rtlGutter",
+            "docGrid",
+            "printerSettings",
+        ]
+    ]
+    following = next((c for c in sp if c.tag in later), None)
+    if following is not None:
+        following.addprevious(pg)
+    else:
+        sp.append(pg)
+pg.set(q("fmt"), "decimal")
+pg.set(q("start"), "1")
+print("content section numbering restarts at 1")
