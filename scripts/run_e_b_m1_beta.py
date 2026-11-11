@@ -5,7 +5,9 @@ PureSVD binary k = 16 base (seed 42), candidate pool 100, train masked, validati
 The locked point (lambda 0.75, beta 0.5) is rescored first and must equal the saved Step 15
 validation metrics. Figure: all 24 points (old 12 from docs m1_metrics.csv + new 12),
 ARP@10 against NDCG@10, with the 5% drop bound (0.95 x NDCG@10 of lambda 1, beta 0) and
-every point below it marked. Nothing is selected; the locked M1 stays (0.75, 0.5).
+every point below it marked, and the interpolated point where the lambda = 0.75 path crosses
+the bound. --redraw-only redraws the figure from the saved CSV without rescoring.
+Nothing is selected; the locked M1 stays (0.75, 0.5).
 """
 
 import os
@@ -44,12 +46,108 @@ NEW_BETAS = [0.75, 1.0, 1.5, 2.0]
 METRICS = ["precision", "recall", "ndcg", "catalog_coverage", "gini", "arp", "novelty", "ild"]
 
 
+def draw(grid: pd.DataFrame, bound: float, path: Path) -> None:
+    """Trade-off figure: 24 points, the 5% bound, the locked point and the bound crossing."""
+    fig, ax = plt.subplots(figsize=(6.3, 3.9))
+    markers = {0.5: "o", 0.75: "s", 1.0: "^"}
+    for _, row in grid.iterrows():
+        color = BLUE if row.nguon == "luoi_cu" else ORANGE
+        ax.scatter(
+            row.arp,
+            row.ndcg,
+            s=60,
+            marker=markers[float(row["lambda"])],
+            color=color if not row.duoi_nguong_5pct else "white",
+            edgecolor=color,
+            linewidth=1.5,
+            zorder=3,
+        )
+    chosen = grid[(grid["lambda"] == 0.75) & (grid.beta == 0.5)].iloc[0]
+    ax.scatter([chosen.arp], [chosen.ndcg], s=170, facecolor="none", edgecolor=INK, zorder=4)
+    ax.annotate(
+        "Cấu hình đã khóa (λ = 0,75; β = 0,5)",
+        (chosen.arp, chosen.ndcg),
+        xytext=(150, 0.178),
+        ha="center",
+        arrowprops={"arrowstyle": "-", "color": INK, "linewidth": 0.6},
+        fontsize=8,
+        color=INK,
+    )
+    ax.axhline(bound, color=MUTED, linestyle="--", linewidth=1)
+    path_075 = grid[grid["lambda"] == 0.75].sort_values("beta")
+    ax.plot(path_075.arp, path_075.ndcg, color=INK, linewidth=0.8, alpha=0.5, zorder=2)
+    above = path_075[path_075.ndcg >= bound].iloc[-1]
+    below = path_075[path_075.beta > above.beta].iloc[0]
+    share = (above.ndcg - bound) / (above.ndcg - below.ndcg)
+    cross_arp = above.arp + share * (below.arp - above.arp)
+    ax.scatter([cross_arp], [bound], s=70, marker="x", color=INK, linewidth=1.5, zorder=5)
+    ax.annotate(
+        "Điểm cắt ngưỡng của λ = 0,75\n(giữa β = 0,75 và β = 1)",
+        (cross_arp, bound),
+        xytext=(132, 0.136),
+        arrowprops={"arrowstyle": "-", "color": INK, "linewidth": 0.6},
+        fontsize=7.5,
+        color=INK,
+    )
+    ax.scatter([above.arp], [above.ndcg], s=170, facecolor="none", edgecolor=ORANGE, zorder=4)
+    ax.annotate(
+        "λ = 0,75; β = 0,75\n(được chọn nếu mở rộng lưới)",
+        (above.arp, above.ndcg),
+        xytext=(62, 0.170),
+        arrowprops={"arrowstyle": "-", "color": ORANGE, "linewidth": 0.6},
+        fontsize=7.5,
+        color=ORANGE,
+    )
+    ax.annotate(
+        "Ngưỡng giảm 5% so với nền",
+        (grid.arp.min(), bound),
+        xytext=(0, -11),
+        textcoords="offset points",
+        fontsize=8,
+        color=MUTED,
+    )
+    handles = [
+        Line2D([], [], color=BLUE, marker="o", linestyle="", label="β ∈ {0; 0,1; 0,25; 0,5}"),
+        Line2D([], [], color=ORANGE, marker="o", linestyle="", label="β ∈ {0,75; 1; 1,5; 2}"),
+        Line2D(
+            [],
+            [],
+            color=MUTED,
+            marker="o",
+            markerfacecolor="white",
+            linestyle="",
+            label="Dưới ngưỡng 5%",
+        ),
+        Line2D([], [], color=INK, marker="x", linestyle="", label="Điểm cắt ngưỡng (nội suy)"),
+    ] + [
+        Line2D([], [], color=MUTED, marker=m, linestyle="", label=f"λ = {lam:g}".replace(".", ","))
+        for lam, m in markers.items()
+    ]
+    ax.set_xlabel("ARP@10 trên tập xác thực (thấp hơn là ít phổ biến hơn)")
+    ax.set_ylabel("NDCG@10 xác thực")
+    ax.set_ylim(top=0.185)
+    ax.legend(handles=handles, frameon=False, fontsize=7, loc="lower right", ncol=2)
+    style(ax)
+    fig.tight_layout()
+    fig.savefig(path, dpi=300)
+    plt.close(fig)
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--output-dir", type=Path, required=True)
     parser.add_argument("--limit", type=int, default=None, help="timing: first N new points")
+    parser.add_argument(
+        "--redraw-only",
+        action="store_true",
+        help="only redraw hinh_4_6.png from hinh_4_6.csv and metrics.json already in --output-dir",
+    )
     args = parser.parse_args()
     out = args.output_dir
+    if args.redraw_only:
+        saved = json.loads((out / "metrics.json").read_text(encoding="utf-8"))
+        draw(pd.read_csv(out / "hinh_4_6.csv"), saved["bound_0.95"], out / "hinh_4_6.png")
+        return
     out.mkdir(parents=True, exist_ok=False)
     source = RUN / "chuong_3/run/representations"
     train = pd.read_parquet(source / "train.parquet")
@@ -95,62 +193,7 @@ def main() -> None:
     grid["duoi_nguong_5pct"] = grid.ndcg < bound
     grid.to_csv(out / "hinh_4_6.csv", index=False)
 
-    fig, ax = plt.subplots(figsize=(6.3, 3.9))
-    markers = {0.5: "o", 0.75: "s", 1.0: "^"}
-    for _, row in grid.iterrows():
-        color = BLUE if row.nguon == "luoi_cu" else ORANGE
-        ax.scatter(
-            row.arp,
-            row.ndcg,
-            s=60,
-            marker=markers[float(row["lambda"])],
-            color=color if not row.duoi_nguong_5pct else "white",
-            edgecolor=color,
-            linewidth=1.5,
-            zorder=3,
-        )
-    chosen = grid[(grid["lambda"] == 0.75) & (grid.beta == 0.5)].iloc[0]
-    ax.scatter([chosen.arp], [chosen.ndcg], s=170, facecolor="none", edgecolor=INK, zorder=4)
-    ax.annotate(
-        "Cấu hình đã khóa",
-        (chosen.arp, chosen.ndcg),
-        xytext=(8, 8),
-        textcoords="offset points",
-        fontsize=8,
-        color=INK,
-    )
-    ax.axhline(bound, color=MUTED, linestyle="--", linewidth=1)
-    ax.annotate(
-        "Ngưỡng giảm 5% so với nền",
-        (grid.arp.min(), bound),
-        xytext=(0, 4),
-        textcoords="offset points",
-        fontsize=8,
-        color=MUTED,
-    )
-    handles = [
-        Line2D([], [], color=BLUE, marker="o", linestyle="", label="β ∈ {0; 0,1; 0,25; 0,5}"),
-        Line2D([], [], color=ORANGE, marker="o", linestyle="", label="β ∈ {0,75; 1; 1,5; 2}"),
-        Line2D(
-            [],
-            [],
-            color=MUTED,
-            marker="o",
-            markerfacecolor="white",
-            linestyle="",
-            label="Dưới ngưỡng 5%",
-        ),
-    ] + [
-        Line2D([], [], color=MUTED, marker=m, linestyle="", label=f"λ = {lam:g}".replace(".", ","))
-        for lam, m in markers.items()
-    ]
-    ax.set_xlabel("ARP@10 trên tập xác thực (thấp hơn là ít phổ biến hơn)")
-    ax.set_ylabel("NDCG@10 xác thực")
-    ax.legend(handles=handles, frameon=False, fontsize=7, loc="lower right", ncol=2)
-    style(ax)
-    fig.tight_layout()
-    fig.savefig(out / "hinh_4_6.png", dpi=300)
-    plt.close(fig)
+    draw(grid, bound, out / "hinh_4_6.png")
     summary = {
         "created_at_utc": datetime.now(UTC).isoformat(),
         "command": sys.argv,
