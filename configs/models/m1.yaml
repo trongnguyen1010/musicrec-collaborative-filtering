@@ -1,0 +1,27 @@
+step: 15
+model: m1
+base_model: implicit_als_k32_reg01_conf1
+representations_run: outputs/runs/representations_20261024
+base_runs:
+  42: outputs/runs/implicit_als_k32_c1_r01_validation_20261026
+  43: outputs/runs/implicit_als_seed43_validation_20261026
+  44: outputs/runs/implicit_als_seed44_validation_20261026
+candidate_size: 100
+lambda_grid: [0.5, 0.75, 1.0]
+beta_grid: [0.0, 0.1, 0.25, 0.5]
+objective: lambda_relevance_minus_one_minus_lambda_max_similarity_minus_beta_popularity
+relevance: per_user_minmax_raw_als_scores_on_fixed_top100_flat_equals_one
+similarity: binary_train_user_vectors_cosine_empty_selected_equals_zero
+popularity: log1p_train_distinct_listeners_divided_by_log1p_catalog_max_listeners
+tie_break: objective_rounded_12_decimals_then_original_candidate_rank
+returned_score: raw_base_als_score_not_context_dependent_greedy_utility
+fit_scope: binary_train_statistics_only_load_base_checkpoints_no_als_fit
+selection_seed: 42
+confirmation_seeds: [43, 44]
+max_relative_ndcg_drop: 0.05
+selection: full_variants_only_min_arp_then_max_ild_then_max_ndcg_then_lambda_beta
+confirmation: fixed_winner_no_retuning_drop_bound_each_seed_and_mean
+ablations: [base, diversity_only, popularity_only, full]
+ablation_parameters: match_selected_full_lambda_and_beta
+no_feasible_full: report_failure_do_not_expand_grid_or_open_test
+ks: [5, 10, 20]

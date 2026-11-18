@@ -44,10 +44,11 @@ stages:
       - outputs/metrics.json:
           cache: false
   export_release:
-    cmd: python scripts/export_release.py
+    cmd: python scripts/export_release.py --version demo-chinh-thuc-20261026
     deps:
-      - outputs/train
-      - outputs/metrics.json
+      - outputs/chinh_thuc_cloud_20261026/chuong_4/test/lock.json
+      - outputs/chinh_thuc_cloud_20261026/chuong_4/m2_test/lock.json
       - scripts/export_release.py
+      - src/musicrec/serving/release.py
     outs:
-      - artifacts/releases
+      - artifacts/releases/demo-chinh-thuc-20261026

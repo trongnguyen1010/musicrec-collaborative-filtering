@@ -1,0 +1,2 @@
+# Release files are hash-checked byte for byte; never convert line endings.
+artifacts/releases/** -text

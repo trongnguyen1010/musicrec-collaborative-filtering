@@ -1,0 +1,226 @@
+{
+  "created_at_utc": "2026-11-07T07:49:39.550518+00:00",
+  "release": "demo-chinh-thuc-20261026",
+  "release_files": [
+    {
+      "path": "data/artists.json",
+      "bytes": 2922202
+    },
+    {
+      "path": "data/train.parquet",
+      "bytes": 750137
+    },
+    {
+      "path": "data/validation.parquet",
+      "bytes": 148478
+    },
+    {
+      "path": "manifest.json",
+      "bytes": 3923
+    },
+    {
+      "path": "models/implicit_als/confidence.npz",
+      "bytes": 291542
+    },
+    {
+      "path": "models/implicit_als/factors.npz",
+      "bytes": 2031604
+    },
+    {
+      "path": "models/implicit_als/state.json",
+      "bytes": 215697
+    },
+    {
+      "path": "models/m1/binary.npz",
+      "bytes": 142722
+    },
+    {
+      "path": "models/m1/state.json",
+      "bytes": 211997
+    },
+    {
+      "path": "models/m2/item_cf/neighbors.npz",
+      "bytes": 1636135
+    },
+    {
+      "path": "models/m2/item_cf/ratings.npz",
+      "bytes": 135931
+    },
+    {
+      "path": "models/m2/item_cf/state.json",
+      "bytes": 195909
+    },
+    {
+      "path": "models/m2/state.json",
+      "bytes": 45175
+    },
+    {
+      "path": "models/m2/statistics.npz",
+      "bytes": 63839
+    },
+    {
+      "path": "models/m2/tags.npz",
+      "bytes": 258474
+    },
+    {
+      "path": "models/pure_svd/projection.npz",
+      "bytes": 1263487
+    },
+    {
+      "path": "models/pure_svd/ratings.npz",
+      "bytes": 139100
+    },
+    {
+      "path": "models/pure_svd/state.json",
+      "bytes": 212389
+    }
+  ],
+  "release_total_bytes": 10668741,
+  "load_seconds_fresh_process": [
+    2.751967999851331,
+    2.219731400022283,
+    2.120999899925664
+  ],
+  "load_seconds_median": 2.219731400022283,
+  "cases": [
+    {
+      "ma": "T01",
+      "noi_dung": "Người dùng có sẵn (mã 2), PureSVD, K = 10",
+      "mong_doi": "10 nghệ sĩ, không trùng, không chứa lịch sử huấn luyện và xác thực",
+      "ket_qua": "Đạt",
+      "ghi_chu": "branch=existing_user, 10 mục, 0 mục thuộc lịch sử"
+    },
+    {
+      "ma": "T02",
+      "noi_dung": "Lịch sử rỗng",
+      "mong_doi": "Danh sách Popularity, fallback_used = true, lý do empty_profile",
+      "ket_qua": "Đạt",
+      "ghi_chu": "branch=popularity, fallback_reason=empty_profile"
+    },
+    {
+      "ma": "T03",
+      "noi_dung": "Người dùng mới chọn 1 nghệ sĩ có trong danh mục M2 (mã 89)",
+      "mong_doi": "Nhánh new_user, mô hình M2, không dự phòng",
+      "ket_qua": "Đạt",
+      "ghi_chu": "branch=new_user, model=m2"
+    },
+    {
+      "ma": "T04",
+      "noi_dung": "Lịch sử chỉ gồm nghệ sĩ ngoài danh mục",
+      "mong_doi": "Không lỗi, dự phòng về phổ biến, liệt kê mã bị bỏ qua",
+      "ket_qua": "Đạt",
+      "ghi_chu": "fallback_reason=no_profile_artist_in_m2_catalog, ignored=['99999999']"
+    },
+    {
+      "ma": "T05",
+      "noi_dung": "K = 100 (giới hạn trên của API), ALS",
+      "mong_doi": "Đúng 100 nghệ sĩ, không trùng, không chứa lịch sử",
+      "ket_qua": "Đạt",
+      "ghi_chu": "100 mục, 100 mục khác nhau"
+    },
+    {
+      "ma": "T06",
+      "noi_dung": "K = 0, K = −1, K không phải số, K = 101",
+      "mong_doi": "Mã 422 cho cả bốn trường hợp",
+      "ket_qua": "Đạt",
+      "ghi_chu": "mã trả về [422, 422, 422, 422]"
+    },
+    {
+      "ma": "T07",
+      "noi_dung": "Bật M1 và đặt M1 về λ = 1, β = 0 cho cùng người dùng",
+      "mong_doi": "Hai danh sách hợp lệ; M1 với λ = 1, β = 0 trùng thứ tự PureSVD",
+      "ket_qua": "Đạt",
+      "ghi_chu": "M1 khác PureSVD 3 mục"
+    },
+    {
+      "ma": "T08",
+      "noi_dung": "Yêu cầu mô hình không phục vụ (svd)",
+      "mong_doi": "Mã 422, liệt kê giá trị hợp lệ",
+      "ket_qua": "Đạt",
+      "ghi_chu": "mã trả về 422"
+    },
+    {
+      "ma": "T09",
+      "noi_dung": "Gửi cùng yêu cầu hai lần",
+      "mong_doi": "Hai kết quả giống hệt (tất định)",
+      "ket_qua": "Đạt",
+      "ghi_chu": "so sánh toàn bộ JSON"
+    },
+    {
+      "ma": "T10",
+      "noi_dung": "Nạp lại gói mô hình trong một ứng dụng mới",
+      "mong_doi": "Kết quả trùng trước khi nạp lại",
+      "ket_qua": "Đạt",
+      "ghi_chu": "so sánh toàn bộ JSON"
+    },
+    {
+      "ma": "T11",
+      "noi_dung": "Mã người dùng không tồn tại (recommend và history)",
+      "mong_doi": "Mã 404",
+      "ket_qua": "Đạt",
+      "ghi_chu": "mã trả về [404, 404]"
+    },
+    {
+      "ma": "T12",
+      "noi_dung": "Thiếu cả user_id lẫn history; nghệ sĩ trùng; quá 5 nghệ sĩ; lượt nghe âm; λ ngoài lưới",
+      "mong_doi": "Mã 422 cho cả năm trường hợp",
+      "ket_qua": "Đạt",
+      "ghi_chu": "mã trả về [422, 422, 422, 422, 422]"
+    }
+  ],
+  "cases_passed": 12,
+  "online_offline_top10": {
+    "pure_svd": {
+      "users": 1877,
+      "identical_order_rate": 1.0,
+      "mean_jaccard": 1.0,
+      "max_abs_score_difference": 0.0
+    },
+    "m1": {
+      "users": 1877,
+      "identical_order_rate": 1.0,
+      "mean_jaccard": 1.0,
+      "max_abs_score_difference": 0.0
+    },
+    "implicit_als": {
+      "users": 1877,
+      "identical_order_rate": 1.0,
+      "mean_jaccard": 1.0,
+      "max_abs_score_difference": 0.0
+    },
+    "m2_n1": {
+      "users": 189,
+      "identical_order_rate": 1.0,
+      "mean_jaccard": 1.0,
+      "max_abs_score_difference": 0.0
+    },
+    "m2_n3": {
+      "users": 189,
+      "identical_order_rate": 1.0,
+      "mean_jaccard": 1.0,
+      "max_abs_score_difference": 0.0
+    },
+    "m2_n5": {
+      "users": 189,
+      "identical_order_rate": 1.0,
+      "mean_jaccard": 1.0,
+      "max_abs_score_difference": 0.0
+    }
+  },
+  "runtime": {
+    "python": "3.11.9",
+    "platform": "Windows-10-10.0.26200-SP0",
+    "processor": "Intel64 Family 6 Model 140 Stepping 1, GenuineIntel",
+    "numpy": "2.4.6",
+    "scipy": "1.17.1",
+    "pandas": "2.3.3",
+    "fastapi": "0.141.1",
+    "pydantic": "2.13.5",
+    "implicit": "0.7.3"
+  },
+  "command": [
+    "scripts/check_chuong_5.py",
+    "--output-dir",
+    "outputs/demo/chuong_5_20261107"
+  ]
+}

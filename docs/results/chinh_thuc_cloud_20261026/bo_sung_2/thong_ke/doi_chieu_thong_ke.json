@@ -1,0 +1,86 @@
+{
+  "bootstrap_free_fields_equal": true,
+  "pairs_compared": 21,
+  "max_abs_ci95_shift": 0.0012703490273492102,
+  "holm_families": {
+    "predeclared": {
+      "pairs": 4,
+      "members": [
+        [
+          "pure_svd",
+          "popularity"
+        ],
+        [
+          "svd",
+          "pure_svd"
+        ],
+        [
+          "m1",
+          "pure_svd"
+        ],
+        [
+          "implicit_als",
+          "pure_svd"
+        ]
+      ]
+    },
+    "supplementary": {
+      "pairs": 5,
+      "members": [
+        [
+          "pure_svd",
+          "random"
+        ],
+        [
+          "pure_svd",
+          "popularity"
+        ],
+        [
+          "pure_svd",
+          "user_cf"
+        ],
+        [
+          "pure_svd",
+          "item_cf"
+        ],
+        [
+          "pure_svd",
+          "svd"
+        ]
+      ]
+    },
+    "pairs_in_both_families": [
+      [
+        "popularity",
+        "pure_svd"
+      ],
+      [
+        "pure_svd",
+        "svd"
+      ]
+    ],
+    "note": "Holm is applied within each family separately; a pair listed in both families has the same raw Wilcoxon p but a Holm p from each family."
+  },
+  "m1_pure_svd_equivalence": {
+    "pair": [
+      "m1",
+      "pure_svd"
+    ],
+    "base_model": "pure_svd",
+    "base_mean_ndcg10": 0.18278004749997057,
+    "relative_margin": 0.05,
+    "delta": 0.009139002374998529,
+    "margin": [
+      -0.009139002374998529,
+      0.009139002374998529
+    ],
+    "ci90": [
+      -0.003641020624733447,
+      0.0008878752093256712
+    ],
+    "lower_test_rejects": true,
+    "upper_test_rejects": true,
+    "equivalent": true,
+    "rule": "tost_alpha_0.05_via_90pct_bootstrap_interval_inside_open_margin"
+  }
+}

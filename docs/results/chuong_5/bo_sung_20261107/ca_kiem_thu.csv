@@ -1,0 +1,13 @@
+ma,noi_dung,mong_doi,ket_qua,ghi_chu
+T01,"Người dùng có sẵn (mã 2), PureSVD, K = 10","10 nghệ sĩ, không trùng, không chứa lịch sử huấn luyện và xác thực",Đạt,"branch=existing_user, 10 mục, 0 mục thuộc lịch sử"
+T02,Lịch sử rỗng,"Danh sách Popularity, fallback_used = true, lý do empty_profile",Đạt,"branch=popularity, fallback_reason=empty_profile"
+T03,Người dùng mới chọn 1 nghệ sĩ có trong danh mục M2 (mã 89),"Nhánh new_user, mô hình M2, không dự phòng",Đạt,"branch=new_user, model=m2"
+T04,Lịch sử chỉ gồm nghệ sĩ ngoài danh mục,"Không lỗi, dự phòng về phổ biến, liệt kê mã bị bỏ qua",Đạt,"fallback_reason=no_profile_artist_in_m2_catalog, ignored=['99999999']"
+T05,"K = 100 (giới hạn trên của API), ALS","Đúng 100 nghệ sĩ, không trùng, không chứa lịch sử",Đạt,"100 mục, 100 mục khác nhau"
+T06,"K = 0, K = −1, K không phải số, K = 101",Mã 422 cho cả bốn trường hợp,Đạt,"mã trả về [422, 422, 422, 422]"
+T07,"Bật M1 và đặt M1 về λ = 1, β = 0 cho cùng người dùng","Hai danh sách hợp lệ; M1 với λ = 1, β = 0 trùng thứ tự PureSVD",Đạt,M1 khác PureSVD 3 mục
+T08,Yêu cầu mô hình không phục vụ (svd),"Mã 422, liệt kê giá trị hợp lệ",Đạt,mã trả về 422
+T09,Gửi cùng yêu cầu hai lần,Hai kết quả giống hệt (tất định),Đạt,so sánh toàn bộ JSON
+T10,Nạp lại gói mô hình trong một ứng dụng mới,Kết quả trùng trước khi nạp lại,Đạt,so sánh toàn bộ JSON
+T11,Mã người dùng không tồn tại (recommend và history),Mã 404,Đạt,"mã trả về [404, 404]"
+T12,Thiếu cả user_id lẫn history; nghệ sĩ trùng; quá 5 nghệ sĩ; lượt nghe âm; λ ngoài lưới,Mã 422 cho cả năm trường hợp,Đạt,"mã trả về [422, 422, 422, 422, 422]"

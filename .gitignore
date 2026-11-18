@@ -5,6 +5,7 @@ __pycache__/
 .ruff_cache/
 .mypy_cache/
 .venv/
+.venv-legacy/
 
 # Secrets and local settings
 .env
@@ -22,6 +23,7 @@ data/raw/*
 data/interim/*
 data/processed/*
 artifacts/releases/*
+!artifacts/releases/demo-chinh-thuc-20261026/
 !data/README.md
 !artifacts/README.md
 
