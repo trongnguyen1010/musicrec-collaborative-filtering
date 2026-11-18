@@ -35,4 +35,4 @@ Script chỉ đọc. Script nạp mô hình M2 đã khóa (`outputs/chinh_thuc_c
 - Hai người còn lại có đích đứng trước nghệ sĩ bị loại. Người dùng 120 có đích ở vị trí 4, nghệ sĩ bị loại ở vị trí 10. Người dùng 1558 có đích ở vị trí 2, nghệ sĩ bị loại ở vị trí 5.
 - Nghệ sĩ hạng 11 được đẩy lên không phải đích của ai.
 - Danh sách có đổi: số nghệ sĩ khác nhau tăng từ 10 lên 11, độ bao phủ từ 0,000757 lên 0,000833, ARP từ 295,70 xuống 295,52. NDCG@10 của từng người không đổi ở cả 187 người.
-- Máy chạy: Windows 11 (10.0.26200), Intel Core i5-11300H, Python 3.11.9, numpy 2.4.6, scipy 1.17.1, pandas 2.3.3, pyarrow 19.0.1. Script chạy trên commit `383c8c9`.
+- Máy chạy: Windows 11 (10.0.26200), Intel Core i5-11300H, Python 3.11.9, numpy 2.4.6, scipy 1.17.1, pandas 2.3.3, pyarrow 19.0.1. Script chạy trên commit `5d07022`.

@@ -3,7 +3,7 @@
   "command": [
     "scripts/report_ch4_extras.py"
   ],
-  "git_sha": "60b175c78f6637f32069d801c32496b7cc163f39",
+  "git_sha": "e03afe6e971c269c3e82c8020df66299d5f3420f",
   "git_status": " M docs/bao-cao/README.md\n?? SHA256SUMS_checkpoints_demo.txt\n?? docs/bao-cao/33_BaoCaoKhoaLuan_CaoTrongNguyen_LeKhacGiaKhang_v17_07-11-2026.docx\n?? docs/bao-cao/GOP_Y_GVHD_06-11-2026.md\n?? docs/bao-cao/GopY_GVHD_06-11-2026_KLTN_TrongNguyen_GiaKhang.docx\n?? docs/bao-cao/KE_HOACH_SUA_THEO_GOP_Y_GVHD.md\n?? docs/bao-cao/nguon_v17/\n?? docs/results/chuong_4_bo_sung.md\n?? scripts/rebuild_locked_runs.py\n?? scripts/report_ch4_extras.py\n",
   "runtime": {
     "python": "3.11.9",

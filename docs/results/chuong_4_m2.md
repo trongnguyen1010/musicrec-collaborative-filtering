@@ -24,7 +24,7 @@ Ngày chạy: 26/10/2026, máy đám mây (cùng môi trường với lần ch�
 | Lưới chọn | α ∈ {0,25; 0,5; 0,75} × ngưỡng ∈ {3, 5, 10} | `m2_config.yaml` |
 | Quy tắc chọn | NDCG@10 trung bình N = 1/3/5 cao nhất, hòa thì α rồi ngưỡng nhỏ hơn | `select_m2_config` |
 
-Lệnh chạy (từ thư mục gốc, Git `7058883` cho bước chọn, `717d04b` cho bước test):
+Lệnh chạy (từ thư mục gốc, Git `ab7d671` cho bước chọn, `a548469` cho bước test):
 
 ```bash
 python -B scripts/run_m2.py --config outputs/chinh_thuc_cloud_20261026/chuong_4/m2_config.yaml --output-dir outputs/chinh_thuc_cloud_20261026/chuong_4/m2_tuning

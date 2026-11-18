@@ -25,7 +25,7 @@
     "train.parquet": "5232d6b1b7a5bb8354b94bc8ee2e4d27054607915f83ca8d18f8aefdd97cb526",
     "test.parquet": "c9196bba9fa761db016d1b8eab7d3b76e3bad8a9fc044a5f66e2e42e58685901"
   },
-  "git_sha": "26af632e9b0e90df58fb2532f68d682d1d7bbcea",
+  "git_sha": "7e09c610d015996870fbb63d399c8c063f457f9b",
   "git_status": " M scripts/evaluate_m2_test.py\n M scripts/report_ch4_extras.py\n M scripts/test_statistics.py\n M src/musicrec/recommenders/item_cf.py\n M src/musicrec/recommenders/user_cf.py\n?? SHA256SUMS_checkpoints_demo.txt\n?? configs/e7_topn_neighbors.yaml\n?? docs/results/chuong_4_bo_sung_2.md\n?? scripts/compare_statistics.py\n?? scripts/run_e7_topn.py\n?? src/musicrec/evaluation/paired.py\n?? tests/unit/test_given_n_e7_scripts.py\n?? tests/unit/test_neighborhood_sum.py\n?? tests/unit/test_paired.py\n",
   "command": [
     "scripts/evaluate_m2_test.py",

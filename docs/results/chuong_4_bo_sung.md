@@ -1,6 +1,6 @@
 # Chương 4: phân tích bổ sung theo góp ý GVHD ngày 06/11/2026
 
-Ngày chạy: 07/11/2026, trên máy cá nhân của nhóm (Windows 11, Intel Core i5-11300H 3,10 GHz, 8 luồng logic, 16.856.203.264 byte RAM; Python 3.11.9; numpy 2.4.6, scipy 1.17.1, pandas 2.3.3, pyarrow 19.0.1, implicit 0.7.3, matplotlib 3.11.2; một luồng BLAS). Commit gốc `60b175c`, cây làm việc có các tệp mới chưa commit liệt kê ở mục 7.
+Ngày chạy: 07/11/2026, trên máy cá nhân của nhóm (Windows 11, Intel Core i5-11300H 3,10 GHz, 8 luồng logic, 16.856.203.264 byte RAM; Python 3.11.9; numpy 2.4.6, scipy 1.17.1, pandas 2.3.3, pyarrow 19.0.1, implicit 0.7.3, matplotlib 3.11.2; một luồng BLAS). Commit gốc `e03afe6`, cây làm việc có các tệp mới chưa commit liệt kê ở mục 7.
 
 Tài liệu này ghi các phân tích GVHD yêu cầu thêm cho Chương 4 ([góp ý](../bao-cao/GOP_Y_GVHD_06-11-2026.md), ý G09–G18). **Không có cấu hình nào được chọn lại.** Mọi mô hình là mô hình đã khóa trong `outputs/chinh_thuc_cloud_20261026/chuong_4/test/lock.json` của lần chạy chính thức ([chuong_4_test.md](chuong_4_test.md)).
 

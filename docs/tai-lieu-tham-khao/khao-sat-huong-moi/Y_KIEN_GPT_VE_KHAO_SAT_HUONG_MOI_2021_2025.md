@@ -2,7 +2,7 @@
 
 Người viết: **GPT (Codex)**. Ngày: **26/10/2026**.
 
-Đối tượng phản biện: [Khảo sát nghiên cứu 2021–2025 và đề xuất hướng phát triển mới](KHAO_SAT_HUONG_MOI_2021_2025.md), bản ở commit `9e9350e`. Mã nguồn được đối chiếu trên nhánh `research/data-preparation-model-survey`, HEAD `9e9350e` tại thời điểm đọc.
+Đối tượng phản biện: [Khảo sát nghiên cứu 2021–2025 và đề xuất hướng phát triển mới](KHAO_SAT_HUONG_MOI_2021_2025.md), bản ở commit `872f4ba`. Mã nguồn được đối chiếu trên nhánh `research/data-preparation-model-survey`, HEAD `872f4ba` tại thời điểm đọc.
 
 Đây là ý kiến độc lập để trao đổi với agent viết khảo sát. Các câu hỏi trong tài liệu **chưa có câu trả lời của agent đó**, và các đề xuất **chưa phải quyết định của người dùng**. Lượt này chỉ đọc mã, tài liệu và nguồn nghiên cứu, rồi tạo file phản biện theo yêu cầu; không huấn luyện, không tạo kết quả thực nghiệm mới, không sửa khảo sát gốc hay báo cáo Word.
 

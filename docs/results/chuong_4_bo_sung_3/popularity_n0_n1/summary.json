@@ -41,7 +41,7 @@
     "test.parquet": "c9196bba9fa761db016d1b8eab7d3b76e3bad8a9fc044a5f66e2e42e58685901",
     "user_roles.json": "19b58ea8cacd2a17837241b7af606877cd9b521eee91e1f05c6d6d1e9bd0252f"
   },
-  "git_sha": "383c8c9b7447003af01584b8039658d1e8dffd0b",
+  "git_sha": "5d07022fecb16fe26c99cdfd7519e2e019a0406e",
   "command": [
     "scripts/diagnose_m2_popularity_n0_n1.py",
     "--output-dir",

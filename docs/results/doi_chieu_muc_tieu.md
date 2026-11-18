@@ -2,7 +2,7 @@
 
 Ngày lập: 06/11/2026.
 
-Mốc đối chiếu: nhánh `research/data-preparation-model-survey` trên GitHub, commit `09a3336`, và báo cáo v16 (26/10). Mục tiêu lấy từ mục 1.3.2 và năm câu hỏi nghiên cứu RQ1–RQ5 của báo cáo. Mọi con số dưới đây chép từ tệp kết quả đã lưu, có ghi nguồn.
+Mốc đối chiếu: nhánh `research/data-preparation-model-survey` trên GitHub, commit `4512873`, và báo cáo v16 (26/10). Mục tiêu lấy từ mục 1.3.2 và năm câu hỏi nghiên cứu RQ1–RQ5 của báo cáo. Mọi con số dưới đây chép từ tệp kết quả đã lưu, có ghi nguồn.
 
 ## Tóm tắt
 

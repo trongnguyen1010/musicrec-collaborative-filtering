@@ -35,7 +35,7 @@ Câu hỏi (đặc tả, mục 2): hậu xử lý thành phần phổ chính c�
 | Máy | Windows 11 (10.0.26200), Intel Core i5-11300H, 8 luồng logic, RAM 16.856.203.264 byte |
 | Python | 3.11.9 |
 | Thư viện | numpy 2.4.6, scipy 1.17.1, pandas 2.3.3, implicit 0.7.3, pyarrow 19.0.1 |
-| Commit khi chạy | `b2c0dbbf49aa38b383364be8a0678f2afca6c7f5`, code H1 lúc đó chưa commit; bản sao code nằm trong `code/` của run và mã băm ghi trong `metrics.json` |
+| Commit khi chạy | `7d9fcf6453360a20268ae9121c6b00e7a43e782e`, code H1 lúc đó chưa commit; bản sao code nằm trong `code/` của run và mã băm ghi trong `metrics.json` |
 | Thời gian | Toàn lượt 216,99 s; context phổ + gate 10,82 s; context phạt trực tiếp 1,33 s |
 | RAM đỉnh | 557.617.152 byte (peak working set của tiến trình) |
 | `lock_h1.json` | SHA-256 `cd90b8cc0cb1bfee121c51d532cb5087b2ba7c6e9eeeff476caf55bf85927c32` |

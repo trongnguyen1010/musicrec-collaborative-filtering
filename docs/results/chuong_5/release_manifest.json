@@ -3,7 +3,7 @@
   "release": "demo-chinh-thuc-20261026",
   "created_at_utc": "2026-10-27T07:00:08.983180+00:00",
   "provenance": {
-    "git_sha": "d1ea7d1fecdfe02824f1b33971adc314c284c48f",
+    "git_sha": "5f565cbf427129e3aeb8824fc0c4f2e1154b792e",
     "git_dirty": true,
     "test_lock": {
       "path": "outputs/chinh_thuc_cloud_20261026/chuong_4/test/lock.json",
@@ -13,7 +13,7 @@
       "path": "outputs/chinh_thuc_cloud_20261026/chuong_4/m2_test/lock.json",
       "sha256": "eeea6a4c03055fba7fcdb8e522d67fd29cf0202a6acc21aa1bf4f6944b83c9f6"
     },
-    "experiment_git_sha": "e1350ceee849daf4ab78ef607629996f96ae35ca",
+    "experiment_git_sha": "45814048706fa7d23a7d0b1c4070aba041dd8b7b",
     "representations": "outputs/chinh_thuc_cloud_20261026/chuong_3/run/representations",
     "artists": "data/raw/hetrec2011/artists.dat",
     "artists_sha256": "c173881362c6b28551368fecb3c0be5a6a30a6cd859e1f5775413dfe46d48648",

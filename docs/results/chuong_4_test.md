@@ -1,6 +1,6 @@
 # Kết quả Chương 4: bản chạy chính thức và đánh giá trên tập test
 
-Ngày chạy: 26/10/2026, 14:30–15:18 (giờ máy chủ), trên máy đám mây. Bạn đã chọn chạy bản chính thức trên máy này ngày 26/10/2026. Mọi con số trong tài liệu này đến từ **một lần chạy liên tục, một máy, một commit** (`e1350ce`). Lần chạy bắt đầu từ dữ liệu gốc và đi qua đủ Chương 3 → baseline → tinh chỉnh → M1 → khóa cấu hình → test.
+Ngày chạy: 26/10/2026, 14:30–15:18 (giờ máy chủ), trên máy đám mây. Bạn đã chọn chạy bản chính thức trên máy này ngày 26/10/2026. Mọi con số trong tài liệu này đến từ **một lần chạy liên tục, một máy, một commit** (`4581404`). Lần chạy bắt đầu từ dữ liệu gốc và đi qua đủ Chương 3 → baseline → tinh chỉnh → M1 → khóa cấu hình → test.
 
 Thư mục kết quả: `outputs/chinh_thuc_cloud_20261026/`. Các tệp nhỏ (khóa cấu hình, bảng chỉ số, kiểm định, môi trường) được chép vào [docs/results/chinh_thuc_cloud_20261026/](chinh_thuc_cloud_20261026/).
 
@@ -22,7 +22,7 @@ Thư mục kết quả: `outputs/chinh_thuc_cloud_20261026/`. Các tệp nhỏ (
 | CPU / RAM | Intel(R) Xeon(R) Processor @ 2.10GHz, 4 luồng logic / 16.872.804.352 byte |
 | Python | 3.11.17 |
 | Thư viện chính | numpy 2.4.6, pandas 2.3.3, pyarrow 19.0.1, scipy 1.17.1, scikit-learn 1.9.1, implicit 0.7.3 |
-| Commit | `e1350ceee849daf4ab78ef607629996f96ae35ca` |
+| Commit | `45814048706fa7d23a7d0b1c4070aba041dd8b7b` |
 | Trạng thái Git | Sạch ở mọi bước, trừ hai run Random/Popularity: chúng ghi nhận thêm tệp chưa commit `scripts/test_statistics.py`. Tệp này là script kiểm định viết trong lúc chạy, không được các run đó gọi tới. |
 
 Danh sách đầy đủ gói đã cài: [environment.json](chinh_thuc_cloud_20261026/environment.json).

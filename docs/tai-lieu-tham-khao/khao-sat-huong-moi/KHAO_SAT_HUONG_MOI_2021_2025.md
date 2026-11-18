@@ -16,7 +16,7 @@ Ngày lập: 26/10/2026. Đây là tài liệu **nghiên cứu**. Chưa viết c
 
 1. Đọc trước tài liệu sẵn có của nhóm, theo yêu cầu: 10 PDF trong `nghien-cuu-2021-2025/10_bai_bao_goc/`, các PDF 2021–2025 trong `bai-bao-nen/` (Ji 2023, Bevec 2024, Ziaoddini 2025, Dinnissen & Bauer 2022, Doh 2025 TalkPlay), cùng các mục đối chiếu M1, M2, ALS trong `TONG_QUAN.md`. Văn bản được trích bằng `pdftotext` và đọc phần tóm tắt, thiết lập, bảng kết quả, kết luận và hạn chế.
 2. Tìm thêm bằng công cụ tìm kiếm web cho những nhóm còn thiếu. Với mỗi bài, mở trang arXiv hoặc trang nhà xuất bản để xác nhận. Với các bài bổ sung, nội dung tóm tắt dưới đây lấy **từ phần tóm tắt (abstract)**, chưa đọc toàn văn. Những con số trích từ bài bổ sung là con số tác giả công bố trong abstract, trên dữ liệu của họ, **không so trực tiếp được** với số của nhóm.
-3. Đối chiếu với kết quả thật của nhóm ở `docs/results/chuong_4_test.md` và `chuong_4_m2.md` (bản chính thức chạy ngày 26/10/2026, commit `e1350ce`). Hai tệp này nằm ở nhánh Chương 4 trên máy local, chưa có trên nhánh research của GitHub; liên kết `../results/...` trong tài liệu này sẽ mở được sau khi gộp nhánh đó.
+3. Đối chiếu với kết quả thật của nhóm ở `docs/results/chuong_4_test.md` và `chuong_4_m2.md` (bản chính thức chạy ngày 26/10/2026, commit `4581404`). Hai tệp này nằm ở nhánh Chương 4 trên máy local, chưa có trên nhánh research của GitHub; liên kết `../results/...` trong tài liệu này sẽ mở được sau khi gộp nhánh đó.
 
 ## 2. Điểm xuất phát: kết quả hiện tại của nhóm
 

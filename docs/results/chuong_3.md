@@ -24,7 +24,7 @@ Ngày chạy: 26/10/2026. Nhánh `claude/project-thread-n6skg7`. Phạm vi: bư�
 | numpy / pandas / pyarrow | 2.4.6 / 2.3.3 / 19.0.1 |
 | scipy / scikit-learn | 1.17.1 / 1.9.1 |
 | matplotlib / pyyaml | 3.11.2 / 6.0.3 |
-| Git SHA lúc chạy | `8d170f9501204238e49b70d3d611e39e7d9105a5`, cây làm việc sạch |
+| Git SHA lúc chạy | `235fdfd06384fba25d652464afb0648a207557d8`, cây làm việc sạch |
 
 Danh sách đầy đủ 87 gói đã cài nằm trong [environment.json](chuong_3/environment.json).
 
