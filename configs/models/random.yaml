@@ -1,0 +1,6 @@
+model: random
+seed: 42
+generator: python_random_shuffle_per_user
+user_seed: "musicrec-random-v1:{seed}:{user_id}"
+catalog_order: numeric_train_item_id
+score: descending_full_permutation_rank

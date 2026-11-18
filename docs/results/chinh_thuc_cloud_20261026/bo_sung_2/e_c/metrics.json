@@ -1,0 +1,96 @@
+{
+  "created_at_utc": "2026-11-10T12:23:33.910118+00:00",
+  "command": [
+    "scripts/report_e_c_groups.py",
+    "--output-dir",
+    "outputs/chuong_4_bo_sung_2/e_c"
+  ],
+  "per_user_source": "outputs\\chuong_4_bo_sung_2\\thong_ke\\phan_tich\\ndcg10_tung_nguoi_dung.csv",
+  "history_threshold": 40,
+  "history_group_sizes": {
+    "D\u01b0\u1edbi 40": 37,
+    "T\u1eeb 40 tr\u1edf l\u00ean": 1818
+  },
+  "mainstream_groups_reproduce_table_4_10": true,
+  "m1_minus_pure_svd_by_group_holm_over_3": [
+    {
+      "nhom": "Th\u1ea5p",
+      "a": "M1",
+      "b": "PureSVD",
+      "users": 618,
+      "nonzero_differences": 146,
+      "positive_differences": 111,
+      "negative_differences": 35,
+      "mean_a": 0.0810424230641935,
+      "mean_b": 0.07237508195934822,
+      "mean_difference": 0.008667341104845294,
+      "ci95_low": 0.005444106652127075,
+      "ci95_high": 0.012090468382775955,
+      "ci90_low": 0.005969160429553877,
+      "ci90_high": 0.011303163513780573,
+      "wilcoxon_p": 3.580806801823025e-08,
+      "w_plus": 8186.0,
+      "w_minus": 2545.0,
+      "rank_biserial": 0.5256732830118349,
+      "holm_p": 1.0742420405469074e-07
+    },
+    {
+      "nhom": "Trung b\u00ecnh",
+      "a": "M1",
+      "b": "PureSVD",
+      "users": 618,
+      "nonzero_differences": 242,
+      "positive_differences": 135,
+      "negative_differences": 107,
+      "mean_a": 0.16918302052597542,
+      "mean_b": 0.1692217627246172,
+      "mean_difference": -3.874219864177402e-05,
+      "ci95_low": -0.004450009973889945,
+      "ci95_high": 0.004277345392118187,
+      "ci90_low": -0.0038103463565800273,
+      "ci90_high": 0.0034738414144431695,
+      "wilcoxon_p": 0.6444859884328791,
+      "w_plus": 15204.5,
+      "w_minus": 14198.5,
+      "rank_biserial": 0.034214195830357445,
+      "holm_p": 0.6444859884328791
+    },
+    {
+      "nhom": "Cao",
+      "a": "M1",
+      "b": "PureSVD",
+      "users": 619,
+      "nonzero_differences": 367,
+      "positive_differences": 161,
+      "negative_differences": 206,
+      "mean_a": 0.293841307877958,
+      "mean_b": 0.3065430340836103,
+      "mean_difference": -0.01270172620565232,
+      "ci95_low": -0.01829519769681908,
+      "ci95_high": -0.006716673477752515,
+      "ci90_low": -0.01727204610635831,
+      "ci90_high": -0.008119840225330233,
+      "wilcoxon_p": 1.2475434096270159e-05,
+      "w_plus": 24878.5,
+      "w_minus": 42649.5,
+      "rank_biserial": -0.2631649093709276,
+      "holm_p": 2.4950868192540317e-05
+    }
+  ],
+  "runtime": {
+    "python": "3.11.9",
+    "platform": "Windows-10-10.0.26200-SP0",
+    "processor": "Intel64 Family 6 Model 140 Stepping 1, GenuineIntel",
+    "cpu_count": 8,
+    "threads": {
+      "OPENBLAS_NUM_THREADS": "1",
+      "OMP_NUM_THREADS": "1"
+    },
+    "numpy": "2.4.6",
+    "scipy": "1.17.1",
+    "pandas": "2.3.3",
+    "pyarrow": "19.0.1",
+    "git_sha": "26af632e9b0e90df58fb2532f68d682d1d7bbcea",
+    "git_status": " M scripts/evaluate_m2_test.py\n M scripts/report_ch4_extras.py\n M scripts/run_baseline.py\n M scripts/test_statistics.py\n M src/musicrec/recommenders/item_cf.py\n M src/musicrec/recommenders/user_cf.py\n?? SHA256SUMS_checkpoints_demo.txt\n?? configs/e7_topn_neighbors.yaml\n?? configs/e_s_sensitivity.yaml\n?? docs/results/chuong_4_bo_sung_2.md\n?? scripts/compare_statistics.py\n?? scripts/report_e_c_groups.py\n?? scripts/run_e7_topn.py\n?? scripts/run_e_b_m1_beta.py\n?? scripts/run_e_s_sensitivity.py\n?? src/musicrec/evaluation/paired.py\n?? tests/unit/test_given_n_e7_scripts.py\n?? tests/unit/test_neighborhood_sum.py\n?? tests/unit/test_paired.py\n"
+  }
+}

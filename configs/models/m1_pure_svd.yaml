@@ -1,0 +1,45 @@
+# Q4 (26/10/2026): M1 on the PureSVD binary base selected by Chapter 4 tuning (k=16).
+step: 15
+model: m1
+base_model: pure_svd_binary_k16
+representations_run: outputs/chuong_3/cloud_20261026/run/representations
+base_runs:
+  42: outputs/chuong_4/tuning_cloud_20261026/pure_svd/pure_svd_lat16
+  43: outputs/chuong_4/tuning_cloud_20261026/pure_svd/pure_svd_lat16_seed43
+  44: outputs/chuong_4/tuning_cloud_20261026/pure_svd/pure_svd_lat16_seed44
+candidate_size: 100
+lambda_grid:
+- 0.5
+- 0.75
+- 1.0
+beta_grid:
+- 0.0
+- 0.1
+- 0.25
+- 0.5
+objective: lambda_relevance_minus_one_minus_lambda_max_similarity_minus_beta_popularity
+relevance: per_user_minmax_raw_pure_svd_scores_on_fixed_top100_flat_equals_one
+similarity: binary_train_user_vectors_cosine_empty_selected_equals_zero
+popularity: log1p_train_distinct_listeners_divided_by_log1p_catalog_max_listeners
+tie_break: objective_rounded_12_decimals_then_original_candidate_rank
+returned_score: raw_base_pure_svd_score_not_context_dependent_greedy_utility
+fit_scope: binary_train_statistics_only_load_base_checkpoints_no_base_fit
+selection_seed: 42
+confirmation_seeds:
+- 43
+- 44
+max_relative_ndcg_drop: 0.05
+selection: full_variants_only_min_arp_then_max_ild_then_max_ndcg_then_lambda_beta
+confirmation: fixed_winner_no_retuning_drop_bound_each_seed_and_mean
+ablations:
+- base
+- diversity_only
+- popularity_only
+- full
+ablation_parameters: match_selected_full_lambda_and_beta
+no_feasible_full: report_failure_do_not_expand_grid_or_open_test
+ks:
+- 5
+- 10
+- 20
+base_class: pure_svd

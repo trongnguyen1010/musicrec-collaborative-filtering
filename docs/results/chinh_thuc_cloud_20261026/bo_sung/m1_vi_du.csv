@@ -1,0 +1,31 @@
+user_id,hang,puresvd,puresvd_nguoi_nghe,puresvd_dung,m1,m1_nguoi_nghe,m1_dung
+2,1,Pet Shop Boys,75,False,Pet Shop Boys,75,False
+2,2,Madonna,348,True,U2,140,False
+2,3,The Cure,190,False,The Cure,190,False
+2,4,U2,140,False,Madonna,348,True
+2,5,Björk,137,False,a-ha,71,False
+2,6,a-ha,71,False,Björk,137,False
+2,7,Michael Jackson,215,False,Massive Attack,91,False
+2,8,The Killers,239,False,Erasure,38,False
+2,9,Massive Attack,91,False,Keane,105,False
+2,10,Radiohead,320,False,Dave Gahan,46,False
+9,1,Lady Gaga,483,False,Lady Gaga,483,False
+9,2,Kelly Clarkson,212,False,Kelly Clarkson,212,False
+9,3,Muse,317,False,Muse,317,False
+9,4,Evanescence,185,True,30 Seconds to Mars,171,False
+9,5,30 Seconds to Mars,171,False,Evanescence,185,True
+9,6,Britney Spears,401,False,Papa Roach,67,False
+9,7,Taylor Swift,196,False,Three Days Grace,70,False
+9,8,Placebo,201,False,Within Temptation,78,False
+9,9,Katy Perry,370,False,Rammstein,109,False
+9,10,Papa Roach,67,False,Marilyn Manson,101,False
+14,1,The Beatles,385,False,The Beatles,385,False
+14,2,Pink Floyd,211,False,Pink Floyd,211,False
+14,3,Led Zeppelin,152,False,The Rolling Stones,102,False
+14,4,The Rolling Stones,102,False,The Doors,109,False
+14,5,The Doors,109,False,John Lennon,54,False
+14,6,Bob Dylan,83,False,Bob Dylan,83,False
+14,7,David Bowie,158,False,Led Zeppelin,152,False
+14,8,Queen,165,False,"Emerson, Lake & Palmer",10,False
+14,9,John Lennon,54,False,Buddy Holly,15,False
+14,10,Elvis Presley,78,False,Tom Petty and the Heartbreakers,12,False

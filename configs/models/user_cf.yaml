@@ -1,4 +1,15 @@
-model:
-  name: user_cf
-  neighbors: 40
-  similarity: cosine
+model: user_cf
+seed: 42
+seed_role: split_provenance_only
+neighbors: 40
+shrinkage: 0
+similarity: full_proxy_vector_cosine
+minimum_common_artists: 1
+neighbor_selection: global_top_l_then_item_filter
+prediction: user_mean_plus_weighted_neighbor_deviation
+known_user_fallback: observed_user_mean
+unknown_user_fallback: observed_global_mean
+score_clipping: none
+tie_break: numeric_train_mapping_order
+numeric_tie_decimals: 12
+fit_scope: train_only

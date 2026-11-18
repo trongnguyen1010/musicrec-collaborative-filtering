@@ -1,0 +1,38 @@
+{
+  "checked_date": "2026-10-05",
+  "source": "https://files.grouplens.org/datasets/hetrec2011/hetrec2011-lastfm-2k.zip",
+  "sha256": "6738f48195667ff03caaab4d32ca9a3133d8cc026b7c3cdaf6ce1010e913c59c",
+  "bytes": 2589075,
+  "schema": [
+    "userID",
+    "artistID",
+    "weight"
+  ],
+  "rows": 92834,
+  "users": 1892,
+  "artists_in_metadata": 17632,
+  "artists_in_interactions": 17632,
+  "duplicates_user_artist": 0,
+  "null_values": 0,
+  "nonpositive_weights": 0,
+  "weight_quantiles": {
+    "0.0": 1.0,
+    "0.25": 107.0,
+    "0.5": 260.0,
+    "0.75": 614.0,
+    "0.9": 1387.0,
+    "0.99": 7228.009999999995,
+    "1.0": 352698.0
+  },
+  "artists_per_user": {
+    "0.0": 1.0,
+    "0.25": 50.0,
+    "0.5": 50.0,
+    "0.75": 50.0,
+    "1.0": 50.0
+  },
+  "users_under_3": 9,
+  "users_under_5": 15,
+  "artists_under_5_listeners": 14804,
+  "density_metadata_catalog": 0.002782815119924182
+}
