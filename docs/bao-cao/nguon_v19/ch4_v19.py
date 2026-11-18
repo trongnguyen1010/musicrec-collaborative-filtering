@@ -88,6 +88,7 @@ e7 = _pd.read_csv(B2 + "e7/metrics.csv")
 e7 = e7[e7.k == 10].set_index("model")
 e7_stats = load(B2 + "e7/statistics_ndcg_at_10.json")
 e7_pairs = {(r["a"], r["b"]): r for r in e7_stats["pairs"]}
+e7_ci = e7_stats["mean_ndcg10_ci"]
 e7_sel = load(B2 + "e7/selection.json")["winners"]
 e7_val = _pd.read_csv(B2 + "e7/validation_summary.csv")
 eg = _pd.read_csv(B2 + "eg/metrics.csv")
@@ -98,6 +99,13 @@ es_m2 = _pd.read_csv(B2 + "e_s/m2_mean_n135.csv")
 eb = _pd.read_csv(B2 + "e_b/hinh_4_6.csv")
 eb_meta = load(B2 + "e_b/metrics.json")
 ep = _pd.read_csv(B2 + "e_p/popularity_validation.csv").set_index("score")
+# v23 (advisor feedback of 18/11/2026): read-only diagnosis of Table 4.13 (Popularity, N = 0 and 1),
+# scripts/diagnose_m2_popularity_n0_n1.py, copied from outputs/chuong_4_bo_sung_3/popularity_n0_n1.
+pop01 = load("docs/results/chuong_4_bo_sung_3/popularity_n0_n1/summary.json")
+es_u5 = float(
+    es[(es.model == "user_cf") & (es.neighbors == 5) & (es.shrinkage == 10)].ndcg_at_10.iloc[0]
+)
+pop_val = float(ep.loc["log_count_sum"].ndcg)
 EG_EVAL = "outputs/chuong_4_bo_sung_2/eg/n_{}/m2/evaluation.json"
 eg_targets = {}
 for _n in [0, 1, 3, 5]:
@@ -164,7 +172,9 @@ P(
     "xạ, quy tắc biến đổi, tham số mô hình, danh sách dự đoán theo người dùng và bảng chỉ số. Hạt giống "
     "chia dữ liệu split_seed = 42 được giữ cố định cho mọi mô hình. Các mô hình có yếu tố ngẫu nhiên dùng "
     "hạt giống 42 để chọn cấu hình, sau đó cấu hình thắng được chạy lại ở hạt giống 43 và 44 để xem mức "
-    "dao động."
+    "dao động. Vì vậy mọi kết quả trên tập kiểm thử trong chương này dựa trên một lần chia dữ liệu duy nhất "
+    "(hạt giống 42); khoảng tin cậy bootstrap ở mục 4.1.2 chỉ phản ánh biến thiên giữa người dùng trong lần "
+    "chia đó, không phản ánh biến thiên giữa các lần chia."
 )
 H3("4.1.2 Quy ước báo cáo và kiểm định thống kê")
 P(
@@ -326,6 +336,10 @@ T(
             "0,197433",
         ],
     ],
+    note=(
+        "UserCF và ItemCF dùng cách tổng hợp trung bình có trọng số (2.2), (2.4). Ngoài lưới đã khóa, "
+        f"UserCF với L = 5, co rút 10 đạt NDCG@10 xác thực {f(es_u5)}, cao hơn Popularity (Bảng 4.19)."
+    ),
     align=["left", "left", "left", "center"],
 )
 P(
@@ -513,8 +527,9 @@ P(
 )
 u7, i7 = e7_pairs[("user_cf_e7", "PureSVD")], e7_pairs[("item_cf_e7", "PureSVD")]
 P(
-    "Popularity là đối chứng mạnh trên dữ liệu này: UserCF, ItemCF và SVD có độ lệch đều có NDCG@10 thấp "
-    "hơn Popularity, trên cả tập xác thực và tập kiểm thử. Với SVD có độ lệch, Hình 4.1 cho thấy mục tiêu "
+    "Popularity là đối chứng mạnh trên dữ liệu này: với cách tổng hợp trung bình có trọng số và lưới đã "
+    "khóa, UserCF và ItemCF có NDCG@10 thấp hơn Popularity, và SVD có độ lệch cũng vậy, trên cả tập xác "
+    "thực và tập kiểm thử. Với SVD có độ lệch, Hình 4.1 cho thấy mục tiêu "
     "sai số bình phương không dẫn tới xếp hạng tốt; mô hình được chọn ở vòng 2 nên danh sách gần với mức "
     f"phổ biến (ARP {f(tm('svd', 10, 'arp'), 2)} so với {f(tm('popularity', 10, 'arp'), 2)} của Popularity) "
     "nhưng kém Popularity về độ chính xác. Với UserCF và ItemCF, danh sách nghiêng mạnh về nghệ sĩ ít phổ "
@@ -522,14 +537,18 @@ P(
     "thử lại tập trung vào nghệ sĩ được nhiều người nghe."
 )
 P(
-    "Nguyên cách tổng hợp điểm là nguyên nhân chính: công thức (2.2) và (2.4) chia cho tổng độ tương đồng "
-    "nên bỏ mất thông tin về số láng giềng cùng nghe, làm các nghệ sĩ chỉ có một người nghe trong nhóm láng "
-    "giềng được xếp ngang hoặc cao hơn nghệ sĩ được nhiều láng giềng nghe. Thực nghiệm bổ sung E7 (mục 4.11) "
-    "với biến thể tổng độ tương đồng (3.5), (3.6) cho NDCG@10 trên tập kiểm thử bằng "
-    f"{f(e7.loc['item_cf'].ndcg)} với ItemCF và {f(e7.loc['user_cf'].ndcg)} với UserCF, vượt Popularity và "
-    f"vượt cả PureSVD (p sau Holm {pv(i7['holm_p'])} và {pv(u7['holm_p'])}), qua đó khẳng định giả thuyết "
-    "này. Kết quả của hai mô hình láng giềng trong Bảng 4.5 vì vậy phản ánh cách chấm điểm dự đoán, không "
-    "phản ánh giới hạn của phương pháp láng giềng. Giữa hai mô hình láng giềng đã khóa, UserCF chính xác "
+    "Cách tổng hợp điểm là nguyên nhân chính: công thức (2.2) và (2.4) chia cho tổng độ tương đồng nên bỏ "
+    "mất thông tin về số láng giềng cùng nghe, làm các nghệ sĩ chỉ có một người nghe trong nhóm láng giềng "
+    "được xếp ngang hoặc cao hơn nghệ sĩ được nhiều láng giềng nghe. Trong phân tích sau khi khóa cấu hình "
+    "E7 (mục 4.11), biến thể tổng độ tương đồng (3.5), (3.6) cho NDCG@10 trên tập kiểm thử bằng "
+    f"{f(e7.loc['item_cf'].ndcg)} với ItemCF và {f(e7.loc['user_cf'].ndcg)} với UserCF, cao hơn rõ rệt so "
+    "với Popularity và cao hơn PureSVD với cỡ hiệu ứng nhỏ "
+    f"(⟦r_rb⟧ {f(i7['rank_biserial'], 3)} và {f(u7['rank_biserial'], 3)}; p sau Holm {pv(i7['holm_p'])} và "
+    f"{pv(u7['holm_p'])}) trên một lần chia, phù hợp với giả thuyết này. Lưới đã khóa cũng là một điều "
+    f"kiện: ngay với cách tổng hợp trung bình, UserCF với L = 5 và co rút 10 (ngoài lưới) đạt NDCG@10 xác "
+    f"thực {f(es_u5)}, cao hơn Popularity {f(pop_val)} (Bảng 4.19). Kết quả của hai mô hình láng giềng "
+    "trong Bảng 4.5 vì vậy phản ánh cách chấm điểm dự đoán và lưới đã chọn, không phản ánh giới hạn của "
+    "phương pháp láng giềng. Giữa hai mô hình láng giềng đã khóa, UserCF chính xác "
     "hơn ItemCF một chút ở K = 10 nhưng ItemCF phủ danh mục rộng hơn gấp đôi."
 )
 P(
@@ -546,9 +565,11 @@ P(
     "PureSVD và M1 cho kết quả giống hệt ở cả ba hạt giống, vì hạt giống chỉ đổi véc-tơ khởi đầu của ARPACK "
     "và thuật toán hội tụ về cùng không gian con; do đó việc chạy lại hai mô hình này không phải là kiểm "
     "chứng độc lập. Trả lời RQ1: trong sáu mô hình đối sánh với cấu hình đã khóa, PureSVD nhị phân với "
-    "k = 16 cho chất lượng xếp hạng tốt nhất và là mô hình cá nhân hóa duy nhất vượt Popularity; ba mô hình "
-    "UserCF, ItemCF và SVD có độ lệch không vượt được Popularity. Kết luận về hai mô hình láng giềng phụ "
-    "thuộc vào cách tổng hợp điểm: với cách tổng hợp top-N ở mục 4.11, cả hai vượt PureSVD."
+    "k = 16 cho chất lượng xếp hạng tốt nhất và là mô hình cá nhân hóa duy nhất vượt Popularity; với cách "
+    "tổng hợp trung bình có trọng số và lưới đã khóa, UserCF và ItemCF không vượt được Popularity, SVD có "
+    "độ lệch cũng vậy. Kết luận về hai mô hình láng giềng phụ thuộc vào cách tổng hợp điểm: trong phân tích "
+    "sau khi khóa cấu hình ở mục 4.11, với cách tổng hợp top-N cả hai cao hơn PureSVD với cỡ hiệu ứng nhỏ "
+    "trên một lần chia (hạt giống 42)."
 )
 
 H2("4.6 Phân tích theo độ dài lịch sử và theo từng người dùng")
@@ -655,7 +676,8 @@ P(
     f"{pv_text(hi_t['holm_p'])}. Như "
     "vậy M1 giúp người dùng ít ưa chuộng nghệ sĩ phổ biến tìm lại được nhiều đích hơn, đổi lại một phần độ "
     "chính xác ở nhóm ưa chuộng cao; hai hiệu ứng này gần bù trừ nhau trên toàn bộ người dùng (mục 4.7). "
-    "Đây là phân tích sau khi đã mở tập kiểm thử nên được xem là bằng chứng bổ sung."
+    "Đây là phân tích sau khi khóa cấu hình, thực hiện khi tập kiểm thử đã mở, nên được xem là bằng chứng "
+    "bổ sung."
 )
 
 H2("4.7 Đánh giá mô-đun tái xếp hạng M1")
@@ -756,10 +778,15 @@ P(
     "của mô hình nền:"
 )
 EQ(860, "4.1")
+delta_val = 0.05 * float(grid_base.ndcg)
+assert -delta_val < tost["ci90"][0] and tost["ci90"][1] < delta_val
 P(
     f"Khoảng tin cậy 90% của chênh lệch M1 − PureSVD là [{f(tost['ci90'][0])}; {f(tost['ci90'][1])}], nằm "
     f"trọn trong khoảng (−{f(tost['delta'])}; {f(tost['delta'])}), nên giả thuyết không tương đương bị bác bỏ "
-    "ở mức ý nghĩa 0,05."
+    "ở mức ý nghĩa 0,05. Nếu biên được tính từ NDCG@10 xác thực của mô hình nền, "
+    f"⟦δ⟧ = 0,05 × {f(grid_base.ndcg)} ≈ {f(delta_val, 4)}, khoảng tin cậy 90% "
+    f"[{f(tost['ci90'][0], 4)}; {f(tost['ci90'][1], 4)}] vẫn nằm trong (−{f(delta_val, 4)}; "
+    f"{f(delta_val, 4)}), nên kết luận không đổi."
 )
 ex_user = examples.user_id.iloc[0]
 ex = examples[examples.user_id == ex_user]
@@ -796,8 +823,9 @@ P(
     f"±{f(tost['delta'])} (5% NDCG@10 của mô hình nền) đã đặt trước ở mục 3.7.3. Do đó M1 tương đương mô "
     "hình nền về độ chính xác ở biên đã chọn. Mức tăng đa dạng đo bằng thước đo độc lập theo thẻ (từ "
     f"{f(base_v.ild_tag, 4)} lên {f(v_full.ild_tag, 4)}) nhỏ hơn mức tăng đo bằng ILD theo người nghe, vì ILD "
-    "theo người nghe dùng chung độ tương đồng với hàm lựa chọn của M1. Phân tích theo nhóm ở mục 4.6 cho "
-    "thấy M1 cải thiện độ chính xác cho người dùng ít ưa chuộng nghệ sĩ phổ biến."
+    "theo người nghe dùng chung độ tương đồng với hàm lựa chọn của M1. Phân tích theo nhóm ở mục 4.6, là "
+    "phân tích sau khi khóa cấu hình, cho thấy M1 cải thiện độ chính xác cho người dùng ít ưa chuộng nghệ "
+    "sĩ phổ biến."
 )
 
 H2("4.8 Đánh giá mô-đun dự phòng M2")
@@ -813,6 +841,15 @@ P(
     "NDCG@10 trên tập kiểm thử của nhóm để dành, chấm một lần sau khi khóa cấu hình; tập đích là các cặp "
     "kiểm thử của người dùng giao với danh mục học. 187 trên 189 người có đích trong danh mục và 14,59% cặp "
     "kiểm thử của nhóm này nằm ngoài danh mục học."
+)
+P(
+    "Các kết quả M2 trong mục này là sơ bộ. Nhóm tinh chỉnh và nhóm để dành chỉ có 187 và 189 người; cùng "
+    "phương án Popularity đạt NDCG@10 từ 0,027627 đến 0,029728 trên nhóm tinh chỉnh (tập xác thực) nhưng từ "
+    "0,056508 đến 0,059750 trên nhóm để dành (tập kiểm thử); và cấu hình được chọn nằm ở góc lưới. Khóa luận "
+    "dùng hai định nghĩa tập đích. Theo giao thức đã khóa, tập đích là các cặp kiểm thử của người dùng giao "
+    "với danh mục học, khoảng năm nghệ sĩ mỗi người (Bảng 4.13–4.15). Theo (3.14), tập đích là toàn bộ nghệ "
+    "sĩ trong lịch sử của người dùng trừ N nghệ sĩ được cung cấp, khoảng 40 nghệ sĩ mỗi người; định nghĩa "
+    "này được chạy như phân tích sau khi khóa cấu hình ở mục 4.11.3 (Bảng 4.20–4.21)."
 )
 LAB = [
     ("popularity", "Popularity"),
@@ -831,6 +868,25 @@ T(
     ],
     note="Kết quả tại K = 10 được tính trên 187 người dùng có nghệ sĩ đích trong danh mục.",
 )
+_hit = pop01["of_these_with_target_in_top10"]
+P(
+    f"Ở Bảng 4.13, Popularity có cùng NDCG@10 {f(pop01['ndcg10']['0'])} ở N = 0 và N = 1. Ở N = 1, hệ thống "
+    "chỉ loại nghệ sĩ được cung cấp khỏi danh sách Popularity, nên danh sách chỉ đổi ở "
+    f"{pop01['users_with_supplied_artist_in_pop_top10']} trên {pop01['reserved_users_evaluated']} người có "
+    f"nghệ sĩ đó nằm trong top-10 Popularity. Trong số này, {pop01['of_these_no_target_in_top10']} người "
+    "không có nghệ sĩ đích nào trong top-10; "
+    f"{len(_hit)} người (mã {_hit[0]['user_id']} và {_hit[1]['user_id']}) có đích ở vị trí "
+    f"{_hit[0]['target_positions_in_n0_top10']} và {_hit[1]['target_positions_in_n0_top10']}, đứng trước "
+    f"nghệ sĩ bị loại (vị trí {int(_hit[0]['supplied_rank_in_pop_top10'])} và "
+    f"{int(_hit[1]['supplied_rank_in_pop_top10'])}), nên vị trí của đích không đổi; và nghệ sĩ hạng 11 được "
+    "đẩy lên không phải đích của người nào. Danh sách có thay đổi (số nghệ sĩ khác nhau trong các danh sách "
+    f"tăng từ {pop01['distinct_artists_at_10']['0']} lên {pop01['distinct_artists_at_10']['1']}, ARP giảm từ "
+    f"{f(pop01['arp_at_10']['0'], 2)} xuống {f(pop01['arp_at_10']['1'], 2)}) nhưng NDCG@10 của từng người "
+    "không đổi. Nhóm kiểm lại điều này bằng một script chỉ đọc trên mô hình M2 đã khóa, cho cùng giá trị "
+    "NDCG@10 với lần chấm chính thức."
+)
+assert pop01["matches_locked_evaluation"] and pop01["eligible_users_with_changed_ndcg10"] == 0
+assert pop01["of_these_promoted_artist_is_target"] == 0
 F(BS + "hinh/hinh_4_7.png", "NDCG@10 theo số nghệ sĩ được cung cấp của các phương án M2")
 P(
     "Bảng 4.14 thống kê tần suất các đường xử lý của M2 ở từng mức N trên 189 người để dành: tỷ lệ yêu cầu "
@@ -912,15 +968,18 @@ P(
     "mạnh nhất."
 )
 P(
-    "Trả lời RQ4 theo giao thức đã khóa: chưa tìm thấy bằng chứng M2 hỗ trợ người dùng ít lịch sử tốt hơn mức "
+    "Trả lời RQ4 theo giao thức đã khóa, ở mức sơ bộ: chưa tìm thấy bằng chứng M2 hỗ trợ người dùng ít lịch sử tốt hơn mức "
     "phổ biến về độ chính xác; M2 không vượt Popularity ở N nào trên tập kiểm thử, dù tăng độ bao phủ và "
     "giảm ARP. Về RQ2, khi số nghệ sĩ được cung cấp tăng từ 1 lên 3, NDCG@10 của M2 tăng từ "
     f"{f(float(m2[(m2.method == 'm2') & (m2.n == 1)].ndcg.iloc[0]))} lên "
     f"{f(float(m2[(m2.method == 'm2') & (m2.n == 3)].ndcg.iloc[0]))}, nhưng không tăng thêm ở N = 5 "
     f"({f(float(m2[(m2.method == 'm2') & (m2.n == 5)].ndcg.iloc[0]))}); phương án chỉ dùng nội dung tăng đều "
     "theo N, còn phương án chỉ dùng ItemCF giảm. Với cỡ mẫu 187 người và khoảng năm đích mỗi người, các xu "
-    "hướng này chỉ mang tính mô tả. Mục 4.11 trình bày kết quả của cùng mô hình M2 khi tập đích gồm toàn bộ "
-    "nghệ sĩ không được cung cấp theo (3.14); với tập đích này, kết luận về RQ4 thay đổi."
+    "hướng này chỉ mang tính mô tả. Mục 4.11.3 trình bày kết quả của cùng mô hình M2 khi tập đích gồm toàn "
+    "bộ nghệ sĩ không được cung cấp theo (3.14), là phân tích sau khi khóa cấu hình; với tập đích này, kết "
+    "luận về RQ4 thay đổi. Để có kết luận chắc chắn hơn, cần kiểm định chéo theo người dùng: chia lại người "
+    "dùng thành nhóm học, nhóm tinh chỉnh và nhóm để dành nhiều lần, chọn cấu hình và chấm trên từng lần "
+    "chia rồi tổng hợp kết quả."
 )
 
 H2("4.9 Thực nghiệm mở rộng với implicit ALS")
@@ -1079,11 +1138,15 @@ T(
     size=22,
 )
 P(
-    f"Cả hai mô hình top-N vượt Popularity với cỡ hiệu ứng lớn (⟦r_rb⟧ khoảng 0,88) và vượt PureSVD khoảng "
-    f"{f(u7['mean_difference'])} đến {f(i7['mean_difference'])} NDCG@10 với cỡ hiệu ứng nhỏ (⟦r_rb⟧ "
-    f"{f(u7['rank_biserial'], 3)} và {f(i7['rank_biserial'], 3)}); hai khác biệt với PureSVD có ý nghĩa sau "
-    "Holm. Implicit ALS vẫn có NDCG@10 cao nhất trong các mô hình đã đo. Như vậy, kết luận RQ1 rằng "
-    "UserCF và ItemCF không vượt Popularity chỉ đúng với cách tổng hợp trung bình có trọng số; với cách "
+    f"Cả hai mô hình top-N cao hơn Popularity với cỡ hiệu ứng lớn (⟦r_rb⟧ khoảng 0,88). So với PureSVD, "
+    f"UserCF top-N và ItemCF top-N cao hơn {f(u7['mean_difference'])} và {f(i7['mean_difference'])} NDCG@10 "
+    f"với cỡ hiệu ứng nhỏ (⟦r_rb⟧ {f(u7['rank_biserial'], 3)} và {f(i7['rank_biserial'], 3)}); p sau Holm "
+    "nhỏ hơn 0,05 nhưng hai chênh lệch này chỉ dựa trên một lần chia dữ liệu (hạt giống 42). Khoảng tin cậy "
+    f"95% của NDCG@10 trung bình là {ci(e7_ci['user_cf'])} với UserCF top-N và {ci(e7_ci['item_cf'])} với "
+    f"ItemCF top-N, chồng lấn với khoảng {ci(means['pure_svd'])} của PureSVD (Bảng 4.7); khoảng tin cậy của "
+    "chênh lệch theo cặp ở Bảng 4.18 thì không chứa 0. Implicit ALS vẫn có NDCG@10 cao nhất trong các mô "
+    "hình đã đo. Như vậy, kết luận RQ1 rằng UserCF và ItemCF không vượt Popularity chỉ đúng với cách tổng "
+    "hợp trung bình có trọng số và lưới đã khóa; với cách "
     "tổng hợp phù hợp bài toán top-N, mô hình láng giềng là đối thủ mạnh trên dữ liệu này, phù hợp với "
     "nhận xét của Cremonesi và cộng sự [13]."
 )
@@ -1139,6 +1202,7 @@ T(
 als_es = es[es.model == "implicit_als"].drop_duplicates(subset="run")
 als_best = als_es.loc[als_es.ndcg_at_10.idxmax()]
 us_best = es[es.model == "user_cf"].ndcg_at_10.max()
+assert us_best == es_u5 and es_u5 > pop_val
 it_best = es[es.model == "item_cf"].ndcg_at_10.max()
 P(
     "Bảng 4.19 cho thấy ba nhóm kết quả. Với PureSVD, k = 4 và k = 8 đều kém k = 16, nên cực đại nằm trong "
@@ -1146,7 +1210,9 @@ P(
     f"{f(best_m2.mean_ndcg_at_10_n135)} ở α = {f(best_m2.alpha, 2)}, n_min = {int(best_m2.history_threshold)}). "
     "Với UserCF và ItemCF dùng cách tổng hợp trung bình, giảm L xuống 5 tăng NDCG@10 lên tới "
     f"{f(us_best)} và {f(it_best)}, gấp khoảng 3,7 lần cấu hình đã khóa nhưng vẫn thấp hơn rất xa cách tổng "
-    "hợp top-N ở E7. Với ALS, không cấu hình ngoài biên nào vượt cấu hình đã khóa: cao nhất là "
+    f"hợp top-N ở E7. Riêng UserCF với L = 5, co rút 10 đạt {f(es_u5)}, cao hơn Popularity {f(pop_val)} trên "
+    "tập xác thực; như vậy ngay với cách tổng hợp trung bình, kết luận UserCF không vượt Popularity cũng "
+    "phụ thuộc lưới đã khóa, còn ItemCF ở L = 5 vẫn thấp hơn Popularity. Với ALS, không cấu hình ngoài biên nào vượt cấu hình đã khóa: cao nhất là "
     f"{int(als_best.latent_factors)} nhân tố, reg {f(als_best.regularization, 1).rstrip('0').rstrip(',')}, "
     f"a_conf {f(als_best.confidence_scale, 1).rstrip('0').rstrip(',')} với NDCG@10 xác thực "
     f"{f(als_best.ndcg_at_10)}, so với 0,197433; giảm số nhân tố xuống 16 hoặc 8 làm NDCG@10 giảm rõ. Các "
@@ -1213,7 +1279,8 @@ T(
 e5p = eg_stats[(5, "popularity")]
 e1p = eg_stats[(1, "popularity")]
 P(
-    f"Với tập đích (3.14), M2 cao hơn Popularity ở so sánh chính N = 3 là {f(e3p['mean_difference'])}, "
+    "Trong phân tích sau khi khóa cấu hình này, với tập đích (3.14), M2 cao hơn Popularity ở so sánh chính "
+    f"N = 3 là {f(e3p['mean_difference'])}, "
     f"khoảng tin cậy 95% {ci(e3p)}, ⟦r_rb⟧ = {f(e3p['rank_biserial'], 3)}, p sau Holm {pv(e3p['holm_p'])}; ở "
     f"N = 5 chênh lệch là {f(e5p['mean_difference'])} (p sau Holm {pv(e5p['holm_p'])}). Ở N = 1, M2 chưa khác "
     f"Popularity có ý nghĩa ({f(e1p['mean_difference'])}, p sau Holm {pv(e1p['holm_p'])}), phù hợp với việc "
@@ -1223,7 +1290,8 @@ P(
     "dùng cũng bị phạt; với khoảng 40 đích theo (3.14), phương sai nhỏ hơn và lợi thế của nội dung thẻ khi "
     "có từ ba nghệ sĩ trở lên thể hiện rõ. Giao thức (3.14) gần với cách Breese và cộng sự [40] định nghĩa "
     "Given-N, nhưng được chọn sau khi đã biết kết quả của giao thức cũ, nên nhóm trình bày cả hai và coi kết "
-    "quả ở đây là bằng chứng bổ sung."
+    "quả ở đây là bằng chứng bổ sung. Với 189 người dùng để dành và cấu hình M2 chọn ở góc lưới, đây vẫn là "
+    "kết quả sơ bộ."
 )
 P(
     "Kết quả mở rộng β của M1 (E9) đã được trình bày cùng Hình 4.4 ở mục 4.7. Ngoài ra, khi xếp Popularity "
@@ -1238,14 +1306,16 @@ P(
     f"hình cá nhân hóa duy nhất vượt Popularity, với NDCG@10 {f(pure)} so với {f(pop)}. Kết quả này phù hợp "
     "với nhận xét của Cremonesi và cộng sự [13] rằng PureSVD hoạt động tốt cho bài toán gợi ý top-N. Tuy "
     "nhiên, phân tích bổ sung E7 cho thấy kết luận về mô hình láng giềng phụ thuộc vào cách tổng hợp điểm: "
-    "khi tổng hợp theo kiểu top-N, UserCF và ItemCF vượt cả PureSVD. Về RQ2, phép chia hiện tại gần như "
+    "khi tổng hợp theo kiểu top-N, UserCF và ItemCF cao hơn PureSVD với cỡ hiệu ứng nhỏ (⟦r_rb⟧ "
+    f"{f(u7['rank_biserial'], 3)} và {f(i7['rank_biserial'], 3)}) trên một lần chia. Về RQ2, phép chia hiện tại gần như "
     "không có biến thiên về độ dài lịch sử; bằng chứng từ Given-N cho thấy chất lượng của M2 tăng từ N = 1 "
     "lên N = 3 ở cả hai giao thức. Phân tích theo mức ưa chuộng nghệ sĩ phổ biến cho thấy biến thiên giữa "
     "người dùng lớn hơn nhiều so với biến thiên theo độ dài lịch sử. Về RQ3, M1 giảm ARP@10 "
-    f"{f(arp_drop, 2)}% và tương đương mô hình nền về NDCG@10 ở biên 5%, đồng thời cải thiện độ chính xác "
-    "cho nhóm người dùng ít ưa chuộng nghệ sĩ phổ biến. Về RQ4, kết luận phụ thuộc định nghĩa tập đích: M2 "
-    "không vượt Popularity khi đích là các cặp kiểm thử, nhưng vượt Popularity ở N = 3 và N = 5 khi đích là "
-    "toàn bộ nghệ sĩ không được cung cấp."
+    f"{f(arp_drop, 2)}% và tương đương mô hình nền về NDCG@10 ở biên 5%; phân tích sau khi khóa cấu hình "
+    "cho thấy M1 cải thiện độ chính xác cho nhóm người dùng ít ưa chuộng nghệ sĩ phổ biến. Về RQ4, kết luận "
+    "phụ thuộc định nghĩa tập đích: M2 không vượt Popularity khi đích là các cặp kiểm thử; phân tích sau khi "
+    "khóa cấu hình cho thấy M2 cao hơn Popularity ở N = 3 và N = 5 khi đích là toàn bộ nghệ sĩ không được "
+    "cung cấp. Với chưa tới 200 người mỗi nhóm, các kết quả về M2 là sơ bộ."
 )
 P(
     "Nhóm chưa đối chiếu con số với các công trình khác dùng dữ liệu Last.fm như [9], [24], [25], vì các công "
@@ -1256,7 +1326,9 @@ P(
 )
 P(
     "Các giới hạn của thực nghiệm được nhóm lại theo ba loại mối đe dọa đối với tính hợp lệ. Về tính hợp lệ "
-    "nội tại, kết quả dựa trên một lần chia ngẫu nhiên với hạt giống 42; một số cấu hình được chọn nằm ở "
+    "nội tại, kết quả dựa trên một lần chia ngẫu nhiên với hạt giống 42, nên các chênh lệch nhỏ như giữa "
+    f"mô hình láng giềng top-N và PureSVD ({f(u7['mean_difference'])} và {f(i7['mean_difference'])} NDCG@10) "
+    "chưa được kiểm chứng trên lần chia khác; một số cấu hình được chọn nằm ở "
     "biên lưới tìm kiếm, và Bảng 4.19 cho thấy với UserCF và ItemCF cực đại nằm ngoài lưới cũ; giao "
     "thức người dùng mới chỉ có chưa tới 200 người mỗi nhóm; các phân tích ở mục 4.11 được thực hiện sau "
     "khi đã mở tập kiểm thử. Về tính hợp lệ của phép đo, nhãn liên quan là nhị phân và chỉ gồm những nghệ sĩ "
@@ -1280,13 +1352,15 @@ P(
     "Chương 4 đã trình bày kết quả tinh chỉnh và đánh giá các mô hình trên cùng giao thức, kèm các phân tích "
     "bổ sung sau khi khóa cấu hình. Với cấu hình đã khóa, PureSVD nhị phân với k = 16 đạt NDCG@10 cao nhất "
     f"trong sáu mô hình đối sánh trên tập kiểm thử ({f(pure)}), hơn Popularity {f(r_ps['mean_difference'])} "
-    "và khác biệt có ý nghĩa thống kê; UserCF, ItemCF và SVD có độ lệch không vượt được Popularity. Kết luận "
-    "về hai mô hình láng giềng có điều kiện: nó đúng với cách tổng hợp trung bình có trọng số, còn với cách "
-    f"tổng hợp top-N, UserCF và ItemCF đạt {f(e7.loc['user_cf'].ndcg)} và {f(e7.loc['item_cf'].ndcg)}, vượt "
-    "PureSVD có ý nghĩa. Mô-đun M1 với λ = 0,75 và β = 0,5 làm ARP giảm "
+    "và khác biệt có ý nghĩa thống kê; với cách tổng hợp trung bình có trọng số và lưới đã khóa, UserCF và "
+    "ItemCF không vượt được Popularity, SVD có độ lệch cũng vậy. Kết luận về hai mô hình láng giềng vì vậy "
+    "có điều kiện: trong phân tích sau khi khóa cấu hình, với cách tổng hợp top-N, UserCF và ItemCF đạt "
+    f"{f(e7.loc['user_cf'].ndcg)} và {f(e7.loc['item_cf'].ndcg)}, cao hơn PureSVD với cỡ hiệu ứng nhỏ "
+    f"(⟦r_rb⟧ {f(u7['rank_biserial'], 3)} và {f(i7['rank_biserial'], 3)}) trên một lần chia. Mô-đun M1 với λ = 0,75 và β = 0,5 làm ARP giảm "
     f"{f(arp_drop, 2)}% và tương đương mô hình nền về NDCG@10 ở biên 5%. Mô-đun M2 chưa vượt Popularity về "
-    "NDCG@10 khi đích là các cặp kiểm thử, nhưng vượt Popularity ở N = 3 và N = 5 khi đích là toàn bộ nghệ "
-    "sĩ không được cung cấp; kết luận về RQ4 vì vậy phụ thuộc định nghĩa tập đích. Thực nghiệm mở rộng cho "
+    "NDCG@10 khi đích là các cặp kiểm thử; trong phân tích sau khi khóa cấu hình, M2 cao hơn Popularity ở "
+    "N = 3 và N = 5 khi đích là toàn bộ nghệ sĩ không được cung cấp. Kết luận về RQ4 vì vậy phụ thuộc định "
+    "nghĩa tập đích và là sơ bộ, do mỗi nhóm đánh giá chưa tới 200 người. Thực nghiệm mở rộng cho "
     "thấy implicit ALS vượt PureSVD có ý nghĩa thống kê. Chương 5 trình bày việc đóng gói các mô hình đã "
     "chọn thành dịch vụ và giao diện minh họa."
 )

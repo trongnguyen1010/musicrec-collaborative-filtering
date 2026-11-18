@@ -9,6 +9,7 @@ import pandas as _pd
 
 FIG = "docs/results/chinh_thuc_cloud_20261026/bo_sung_2/hinh_bao_cao/"
 LOAD = _json.loads(open("docs/results/chuong_5/load_test.json", encoding="utf-8").read())
+LOAD_WARMUP = int(LOAD["command"][LOAD["command"].index("--warmup") + 1])
 EXAMPLE = _json.loads(open("docs/results/chuong_5/vi_du_recommend.json", encoding="utf-8").read())
 TITLE_VI = "XÂY DỰNG HỆ THỐNG KHUYẾN NGHỊ NGHỆ SĨ ÂM NHẠC DỰA TRÊN LỌC CỘNG TÁC"  # đề cương V2
 TITLE_VI_SENT = "Xây dựng hệ thống khuyến nghị nghệ sĩ âm nhạc dựa trên lọc cộng tác"
@@ -98,7 +99,7 @@ remove(ORIG[21])
 TOMTAT = [
     "Các dịch vụ nghe nhạc trực tuyến cung cấp kho nội dung lớn hơn nhiều so với khả năng khám phá của mỗi người nghe, vì vậy hệ thống khuyến nghị giúp người dùng tìm được những nghệ sĩ phù hợp với sở thích. Khóa luận xây dựng và đánh giá một hệ thống khuyến nghị nghệ sĩ dựa trên lọc cộng tác, sử dụng số lượt nghe trong bộ dữ liệu Last.fm HetRec 2011 làm phản hồi ngầm.",
     "Sau khi làm sạch, dữ liệu gồm 1.877 người dùng và 92.801 cặp người dùng–nghệ sĩ, được chia theo từng người dùng thành tập huấn luyện, xác thực và kiểm thử. Sáu mô hình đối sánh (Random, Popularity, lọc cộng tác dựa trên người dùng, lọc cộng tác dựa trên nghệ sĩ, SVD có độ lệch và PureSVD) được tinh chỉnh trên tập xác thực theo NDCG@10 và khóa cấu hình trước khi mở tập kiểm thử. Khóa luận đề xuất hai mô-đun: M1 là bộ tái xếp hạng tham lam theo tinh thần độ liên quan biên cực đại, có thêm thành phần phạt mức phổ biến; M2 là cơ chế dự phòng lai cho người dùng mới, kết hợp điểm ItemCF, thẻ nghệ sĩ và mức phổ biến, được đánh giá theo giao thức Given-N. Implicit ALS được thực hiện như một thực nghiệm mở rộng. Việc đánh giá dùng các chỉ số xếp hạng và các chỉ số ngoài độ chính xác, kèm kiểm định Wilcoxon theo cặp, hiệu chỉnh Holm, khoảng tin cậy bootstrap, cỡ hiệu ứng và kiểm định tương đương.",
-    "Trên tập kiểm thử, với cấu hình đã khóa, PureSVD đạt NDCG@10 cao nhất trong sáu mô hình đối sánh (0,1828 so với 0,0688 của Popularity, khác biệt có ý nghĩa thống kê), còn các mô hình láng giềng và SVD có độ lệch không vượt được Popularity. Phân tích bổ sung sau khi khóa cấu hình cho thấy kết luận về mô hình láng giềng phụ thuộc cách tổng hợp điểm: khi chấm điểm theo kiểu top-N, UserCF và ItemCF đạt 0,1937 và 0,1940, vượt PureSVD có ý nghĩa. M1 giảm độ phổ biến trung bình của danh sách gợi ý 15,69% và tương đương PureSVD về NDCG@10 theo kiểm định tương đương ở biên 5%; M1 cải thiện độ chính xác cho nhóm người dùng ít ưa chuộng nghệ sĩ phổ biến. M2 chưa vượt Popularity khi tập đích là các cặp kiểm thử, nhưng vượt Popularity ở N = 3 và N = 5 khi tập đích là toàn bộ nghệ sĩ người dùng chưa cung cấp. Implicit ALS đạt NDCG@10 0,2175, cao nhất trong các mô hình đã đo. Các mô hình được đóng gói thành dịch vụ FastAPI và giao diện Next.js; danh sách gợi ý trên ứng dụng trùng hoàn toàn với đánh giá ngoại tuyến, thời gian phản hồi trung vị từ 3,8 đến 11,5 ms trên máy tính cá nhân.",
+    "Trên tập kiểm thử, với cấu hình đã khóa, PureSVD đạt NDCG@10 cao nhất trong sáu mô hình đối sánh (0,1828 so với 0,0688 của Popularity, khác biệt có ý nghĩa thống kê), còn các mô hình láng giềng và SVD có độ lệch không vượt được Popularity. Phân tích sau khi khóa cấu hình cho thấy kết luận về mô hình láng giềng phụ thuộc cách tổng hợp điểm: khi chấm điểm theo kiểu top-N, UserCF và ItemCF đạt 0,1937 và 0,1940, cao hơn PureSVD với cỡ hiệu ứng nhỏ (⟦r_rb⟧ 0,104 và 0,123) trên một lần chia. M1 giảm độ phổ biến trung bình của danh sách gợi ý 15,69% và tương đương PureSVD về NDCG@10 theo kiểm định tương đương ở biên 5%; phân tích sau khi khóa cấu hình cho thấy M1 cải thiện độ chính xác cho nhóm người dùng ít ưa chuộng nghệ sĩ phổ biến. M2 chưa vượt Popularity khi tập đích là các cặp kiểm thử; phân tích sau khi khóa cấu hình cho thấy M2 cao hơn Popularity ở N = 3 và N = 5 khi tập đích là toàn bộ nghệ sĩ người dùng chưa cung cấp, nhưng với nhóm đánh giá chưa tới 200 người đây là kết quả sơ bộ. Implicit ALS đạt NDCG@10 0,2175, cao nhất trong các mô hình đã đo. Các mô hình được đóng gói thành dịch vụ FastAPI và giao diện Next.js; danh sách gợi ý trên ứng dụng trùng hoàn toàn với đánh giá ngoại tuyến, thời gian phản hồi trung vị từ 3,8 đến 11,5 ms trên máy tính cá nhân.",
     "**Từ khóa:** khuyến nghị âm nhạc, lọc cộng tác, phản hồi ngầm, thiên lệch phổ biến, khởi động nguội, Last.fm.",
 ]
 abstract_head = ORIG[64]
@@ -111,7 +112,7 @@ fill(
 )
 fill(
     ORIG[68],
-    "On the test set, with the locked configurations, PureSVD achieved the highest NDCG@10 among the six models (0.1828 against 0.0688 for Popularity, a significant difference), while the neighbourhood models and biased SVD did not beat Popularity. A supplementary analysis after locking showed that this depends on how neighbourhood scores are aggregated: with top-N scoring, user-based and item-based CF reached 0.1937 and 0.1940, significantly above PureSVD. M1 reduced average recommendation popularity by 15.69% and was equivalent to PureSVD in NDCG@10 under a two one-sided test with a 5% margin; it improved accuracy for users with little interest in popular artists. M2 did not beat Popularity when the targets were the held-out test pairs, but it did at N = 3 and N = 5 when the targets were all artists the user had not supplied. Implicit ALS reached 0.2175, the best model measured. The models were packaged as a FastAPI service with a Next.js interface whose recommendation lists match the offline evaluation exactly, with median response times between 3.8 and 11.5 ms on a personal computer.",
+    "On the test set, with the locked configurations, PureSVD achieved the highest NDCG@10 among the six models (0.1828 against 0.0688 for Popularity, a significant difference), while the neighbourhood models and biased SVD did not beat Popularity. An analysis after locking the configurations showed that this depends on how neighbourhood scores are aggregated: with top-N scoring, user-based and item-based CF reached 0.1937 and 0.1940, above PureSVD with small effect sizes (⟦r_rb⟧ 0.104 and 0.123) on a single split. M1 reduced average recommendation popularity by 15.69% and was equivalent to PureSVD in NDCG@10 under a two one-sided test with a 5% margin; an analysis after locking showed that it improved accuracy for users with little interest in popular artists. M2 did not beat Popularity when the targets were the held-out test pairs; in an analysis after locking, it scored higher than Popularity at N = 3 and N = 5 when the targets were all artists the user had not supplied, a preliminary result since each evaluation group has fewer than 200 users. Implicit ALS reached 0.2175, the best model measured. The models were packaged as a FastAPI service with a Next.js interface whose recommendation lists match the offline evaluation exactly, with median response times between 3.8 and 11.5 ms on a personal computer.",
     rpr=copy.deepcopy(ORIG[68].find("w:r/w:rPr", NS)),
 )
 CAMDOAN = [
@@ -227,13 +228,13 @@ def _contrib():
         "Thứ nhất, khóa luận xây dựng một quy trình thực nghiệm có thể tái lập trên Last.fm HetRec 2011: ánh xạ và ngưỡng biến đổi chỉ học từ tập huấn luyện, đích ngoài danh mục được báo cáo riêng, cấu hình được khóa trước khi mở tập kiểm thử và bộ đánh giá được kiểm chứng bằng ví dụ tính tay cùng thư viện chuẩn."
     )
     P(
-        "Thứ hai, khóa luận so sánh sáu mô hình đối sánh và implicit ALS trên cùng giao thức, kèm kiểm định Wilcoxon theo cặp, hiệu chỉnh Holm, khoảng tin cậy bootstrap và cỡ hiệu ứng. Với cấu hình đã khóa, PureSVD là mô hình đối sánh duy nhất vượt Popularity; phân tích bổ sung chỉ ra rằng kết quả kém của UserCF và ItemCF đến từ cách tổng hợp điểm dự đoán, vì khi tổng hợp theo kiểu top-N hai mô hình này vượt cả PureSVD."
+        "Thứ hai, khóa luận so sánh sáu mô hình đối sánh và implicit ALS trên cùng giao thức, kèm kiểm định Wilcoxon theo cặp, hiệu chỉnh Holm, khoảng tin cậy bootstrap và cỡ hiệu ứng. Với cấu hình đã khóa, PureSVD là mô hình đối sánh duy nhất vượt Popularity; UserCF và ItemCF không vượt Popularity với cách tổng hợp trung bình có trọng số và lưới đã khóa. Phân tích sau khi khóa cấu hình chỉ ra rằng kết quả kém của hai mô hình này chủ yếu đến từ cách tổng hợp điểm dự đoán: khi tổng hợp theo kiểu top-N, chúng cao hơn PureSVD với cỡ hiệu ứng nhỏ (⟦r_rb⟧ 0,104 và 0,123) trên một lần chia."
     )
     P(
-        "Thứ ba, khóa luận đề xuất mô-đun tái xếp hạng M1 kết hợp ý tưởng MMR với phạt mức phổ biến. M1 giảm ARP@10 15,69% và tương đương mô hình nền về NDCG@10 theo kiểm định tương đương ở biên 5%, đồng thời cải thiện độ chính xác cho nhóm người dùng ít ưa chuộng nghệ sĩ phổ biến. Khóa luận cũng chỉ ra và xử lý tính vòng tròn khi dùng cùng độ tương đồng cho hàm lựa chọn và chỉ số ILD."
+        "Thứ ba, khóa luận đề xuất mô-đun tái xếp hạng M1 kết hợp ý tưởng MMR với phạt mức phổ biến. M1 giảm ARP@10 15,69% và tương đương mô hình nền về NDCG@10 theo kiểm định tương đương ở biên 5%; phân tích sau khi khóa cấu hình cho thấy M1 cải thiện độ chính xác cho nhóm người dùng ít ưa chuộng nghệ sĩ phổ biến. Khóa luận cũng chỉ ra và xử lý tính vòng tròn khi dùng cùng độ tương đồng cho hàm lựa chọn và chỉ số ILD."
     )
     P(
-        "Thứ tư, khóa luận xây dựng mô-đun dự phòng M2 cho người dùng mới với giao thức Given-N tách biệt người dùng học và người dùng đánh giá. Kết quả cho thấy đánh giá M2 phụ thuộc định nghĩa tập đích: M2 không vượt Popularity khi đích là các cặp kiểm thử, nhưng vượt Popularity ở N = 3 và N = 5 khi đích là toàn bộ nghệ sĩ người dùng chưa cung cấp."
+        "Thứ tư, khóa luận xây dựng mô-đun dự phòng M2 cho người dùng mới với giao thức Given-N tách biệt người dùng học và người dùng đánh giá. Kết quả sơ bộ cho thấy đánh giá M2 phụ thuộc định nghĩa tập đích: M2 không vượt Popularity khi đích là các cặp kiểm thử; phân tích sau khi khóa cấu hình cho thấy M2 cao hơn Popularity ở N = 3 và N = 5 khi đích là toàn bộ nghệ sĩ người dùng chưa cung cấp."
     )
     P(
         "Thứ năm, khóa luận đóng gói các mô hình thành dịch vụ FastAPI và giao diện Next.js có danh sách gợi ý trùng hoàn toàn với đánh giá ngoại tuyến."
@@ -320,7 +321,7 @@ def _ch5():
     KEEP(905)
     FKEEP(906, "Tổ chức mã nguồn của hệ thống")
     P(
-        "Hình 5.2 trình bày sơ đồ thành phần và triển khai. Trình duyệt chỉ giao tiếp với giao diện Next.js; giao diện gọi dịch vụ FastAPI qua HTTP và nhận JSON. Dịch vụ chuyển yêu cầu cho lớp DemoService, lớp này định tuyến sang mô hình phù hợp trong gói mô hình đã nạp. Gói mô hình chỉ được nạp một lần khi dịch vụ khởi động và mọi tệp đều được kiểm tra mã băm. Giao diện Streamlit dùng chung DemoService và chỉ giữ làm phương án dự phòng."
+        "Hình 5.2 trình bày sơ đồ thành phần và triển khai. Trình duyệt chỉ giao tiếp với giao diện Next.js; giao diện gọi dịch vụ FastAPI qua HTTP và nhận JSON. Dịch vụ chuyển yêu cầu cho lớp DemoService, lớp này định tuyến sang mô hình phù hợp trong gói mô hình đã nạp. Gói mô hình chỉ được nạp một lần khi dịch vụ khởi động và mọi tệp đều được kiểm tra mã băm. Giao diện Streamlit gọi cùng dịch vụ FastAPI qua HTTP và chỉ giữ làm phương án dự phòng."
     )
     F(FIG + "trien_khai.png", "Sơ đồ thành phần và triển khai của hệ thống", width_cm=15.5)
     P(
@@ -424,7 +425,7 @@ def _ch5():
     H3("5.4.4 Kiểm thử tải")
     rt = LOAD["runtime"]
     P(
-        f"Nhóm đo thêm thông lượng khi nhiều yêu cầu đến cùng lúc bằng một script Python gửi POST /recommend (người dùng có sẵn, PureSVD, K = 10) từ nhiều luồng, mỗi luồng giữ một phiên HTTP riêng và gửi liên tục cho tới khi đủ số yêu cầu; mã người dùng thay đổi luân phiên trong 200 người dùng đầu. Dịch vụ chạy bằng uvicorn với một tiến trình, trên cùng máy với chương trình gửi (Windows 11, Intel Core i5-11300H, {rt['cpu_count']} luồng logic, Python {rt['python']}, FastAPI {rt['fastapi']}, uvicorn {rt['uvicorn']}). Mỗi mức đồng thời gửi {vn(LOAD['levels'][0]['requests'], 0)} yêu cầu sau một lượt khởi động. Bảng 5.7 trình bày kết quả."
+        f"Nhóm đo thêm thông lượng khi nhiều yêu cầu đến cùng lúc bằng một script Python gửi POST /recommend (người dùng có sẵn, PureSVD, K = 10) từ nhiều luồng, mỗi luồng giữ một phiên HTTP riêng và gửi liên tục cho tới khi đủ số yêu cầu; mã người dùng thay đổi luân phiên trong 200 người dùng đầu. Dịch vụ chạy bằng uvicorn với một tiến trình, trên cùng máy với chương trình gửi (Windows 11, Intel Core i5-11300H, {rt['cpu_count']} luồng logic, Python {rt['python']}, FastAPI {rt['fastapi']}, uvicorn {rt['uvicorn']}). Mỗi mức đồng thời gửi {vn(LOAD['levels'][0]['requests'], 0)} yêu cầu; trước mức đầu tiên, script gửi {LOAD_WARMUP} yêu cầu khởi động không tính. Bảng 5.7 trình bày kết quả."
     )
     T(
         "Kết quả kiểm thử tải của POST /recommend (PureSVD, K = 10)",
@@ -452,6 +453,9 @@ def _ch5():
     l1, l8, l32 = LOAD["levels"]
     P(
         f"Với một yêu cầu tại một thời điểm, dịch vụ xử lý {vn(l1['throughput_rps'], 1)} yêu cầu mỗi giây với trung vị {vn(l1['median_ms'], 2)} ms. Khi có 8 yêu cầu đồng thời, thông lượng tăng lên {vn(l8['throughput_rps'], 1)} yêu cầu mỗi giây nhưng trung vị tăng lên {vn(l8['median_ms'], 2)} ms; ở 32 yêu cầu đồng thời, thông lượng không tăng thêm ({vn(l32['throughput_rps'], 1)}) còn trung vị và P95 tăng lên {vn(l32['median_ms'], 2)} và {vn(l32['p95_ms'], 2)} ms, tức dịch vụ một tiến trình đã bão hòa và yêu cầu phải xếp hàng. Không có yêu cầu nào lỗi ở cả ba mức. Đây là phép đo trên một máy cá nhân, chưa phải trên máy chủ triển khai; để phục vụ nhiều người dùng hơn cần chạy nhiều tiến trình hoặc nhiều máy."
+    )
+    P(
+        f"Trung vị {vn(l1['median_ms'], 2)} ms ở mức một yêu cầu tại một thời điểm (Bảng 5.7) thấp hơn 8,06 ms của PureSVD ở Bảng 5.6, dù cùng nhánh xử lý. Hai phép đo khác nhau về cách đo và thời điểm đo: Bảng 5.6 gửi 200 lần một yêu cầu cố định (người dùng mã 2) sau 20 lượt khởi động, đo ngày 07/11/2026; Bảng 5.7 gửi {vn(l1['requests'], 0)} yêu cầu sau {LOAD_WARMUP} yêu cầu khởi động, mã người dùng xoay vòng trong 200 người, đo ngày 10–11/11/2026. Cả hai script đều giữ phiên HTTP (requests.Session), nên chênh lệch không do việc mở lại kết nối. Một lần đo trước đó bằng cùng script với Bảng 5.6 (27/10/2026, 50 lần lặp) cho trung vị 5,23 ms. Nhóm vì vậy xem chênh lệch giữa khoảng 5 và 8 ms là biến động giữa các lần đo trên máy cá nhân cộng với khác biệt về cách đo, không phải thay đổi hiệu năng của dịch vụ."
     )
     H2("5.5 Kết luận chương")
     P(
@@ -493,7 +497,7 @@ def _ch6():
             [
                 "3b. M2 hỗ trợ người dùng mới",
                 "Đạt một phần",
-                "Bảng 4.13–4.15, 4.20–4.21: theo giao thức đã khóa M2 chưa vượt Popularity; với tập đích (3.14) M2 vượt Popularity ở N = 3 và N = 5. Kết luận phụ thuộc định nghĩa tập đích.",
+                "Bảng 4.13–4.15, 4.20–4.21: theo giao thức đã khóa M2 chưa vượt Popularity; trong phân tích sau khi khóa cấu hình, với tập đích (3.14) M2 cao hơn Popularity ở N = 3 và N = 5. Kết luận phụ thuộc định nghĩa tập đích và là sơ bộ (dưới 200 người mỗi nhóm).",
             ],
             [
                 "4. Đánh giá bằng chỉ số xếp hạng và chỉ số bổ sung",
@@ -513,7 +517,7 @@ def _ch6():
         "Khóa luận đã xây dựng một hệ thống khuyến nghị nghệ sĩ dựa trên lọc cộng tác với quy trình thực nghiệm thống nhất trên bộ dữ liệu Last.fm HetRec 2011. Quy trình dữ liệu được kiểm chứng chặt chẽ: ánh xạ và các ngưỡng biến đổi chỉ học từ tập huấn luyện, đích ngoài danh mục được báo cáo riêng, bộ đánh giá được kiểm tra bằng ví dụ tính tay và đối chiếu với thư viện chuẩn, và cấu hình được khóa trước khi mở tập kiểm thử."
     )
     P(
-        "Với cấu hình đã khóa, PureSVD nhị phân đạt NDCG@10 cao nhất trong sáu mô hình đối sánh là 0,182780, cao hơn Popularity 0,114005 và khác biệt có ý nghĩa thống kê; UserCF, ItemCF và SVD có độ lệch không vượt được Popularity. Các phân tích bổ sung sau khi khóa cấu hình cho thấy hai kết luận phụ thuộc vào lựa chọn thiết kế: mô hình láng giềng vượt PureSVD khi tổng hợp điểm theo kiểu top-N, và M2 vượt Popularity ở N = 3, 5 khi tập đích là toàn bộ nghệ sĩ người dùng chưa cung cấp. Mô-đun M1 giảm độ phổ biến trung bình của danh sách 15,69% và tương đương mô hình nền về NDCG@10 ở biên 5%. Implicit ALS đạt NDCG@10 0,217453, cao nhất trong các mô hình đã đo. Hệ thống được đóng gói thành dịch vụ FastAPI và giao diện Next.js, cho danh sách trùng hoàn toàn với đánh giá ngoại tuyến. Bảng 6.2 tóm tắt câu trả lời cho năm câu hỏi nghiên cứu."
+        "Với cấu hình đã khóa, PureSVD nhị phân đạt NDCG@10 cao nhất trong sáu mô hình đối sánh là 0,182780, cao hơn Popularity 0,114005 và khác biệt có ý nghĩa thống kê; với cách tổng hợp trung bình có trọng số và lưới đã khóa, UserCF và ItemCF không vượt được Popularity, SVD có độ lệch cũng vậy. Các phân tích sau khi khóa cấu hình cho thấy hai kết luận phụ thuộc vào lựa chọn thiết kế: khi tổng hợp điểm theo kiểu top-N, mô hình láng giềng cao hơn PureSVD với cỡ hiệu ứng nhỏ (⟦r_rb⟧ 0,104 và 0,123) trên một lần chia; và M2 cao hơn Popularity ở N = 3, 5 khi tập đích là toàn bộ nghệ sĩ người dùng chưa cung cấp, nhưng đây là kết quả sơ bộ trên chưa tới 200 người. Mô-đun M1 giảm độ phổ biến trung bình của danh sách 15,69% và tương đương mô hình nền về NDCG@10 ở biên 5%; phân tích sau khi khóa cấu hình cho thấy M1 cải thiện độ chính xác cho nhóm người dùng ít ưa chuộng nghệ sĩ phổ biến. Implicit ALS đạt NDCG@10 0,217453, cao nhất trong các mô hình đã đo. Hệ thống được đóng gói thành dịch vụ FastAPI và giao diện Next.js, cho danh sách trùng hoàn toàn với đánh giá ngoại tuyến. Bảng 6.2 tóm tắt câu trả lời cho năm câu hỏi nghiên cứu."
     )
     T(
         "Tóm tắt câu trả lời các câu hỏi nghiên cứu",
@@ -522,7 +526,7 @@ def _ch6():
         [
             [
                 "RQ1",
-                "Với cấu hình đã khóa, PureSVD nhị phân (k = 16) tốt nhất trong sáu mô hình đối sánh, NDCG@10 = 0,182780, hơn Popularity 0,114005 có ý nghĩa; UserCF, ItemCF, SVD có độ lệch không vượt Popularity. Với cách tổng hợp top-N (phân tích bổ sung), UserCF đạt 0,193668 và ItemCF đạt 0,193973, vượt PureSVD có ý nghĩa. Implicit ALS đạt 0,217453, cao nhất.",
+                "Với cấu hình đã khóa, PureSVD nhị phân (k = 16) tốt nhất trong sáu mô hình đối sánh, NDCG@10 = 0,182780, hơn Popularity 0,114005 có ý nghĩa; với cách tổng hợp trung bình có trọng số và lưới đã khóa, UserCF, ItemCF, SVD có độ lệch không vượt Popularity. Với cách tổng hợp top-N (phân tích sau khi khóa cấu hình), UserCF đạt 0,193668 và ItemCF đạt 0,193973, cao hơn PureSVD với cỡ hiệu ứng nhỏ (⟦r_rb⟧ 0,104 và 0,123) trên một lần chia. Implicit ALS đạt 0,217453, cao nhất.",
                 "Bảng 4.5–4.8, 4.17–4.18",
             ],
             [
@@ -532,12 +536,12 @@ def _ch6():
             ],
             [
                 "RQ3",
-                "M1 giảm ARP@10 15,69% và tăng độ bao phủ từ 1,86% lên 2,94%; chênh lệch NDCG@10 là −0,001364 với khoảng tin cậy 90% [−0,003641; 0,000888] nằm trong biên ±0,009139, nên tương đương mô hình nền theo TOST. M1 hơn PureSVD có ý nghĩa ở nhóm ít ưa chuộng nghệ sĩ phổ biến.",
+                "M1 giảm ARP@10 15,69% và tăng độ bao phủ từ 1,86% lên 2,94%; chênh lệch NDCG@10 là −0,001364 với khoảng tin cậy 90% [−0,003641; 0,000888] nằm trong biên ±0,009139, nên tương đương mô hình nền theo TOST. Theo phân tích sau khi khóa cấu hình, M1 cao hơn PureSVD ở nhóm ít ưa chuộng nghệ sĩ phổ biến.",
                 "Bảng 4.10, 4.11; công thức (4.1)",
             ],
             [
                 "RQ4",
-                "Phụ thuộc định nghĩa tập đích: theo giao thức đã khóa, M2 không vượt Popularity ở N = 1, 3, 5; với tập đích (3.14), M2 vượt Popularity ở N = 3 (+0,063028, p sau Holm 0,001) và N = 5.",
+                "Sơ bộ, phụ thuộc định nghĩa tập đích: theo giao thức đã khóa, M2 không vượt Popularity ở N = 1, 3, 5; trong phân tích sau khi khóa cấu hình với tập đích (3.14), M2 cao hơn Popularity ở N = 3 (+0,063028, p sau Holm 0,001) và N = 5, trên 189 người dùng.",
                 "Bảng 4.13–4.15, 4.20–4.21",
             ],
             [
@@ -550,14 +554,14 @@ def _ch6():
     )
     H2("6.3 Hạn chế")
     P(
-        "Thứ nhất, dữ liệu Last.fm HetRec 2011 không có thời điểm của từng lượt nghe, nên phép chia ngẫu nhiên chỉ kiểm tra khả năng tìm lại một phần nghệ sĩ đã nghe, không mô phỏng việc dự đoán lần nghe tiếp theo. Thứ hai, mỗi người dùng chỉ được ghi nhận những nghệ sĩ nghe nhiều nhất và phần lớn có đúng 50 nghệ sĩ, nên ảnh hưởng của độ dài lịch sử chỉ khảo sát được qua thí nghiệm Given-N. Thứ ba, dữ liệu được thu thập năm 2011 nên không phản ánh thị hiếu âm nhạc hiện nay. Thứ tư, điểm đại diện 1–5 là phép quy đổi của nhóm từ phân vị lượt nghe, không phải đánh giá do người nghe tự chấm, nên RMSE chỉ có ý nghĩa tham khảo. Thứ năm, kết quả dựa trên một lần chia dữ liệu với một hạt giống; PureSVD là tất định nên chạy lại với hạt giống khác không tạo ra kiểm chứng độc lập."
+        "Thứ nhất, dữ liệu Last.fm HetRec 2011 không có thời điểm của từng lượt nghe, nên phép chia ngẫu nhiên chỉ kiểm tra khả năng tìm lại một phần nghệ sĩ đã nghe, không mô phỏng việc dự đoán lần nghe tiếp theo. Thứ hai, mỗi người dùng chỉ được ghi nhận những nghệ sĩ nghe nhiều nhất và phần lớn có đúng 50 nghệ sĩ, nên ảnh hưởng của độ dài lịch sử chỉ khảo sát được qua thí nghiệm Given-N. Thứ ba, dữ liệu được thu thập năm 2011 nên không phản ánh thị hiếu âm nhạc hiện nay. Thứ tư, điểm đại diện 1–5 là phép quy đổi của nhóm từ phân vị lượt nghe, không phải đánh giá do người nghe tự chấm, nên RMSE chỉ có ý nghĩa tham khảo. Thứ năm, mọi kết quả dựa trên một lần chia dữ liệu với hạt giống 42; PureSVD là tất định nên chạy lại với hạt giống khác không tạo ra kiểm chứng độc lập, và các chênh lệch nhỏ như giữa mô hình láng giềng top-N và PureSVD (0,0109 và 0,0112 NDCG@10, cỡ hiệu ứng nhỏ) cần được kiểm lại trên nhiều lần chia."
     )
     P(
-        "Thứ sáu, một số cấu hình được chọn nằm ở biên lưới tìm kiếm, và các phân tích bổ sung ở mục 4.11 (biến thể top-N, độ nhạy ngoài biên, tập đích (3.14), mở rộng β) được thực hiện sau khi đã mở tập kiểm thử, nên là bằng chứng bổ sung chứ không thay kết quả đã khóa. Thứ bảy, độ đa dạng ILD và phần phạt của M1 cùng dựa trên độ tương đồng đồng nghe; thước đo độc lập theo thẻ cho thấy mức tăng đa dạng nhỏ hơn, và chỉ 36,69% nghệ sĩ của danh mục huấn luyện có véc-tơ thẻ dùng được. Thứ tám, thẻ nghệ sĩ do người dùng gán làm giới hạn M2, và giao thức người dùng mới chỉ có chưa tới 200 người mỗi nhóm. Thứ chín, M1 được tinh chỉnh trên PureSVD trong khi ALS là mô hình chính xác nhất đã đo. Cuối cùng, ứng dụng ở mức minh họa: chưa triển khai lên máy chủ công khai, giao diện chưa đặt thời gian chờ riêng cho lời gọi API, kiểm thử tải mới thực hiện trên một máy cá nhân và chưa đánh giá với người dùng thật."
+        "Thứ sáu, một số cấu hình được chọn nằm ở biên lưới tìm kiếm, và các phân tích bổ sung ở mục 4.11 (biến thể top-N, độ nhạy ngoài biên, tập đích (3.14), mở rộng β) được thực hiện sau khi đã mở tập kiểm thử, nên là bằng chứng bổ sung chứ không thay kết quả đã khóa. Thứ bảy, độ đa dạng ILD và phần phạt của M1 cùng dựa trên độ tương đồng đồng nghe; thước đo độc lập theo thẻ cho thấy mức tăng đa dạng nhỏ hơn, và chỉ 36,69% nghệ sĩ của danh mục huấn luyện có véc-tơ thẻ dùng được. Thứ tám, thẻ nghệ sĩ do người dùng gán làm giới hạn M2, và giao thức người dùng mới chỉ có chưa tới 200 người mỗi nhóm nên kết quả về M2 là sơ bộ. Thứ chín, M1 được tinh chỉnh trên PureSVD trong khi ALS là mô hình chính xác nhất đã đo. Cuối cùng, ứng dụng ở mức minh họa: chưa triển khai lên máy chủ công khai, giao diện chưa đặt thời gian chờ riêng cho lời gọi API, kiểm thử tải mới thực hiện trên một máy cá nhân và chưa đánh giá với người dùng thật."
     )
     H2("6.4 Hướng phát triển")
     P(
-        "**Ngắn hạn**, các hướng sau có thể làm ngay trên hệ thống hiện tại. Về mô hình, áp dụng M1 trên mô hình nền ALS và chấm trên một lần chia mới; thay thành phần ItemCF trong M2 bằng biến thể tổng hợp top-N, vốn cho kết quả tốt hơn rõ rệt ở mục 4.11; mở rộng lưới tìm kiếm ra ngoài các biên đã phát hiện và cá nhân hóa mức phạt phổ biến theo từng người dùng như Abdollahpouri và cộng sự [19]. Về đánh giá, lặp lại thực nghiệm trên nhiều lần chia để ước lượng bất định và dùng giao thức Given-N theo (3.14) với nhiều nhóm người dùng luân phiên để tăng cỡ mẫu. Về hệ thống, bổ sung thời gian chờ, bộ nhớ đệm, chạy nhiều tiến trình và triển khai lên môi trường đám mây."
+        "**Ngắn hạn**, các hướng sau có thể làm ngay trên hệ thống hiện tại. Về mô hình, áp dụng M1 trên mô hình nền ALS và chấm trên một lần chia mới; thay thành phần ItemCF trong M2 bằng biến thể tổng hợp top-N, vốn cho kết quả tốt hơn rõ rệt ở mục 4.11; mở rộng lưới tìm kiếm ra ngoài các biên đã phát hiện và cá nhân hóa mức phạt phổ biến theo từng người dùng như Abdollahpouri và cộng sự [19]. Về đánh giá, lặp lại thực nghiệm trên nhiều lần chia để ước lượng bất định và đánh giá M2 bằng kiểm định chéo theo người dùng, tức chia luân phiên người dùng thành nhóm học, nhóm tinh chỉnh và nhóm để dành nhiều lần, với cả hai định nghĩa tập đích, để tăng cỡ mẫu. Về hệ thống, bổ sung thời gian chờ, bộ nhớ đệm, chạy nhiều tiến trình và triển khai lên môi trường đám mây."
     )
     P(
         "**Dài hạn**, có thể dùng bộ dữ liệu nghe nhạc có dấu thời gian như LFM-2b [35] để chia tập theo mốc thời gian thay cho chia ngẫu nhiên; bổ sung các mô hình tối ưu trực tiếp cho xếp hạng như BPR [36] hoặc EASE [37] và các mô hình dựa trên đồ thị như LightGCN [38]; khai thác quan hệ bạn bè có sẵn trong dữ liệu; dùng biểu diễn độc lập với chỉ số đánh giá cho phần đa dạng của M1 (thể loại, đặc trưng âm thanh); bổ sung siêu dữ liệu nghệ sĩ từ nguồn bên ngoài để tăng độ phủ nội dung của M2, cho phép người dùng mới chọn thể loại yêu thích ở bước đầu; và khảo sát người dùng thật về độ mới, độ đa dạng của danh sách gợi ý."
