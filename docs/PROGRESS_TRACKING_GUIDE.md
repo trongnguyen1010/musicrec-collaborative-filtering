@@ -1,145 +1,91 @@
-# Hướng dẫn theo dõi tiến độ hai thành viên
+# Phối hợp và giải thích tiến độ khóa luận
 
-## Khuyến nghị
+Cập nhật ngày 19/10/2026 theo [hướng dẫn của GVHD](huong-dan-gvhd/H%C6%B0%E1%BB%9Bng%20d%E1%BA%ABn%20t%E1%BB%ABng%20b%C6%B0%E1%BB%9Bc%20ho%C3%A0n%20th%C3%A0nh%20kh%C3%B3a%20lu%E1%BA%ADn.docx), [kế hoạch từng bước](WEEKLY_IMPLEMENTATION_PLAN.md) và [quy tắc phát triển](../DEVELOPMENT_RULES.md). Tài liệu này thay quy trình quản lý 12 tuần có ngày cố định trước đây.
 
-Dùng **GitHub Issues + GitHub Projects + Pull Requests + Actions** làm công cụ theo dõi chính.
-Project đã ở trên GitHub, có CI và PR template, nên cách này liên kết trực tiếp task → code → review
-→ test mà không phát sinh một hệ thống vận hành khác. MLflow chỉ theo dõi thí nghiệm ML, không thay
-task board.
+Mục tiêu là biết đã làm gì, kết quả ở đâu và vì sao chọn cách đó, đồng thời bảo đảm cả hai thành viên hiểu để bảo vệ. Không bắt buộc thiết lập GitHub Projects, MLflow, tự động hóa báo cáo hoặc hệ thống chấm điểm tiến độ.
 
-GitHub Projects hỗ trợ iteration theo tuần, custom fields, table/board/roadmap, automation và chart.
-Required status checks có thể chặn merge khi CI chưa pass. Với hai người, chưa cần Jira/Trello hoặc
-tự xây web dashboard.
+## Theo dõi hạn demo cuối tháng 11
 
-## Bước 1 — Tạo Project
+Lịch mục tiêu là 19/10–30/11/2026; ngày/giờ nộp chính xác chờ thông tin thực tế, chưa coi hạn demo là hạn nộp toàn bộ khóa luận. Mốc nội bộ: 25/10 dữ liệu/evaluator và hai baseline; 01/11 UserCF/ItemCF; 08/11 sáu baseline; 15/11 chọn mô hình sau M1/M2 và đánh giá; 22/11 demo đủ luồng; 27/11 sẵn sàng nộp; 28–30/11 dự phòng.
 
-1. Trên GitHub, chọn profile/organization → **Projects** → **New project** → Table.
-2. Đặt tên `MusicRec Thesis — 2026` và link repository trong description/settings.
-3. Tạo Iteration một tuần, bắt đầu 2026-09-07, sinh đủ 12 iterations.
-4. Bật workflow: item mới thành `Todo`; issue đóng thành `Done`.
+- Cuối mỗi mốc đối chiếu minh chứng ngay trong chat: đã xong gì, còn thiếu gì, ảnh hưởng mốc tiếp theo và đề xuất điều chỉnh. Không ghi phần chưa làm là hoàn thành để giữ lịch.
+- Nếu trễ trước 08/11, dừng mở rộng thí nghiệm, ưu tiên correctness và các baseline trong phạm vi đã chốt; việc giảm lưới chưa chạy cần giải thích trước thực hiện.
+- Nếu M1/M2 chưa được kiểm chứng trước 15/11, đề xuất người dùng chốt phạm vi demo trên mô hình nền đã kiểm chứng và fallback trung thực. Không tự coi đề xuất là được duyệt hoặc ghi M1/M2 đã hoàn thành.
+- Từ 23/11 ưu tiên sửa lỗi, kiểm tra môi trường sạch, hướng dẫn chạy và luyện demo; không thêm tính năng hoặc quay lại chọn siêu tham số bằng test.
+- Không tự tạo lịch nhắc, gửi tin cho cô hoặc chuyển bước theo ngày. Các điểm dừng trao đổi vẫn áp dụng; khi chưa được phép tiếp tục thì báo ảnh hưởng lịch thay vì tự chạy.
 
-## Bước 2 — Tạo field chuẩn
+## Một bước làm việc
 
-| Field | Kiểu | Giá trị |
+Trạng thái sau Bước 14 ngày 26/10/2026: đã tổng hợp tám cấu hình thuộc sáu họ baseline, gồm sáu fit xác nhận seed bổ sung cho Random/SVD/PureSVD nhị phân, giữ split seed 42. NDCG@10 mean ± sample std qua model seed 42/43/44: PureSVD nhị phân 0.1564272628 ± 0, SVD 0.0576259192 ± 0.0010411842, Random 0.0004124977 ± 0.0001408550. Popularity 0.0623622664 vẫn vượt SVD cả ba seed. Nhóm lịch sử train <40/=40/>40 có 41/1.822/2 user hợp lệ, không kết luận rộng từ nhóm chỉ hai user. [Data card](data-card.md) giữ toàn bộ bảng chất lượng/chi phí/nhóm/seed và bằng chứng kiểm chứng; 69 tests/lint/format/mypy đạt. PureSVD nhị phân là ứng viên M1 của các cấu hình hiện có; chưa tuning hoặc khóa nền. Baseline/protocol/lịch hiện đủ điều kiện đề xuất bước ALS riêng trước 15/11, chưa cài/huấn luyện mở rộng. Word giữ Bước 6; dừng Bước 14, chờ quyết định nhánh mở rộng hoặc duyệt thiết kế M1, chưa chạy M1/M2/test.
+
+Cập nhật sau phép riêng của người dùng: lượt ALS đầu tiên (32 factors/reg 0.1/a_conf 1/seed 42) đã hoàn thành, tốt nhất vòng 18/dừng 23, NDCG@10 0.1974107044 so PureSVD nhị phân 0.1564272628; coverage tăng, ARP giảm, ILD giảm nhẹ. Đã đo fit/monitor/recommend, OS peak working set và artifact; 73 tests/lint/format/mypy cùng kiểm toán độc lập đạt. Nguồn thực nghiệm mới ưu tiên 2022–2026 theo yêu cầu, có kiểm định nghĩa metric/nhãn preprint. Đề xuất ưu tiên xác nhận hai seed còn lại trước tuning hoặc M1; chưa chạy 43/44 hoặc đổi nền, chưa BPR/SLIM/M1/M2/test. Kế hoạch mốc chính giữ nguyên; Word vẫn Bước 6.
+
+Trạng thái sau điều chỉnh đã được cho phép: xác nhận ALS seed 43/44 xong, tổng hợp lại 17 run cùng cohort/catalog/protocol. ALS NDCG@10 **0.1965852193 ± 0.0014783714** qua ba seed, thắng đối chứng PureSVD nhị phân **3/3 seed**, tăng mean 25,6720%; qua điều kiện giữ đã chốt. Cập nhật ứng viên nền M1 sang ALS cùng cấu hình, seed 42 tham chiếu, không chọn seed đẹp nhất. **76 tests/lint/format/mypy đạt**; kiểm toán độc lập, bốn CSV tổng hợp trùng hash, 219 tệp cũ/11 Word giữ nguyên. Tuning tiếp tục hoãn; chưa BPR/SLIM/M1/M2/test. Việc kế tiếp là duyệt thiết kế Bước 15 M1; chưa triển khai reranker hoặc khóa mô hình cuối.
+
+**Trạng thái hiện hành sau Bước 15:** đã triển khai M1 trên ALS đã xác nhận, giải thích/đóng băng thiết kế trước thực nghiệm. Chọn λ=0.75/β=0.5/C=100 qua 12 tổ hợp seed 42, giữ tham số để xác nhận 43/44 với ablation tương ứng; 20 phép đánh giá, không fit ALS mới. Mean NDCG@10 0.1880698319 ± 0.0018438691 (giảm 4,3317%), ARP giảm 24,7101%, ILD tăng 0.0279024, coverage 6,5225%; gate 5% @10 từng seed/mean đạt. @5 giảm 6,2175%, cần trình bày giới hạn này. Có đường đánh đổi, identity, context load và per-user/nhóm trên cùng catalog; 83 tests đạt. Bằng chứng ở [data card](data-card.md); giữ 358 tệp cũ, gồm 11 Word. Chưa mở test/M2 hoặc khóa mô hình cuối; bước kế tiếp là thiết kế Bước 16 khi người dùng cho phép. Các đoạn Bước 14/ALS phía trên giữ lịch sử quyết định theo từng mốc.
+
+**Trạng thái hiện hành sau Bước 16:** M2 đã chạy theo user split 1.501/187/189 học/tinh chỉnh/để dành, seed 42; fit các thành phần và ngưỡng chỉ từ learning train, thẻ đúng cặp train. Chín cặp chọn α=0.75/ngưỡng10 bằng mean NDCG@10 N=1/3/5 = 0.0454919147, Pop cùng protocol 0.0288284384. N=0 khớp Pop; 48 phép đánh giá, 187 user/186 hợp lệ, catalog 13.210. Giữ cả ItemCF đơn lẻ thấp hơn Pop, thiếu thẻ và trade-off với nội dung; chưa so trực tiếp với warm-start. 91 tests/lint/format/mypy và audit độc lập đạt, 887 tệp cũ/11 Word giữ nguyên. [Data card](data-card.md) giữ bằng chứng; 189 user để dành và test chưa dùng. Tiếp theo là khóa cấu hình/protocol và Bước 17 khi được cho phép; không tự chuyển bước hoặc sửa Word. Các đoạn trước là lịch sử từng mốc.
+
+1. Xác nhận bước được phép, mục tiêu, đầu vào, đầu ra và những việc chưa thuộc bước đó.
+2. Trước khi thực hiện, giải thích căn cứ tài liệu và lựa chọn riêng; chỉ cần kiến thức đủ để hiểu công việc sắp làm.
+3. Khi đến bước code/thực nghiệm, kiểm tra logic trên ví dụ nhỏ trước; lưu kết quả thật cùng cấu hình.
+4. Cuối bước trình bày minh chứng, giới hạn và câu hỏi tự kiểm tra.
+5. Dừng chờ người dùng cho chuyển bước. Có kế hoạch đầy đủ không phải quyền chạy liên tục.
+
+Với UserCF, ItemCF, SVD có độ lệch và PureSVD, cấu hình đầu và tinh chỉnh là các lần làm riêng. M1/M2 có lần trao đổi thiết kế trước khi chạy.
+
+### Nhánh khảo sát mở rộng ngày 24/10/2026
+
+- Đã khảo sát implicit ALS và BPR-MF là hai ứng viên ưu tiên, SLIM là dự phòng; chưa có kết quả mô hình hoặc thay đổi sáu baseline chính. Thiết kế lượt đầu, trần 8/8/4 cấu hình và tiêu chí giữ nằm trong [kế hoạch hiện hành](WEEKLY_IMPLEMENTATION_PLAN.md#thực-nghiệm-bổ-sung-có-giới-hạn); nguồn ở [khảo sát tài liệu](tai-lieu-tham-khao/TONG_QUAN.md#khao-sat-mo-rong-20261024).
+- Chỉ xét thử sau khi sáu baseline có validation hợp lệ, trước chốt nền M1 và khóa test, nếu không ảnh hưởng M1/M2 hoặc mốc 15/11. Trễ mốc baseline 08/11 hoặc thiếu thời gian thì chuyển nhánh phụ sau demo; giữ mốc 22/11, 27/11 và quỹ dự phòng.
+- Với từng ứng viên, tách cho phép triển khai/lượt chạy đầu → giải thích số đo và chi phí → cho phép tinh chỉnh → kiểm tra cấu hình được chọn. Đồng ý khảo sát không cho phép tự cài thư viện, tạo config hoặc train.
+- Đổi nền M1 cần đánh giá lại M1 cùng ablation; M2 vẫn dùng ItemCF theo thiết kế riêng. Test đã mở không dùng để chọn lại mô hình của đợt đã khóa.
+- Chưa sửa báo cáo Word ở bước khảo sát. Khi kết quả đủ căn cứ, rút gọn diễn giải hoặc chuyển chi tiết xuống phụ lục để dành chỗ; giữ bảng kết quả của mọi mô hình đã chạy, kể cả không cải thiện.
+
+## Nội dung giải thích cuối bước
+
+Không tạo tệp nhật ký hoặc Word tiến độ mới. Trình bày trong chat theo sáu mục:
+
+1. **Việc đã làm:** tệp thay đổi, lý do và phạm vi đã hoàn thành.
+2. **Bằng chứng:** bảng/hình/ví dụ hoặc kết quả kiểm tra thực tế. Chưa chạy thì ghi chưa có số liệu.
+3. **Căn cứ:** bài báo/README nào được dùng; lựa chọn nào của nhóm; có phải tái hiện chính xác không.
+4. **Diễn giải:** kết quả có nghĩa gì, chưa chứng minh điều gì, có lỗi hoặc kết quả không cải thiện không.
+5. **Tự kiểm tra:** 2–3 câu hỏi bảo vệ cùng trả lời ngắn; nếu chưa hiểu, giải thích lại trước chuyển bước.
+6. **Báo cáo Word:** chỉ sửa hoặc xuất bản mới khi người dùng yêu cầu rõ ràng, theo yêu cầu mới nhất ngày 25/10/2026. Không tự cập nhật sau từng bước hoặc khi chạy hết mô hình; kết quả mới vẫn lưu ngay trong run và tài liệu làm việc hiện có.
+
+Bước quản lý hoặc chỉ sửa tài liệu dùng chính tài liệu nguồn làm căn cứ; không đòi có bài báo hay metric mới.
+
+## Phân công hai thành viên
+
+| Trách nhiệm tham khảo | Người phụ trách chính | Người đọc chéo |
 | --- | --- | --- |
-| Status | Single select | Backlog, Ready, In Progress, Review, Blocked, Done |
-| Iteration | Iteration | Week 1 ... Week 12 |
-| Owner | Assignee | Một owner duy nhất |
-| Reviewer | Text/assignee | Thành viên còn lại |
-| Area | Single select | Data, Evaluation, Model, MLOps, API, UI, Docs |
-| Priority | Single select | P0, P1, P2 |
-| Estimate | Number | 1, 2, 3, 5, 8 |
-| Actual | Number | Ghi sau nghiệm thu để cải thiện estimate |
-| Risk | Single select | Low, Medium, High |
-| Evidence | Text | PR, MLflow run, report hoặc artifact |
+| Dữ liệu, EDA, evaluator và phân tích | Cao Trọng Nguyên | Lê Khắc Gia Khang |
+| Mô hình và prototype khi đến bước | Lê Khắc Gia Khang | Cao Trọng Nguyên |
+| Lựa chọn phương pháp, kết luận và báo cáo | Cả hai cùng hiểu và thống nhất | Cả hai |
 
-Không tạo field `% complete` tự nhập. Tiến độ được tính từ accepted points của item Done để tránh
-tình trạng “90%” kéo dài.
+Một người phụ trách một việc tại một thời điểm; giao diện chung có một người sửa chính. Không phân công theo kiểu mỗi người chỉ biết một nửa khóa luận. Không tự nhắn cho thành viên khác hoặc GVHD.
 
-## Bước 3 — Tạo view
+## Dùng Git và công cụ hiện có
 
-1. **Current week:** filter `iteration:@current`, board theo Status, sort Priority.
-2. **By member:** các item chưa Done, group Owner, hiện tổng Estimate.
-3. **Blocked:** filter `status:Blocked`, sort Priority/target date.
-4. **Review queue:** filter `status:Review`, group Reviewer.
-5. **Roadmap:** 12 iterations và milestones.
-6. **Quality debt:** label `tech-debt` hoặc `bug`, group Area.
+- Dùng Git ghi nhận thay đổi với mục tiêu rõ; không tự commit/push thay người dùng nếu chưa được yêu cầu.
+- Khi chuẩn bị PR, tuân thủ review và CI của repository. Hoàn thành bước trong chat không đồng nghĩa PR đã merge hoặc hệ thống đã phát hành.
+- Có thể liên kết issue/PR nếu nhóm đang dùng; không bắt buộc tạo board/issue cho mọi trao đổi hoặc thay đổi Markdown nhỏ.
+- Run thực nghiệm lưu cấu hình, seed, phiên bản mã, hash dữ liệu/split, dự đoán, metric và thời gian. MLflow/DVC là công cụ tùy nhu cầu, không thay minh chứng.
+- Không dùng số commit, dòng code, giờ online hoặc phần trăm tự nhập để suy ra mức hiểu hay đóng góp.
+- Không tạo checker tiến độ, scheduled Action, báo cáo tuần tự sinh hoặc thêm công cụ quản lý khi chưa có nhu cầu và yêu cầu cụ thể.
 
-Giới hạn WIP: mỗi người tối đa **một item In Progress**. PR nhỏ có CI xanh không nên chờ review quá
-một ngày làm việc.
+## Trao đổi với GVHD
 
-## Bước 4 — Chuẩn hóa Issue
+Hướng dẫn đề xuất nhịp hằng tuần hoặc hai tuần/lần. Người dùng thống nhất lịch thực tế với cô; trợ lý chỉ chuẩn bị nội dung khi được yêu cầu, không tự gửi hoặc tạo nhắc việc.
 
-```markdown
-## Mục tiêu / milestone / research question
+Nội dung gọn: bước vừa hoàn thành và minh chứng; khó khăn cụ thể; quyết định cần cô góp ý; bước tiếp theo. Thay đổi mô hình hay thử nghiệm so với hướng dẫn cần nêu mục đích và cách kiểm chứng, không tự ghi là cô đã duyệt.
 
-## Phạm vi
-- In scope:
-- Out of scope:
+## Điều kiện hoàn thành và các điểm cần dừng
 
-## Cách thực hiện dự kiến
-
-## Acceptance criteria
-- [ ] Đầu ra cụ thể ...
-- [ ] Test ...
-- [ ] Quality gates pass
-- [ ] Docs/config/ADR cập nhật nếu cần
-
-## Dependency
-- Blocked by #...
-
-## Evidence khi hoàn thành
-- PR:
-- Command/test output:
-- MLflow run / artifact / screenshot:
-```
-
-Task experiment phải ghi dataset hash, config hash, seed, candidate protocol và metric. Task bug
-phải có cách tái lập và regression test.
-
-## Bước 5 — Nối Issue, PR và CI
-
-- Branch chứa issue number, ví dụ `feat/42-item-cf`.
-- PR ghi `Closes #42` để issue tự đóng sau merge.
-- Bảo vệ `main`: require PR, một approval và required CI job `quality`.
-- Bật dismiss stale approval khi có commit mới nếu repository settings hỗ trợ.
-- Thêm `.github/CODEOWNERS` sau khi có đúng GitHub username của hai thành viên.
-
-Không đoán username trong `CODEOWNERS`: GitHub chỉ request review khi account hợp lệ và có write
-permission.
-
-## Bước 6 — Dashboard và báo cáo tuần
-
-Tạo ba chart:
-
-1. accepted points theo iteration/owner — để nhìn throughput, không xếp hạng cá nhân;
-2. items theo Status — để nhìn carry-over, blocker và review queue;
-3. Estimate theo Area — để tránh làm nhiều model nhưng thiếu data/evaluation/test.
-
-Mẫu weekly review:
-
-```markdown
-# Weekly review — Week N
-
-- Planned / accepted / carry-over points: ... / ... / ...
-- Milestone: Green | Yellow | Red
-- CI / tests / coverage: ...
-- Reproducibility: pass/fail; command/run ID: ...
-- Completed evidence: #issue / #PR / MLflow run ...
-- Blockers và owner/date: ...
-- Escaped defects/rework: ...
-- Decisions/ADR: ...
-- Next commitment (<= 80% capacity): ...
-```
-
-Theo dõi planned/accepted points, carry-over ratio, tuổi blocker, review turnaround, CI first-pass
-rate, escaped defects, reproducibility pass/fail và milestone forecast. Không dùng số commit, dòng
-code hay thời gian online để đánh giá đóng góp.
-
-## Checker tự động phiên bản nhỏ
-
-Nên dùng board thủ công hai tuần trước để biết nhóm thật sự thiếu báo cáo nào. Sau đó viết một script
-dùng GitHub CLI/API, đọc Project/Issues và sinh `reports/progress/week-N.md`; không tạo database mới.
-
-Checker v1 nên phát hiện:
-
-- item In Progress/Review/Done thiếu owner, iteration, estimate hoặc acceptance criteria;
-- Done không có merged PR/CI success;
-- WIP > 1/người, review quá hạn, blocker quá hai ngày;
-- dependency chưa Done nhưng downstream đã In Progress;
-- tổng estimate hai người lệch quá 30% trong tuần;
-- experiment thiếu MLflow run/data hash/config hash;
-- xuất JSON và Markdown; chỉ trả exit code lỗi cho governance P0.
-
-Có thể tạo scheduled GitHub Action chạy chiều Chủ nhật và upload/comment báo cáo. Token chỉ cấp
-quyền đọc metadata cần thiết; tuyệt đối không commit personal access token. Nếu Project thuộc
-organization/private repository, kiểm tra quyền API trước khi viết script.
-
-## Nguồn chính thức
-
-- [GitHub Projects quickstart](https://docs.github.com/en/issues/planning-and-tracking-with-projects/learning-about-projects/quickstart-for-projects)
-- [GitHub Projects best practices](https://docs.github.com/en/issues/planning-and-tracking-with-projects/learning-about-projects/best-practices-for-projects)
-- [GitHub iteration fields](https://docs.github.com/en/issues/planning-and-tracking-with-projects/understanding-fields/about-iteration-fields)
-- [GitHub Project charts](https://docs.github.com/en/issues/planning-and-tracking-with-projects/viewing-insights-from-your-project/configuring-charts)
-- [GitHub required status checks](https://docs.github.com/en/pull-requests/reference/status-checks)
-- [GitHub CODEOWNERS](https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners)
+- Tài liệu: đúng nguồn, phân biệt kế hoạch với thực tế, liên kết hợp lệ và không mâu thuẫn phương pháp hiện hành.
+- Dữ liệu: bảo toàn/giải thích số lượng, đúng schema và đúng quy tắc chống rò rỉ.
+- Mô hình: ví dụ tính tay phù hợp, điểm hữu hạn, loại lịch sử, thứ tự ổn định, xuất/nạp đúng.
+- Thực nghiệm: cùng protocol, chỉ validation chọn cấu hình, có kết quả truy vết và kết luận đúng giới hạn.
+- Prototype: chỉ làm sau thực nghiệm; offline/API nhất quán, thử môi trường sạch và demo được.
+- Phát hiện cặp trùng count khác nhau, nguồn không rõ, leakage hoặc evaluator sai: giải thích và giải quyết trong phạm vi được phép trước khi chuyển tiếp.
+- Kết quả không cải thiện vẫn là kết quả hợp lệ; không thay split, lọc đuôi dài hoặc mở test để tìm bảng đẹp hơn.

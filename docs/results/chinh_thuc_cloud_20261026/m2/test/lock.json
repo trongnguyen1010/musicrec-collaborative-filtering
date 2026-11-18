@@ -1,0 +1,90 @@
+{
+  "step": 17,
+  "locked_at_utc": "2026-10-26T15:35:34.681479+00:00",
+  "m2_run": "/home/claude/musicrec-collaborative-filtering/outputs/chinh_thuc_cloud_20261026/chuong_4/m2_tuning",
+  "selected": {
+    "alpha": 0.75,
+    "history_threshold": 10,
+    "validation_mean_ndcg_at_10_n135": 0.045491914679283825
+  },
+  "m2_metrics_sha256": "826c227ddd41a5eba2d0a2372c8e638b573f4b2d8558e69bf019db92e6a411d8",
+  "selection_sha256": "f3d1a5b89eefcd9c4aa602addc5e7b3036588bc6dcc285d902a337f6f3499535",
+  "user_roles_sha256": "19b58ea8cacd2a17837241b7af606877cd9b521eee91e1f05c6d6d1e9bd0252f",
+  "model_sha256": {
+    "item_cf/neighbors.npz": "fb929f7d1287f51abf6adbc1db29c0080dbb3809b2b6ef85e9a8405978c3b420",
+    "item_cf/ratings.npz": "93184b3c6148b642d1d821e08ef1c4f8e03c6db009d35cb52baec53cb16e4feb",
+    "item_cf/state.json": "035ce7f83fd7f1a68341d5cac3b8c6d494c6c9737ade9b632c5e4813d0b33277",
+    "state.json": "7a92abea1f935695bbf9ffaaf91164fcb4d210c1b1b77d20e5f5cab3b74b81aa",
+    "statistics.npz": "7ed8888139159b19124d8acc038fd34ea80c527f50a3f2ed57b9d384267d58c0",
+    "tags.npz": "cdd259eb9ac3421eeb442d123d09ae204910eddcaebb78fbabad31bc92d7f762"
+  },
+  "cohort": "reserved_users_with_at_least_five_train_interactions",
+  "profiles": "profile_order_seed_42_nested_prefix_of_train_artists",
+  "targets": "test_pairs_intersect_learning_catalog",
+  "profile_sizes": [
+    0,
+    1,
+    3,
+    5
+  ],
+  "methods": [
+    "popularity",
+    "content",
+    "item_cf",
+    "m2"
+  ],
+  "comparison_pairs": [
+    [
+      "m2",
+      "popularity",
+      1
+    ],
+    [
+      "m2",
+      "content",
+      1
+    ],
+    [
+      "m2",
+      "item_cf",
+      1
+    ],
+    [
+      "m2",
+      "popularity",
+      3
+    ],
+    [
+      "m2",
+      "content",
+      3
+    ],
+    [
+      "m2",
+      "item_cf",
+      3
+    ],
+    [
+      "m2",
+      "popularity",
+      5
+    ],
+    [
+      "m2",
+      "content",
+      5
+    ],
+    [
+      "m2",
+      "item_cf",
+      5
+    ]
+  ],
+  "primary_comparison": [
+    "m2",
+    "popularity",
+    3
+  ],
+  "metric": "ndcg@10",
+  "git_sha": "717d04bb844c40d526cf2b8e0893249eec3a930b"
+}

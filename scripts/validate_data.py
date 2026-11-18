@@ -19,7 +19,9 @@ def main() -> None:
     validated = frame.loc[:, ["userID", "artistID", "weight"]].rename(
         columns={"userID": "user_id", "artistID": "item_id", "weight": "listening_count"}
     )
-    validated = validated.dropna().astype({"user_id": str, "item_id": str, "listening_count": float})
+    validated = validated.dropna().astype(
+        {"user_id": str, "item_id": str, "listening_count": float}
+    )
     if (validated["listening_count"] <= 0).any():
         raise ValueError("listening_count must be positive")
     OUTPUT_FILE.parent.mkdir(parents=True, exist_ok=True)

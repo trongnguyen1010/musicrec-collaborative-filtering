@@ -1,0 +1,214 @@
+{
+  "locked_at_utc": "2026-10-26T15:15:38.514927+00:00",
+  "representations_run": "/home/claude/musicrec-collaborative-filtering/outputs/chinh_thuc_cloud_20261026/chuong_3/run/representations",
+  "selection_rule": "ndcg_at_10_validation_seed42; stochastic winners confirmed on 43/44",
+  "models": {
+    "random": {
+      "refit": true
+    },
+    "popularity": {
+      "refit": true
+    },
+    "user_cf": {
+      "selected": {
+        "neighbors": 20,
+        "shrinkage": 0
+      },
+      "validation_ndcg_at_10_seed42": 0.017488321672763516,
+      "runs": {
+        "42": {
+          "path": "/home/claude/musicrec-collaborative-filtering/outputs/chinh_thuc_cloud_20261026/chuong_4/tuning/user_cf/user_cf_nei20_shr0",
+          "metrics_sha256": "7a32df820d7949a9dc1260694d7cdda3375b686581b709502ad0b57fd87df168",
+          "model_sha256": {
+            "neighbors.npz": "1cdd1ad59adf269506f60d6274ac554e8ec0bb4587ec4a46c63687f4f288bb2a",
+            "ratings.npz": "42e18cee7bede1d35e80c26a1cc3e1e5ef30bd2fe75942ab2aeb9164b3adac01",
+            "state.json": "42a56aba8f9be630299bc3e025c605f5234ab6be8514c70e70d96fd3971faa10"
+          }
+        }
+      }
+    },
+    "item_cf": {
+      "selected": {
+        "neighbors": 20,
+        "shrinkage": 0
+      },
+      "validation_ndcg_at_10_seed42": 0.015364109803005505,
+      "runs": {
+        "42": {
+          "path": "/home/claude/musicrec-collaborative-filtering/outputs/chinh_thuc_cloud_20261026/chuong_4/tuning/item_cf/item_cf_nei20_shr0",
+          "metrics_sha256": "0b4182196f48025f912456ca6f5dbdc14c3be5784bd5930307c64053e4e4c0d0",
+          "model_sha256": {
+            "neighbors.npz": "3c275ffe06b6807ce8d0e58292db80d7093b3c67ec7527511663cf2f73974bb8",
+            "ratings.npz": "42e18cee7bede1d35e80c26a1cc3e1e5ef30bd2fe75942ab2aeb9164b3adac01",
+            "state.json": "64dc4a1c3791e6c73f037bb2eeb343e9544861b738ec3b3c5deee086c627a21d"
+          }
+        }
+      }
+    },
+    "svd": {
+      "selected": {
+        "latent_factors": 16,
+        "learning_rate": 0.001925,
+        "regularization": 0.01025
+      },
+      "validation_ndcg_at_10_seed42": 0.060665866476874455,
+      "runs": {
+        "42": {
+          "path": "/home/claude/musicrec-collaborative-filtering/outputs/chinh_thuc_cloud_20261026/chuong_4/tuning/svd/svd_lat16_lea0.001925_reg0.01025",
+          "metrics_sha256": "2ad0a3d44ccb85697dfc9d8c517bbb79a4486ccd2bd79972914d1e711078a53a",
+          "model_sha256": {
+            "parameters.npz": "4bd3e715d1191e30bf8cbfa24136e7b6566a39bb83dde801b176a450826c2c73",
+            "ratings.npz": "42e18cee7bede1d35e80c26a1cc3e1e5ef30bd2fe75942ab2aeb9164b3adac01",
+            "state.json": "24c7dbc35e093670eba6b1f1400ec148006da8b6d58d20bfe6c1eb5b311504bf"
+          }
+        },
+        "43": {
+          "path": "/home/claude/musicrec-collaborative-filtering/outputs/chinh_thuc_cloud_20261026/chuong_4/tuning/svd/svd_lat16_lea0.001925_reg0.01025_seed43",
+          "metrics_sha256": "a36c9518ad919cb7505cab663e07f5694260e134256391728aa39b371a415555",
+          "model_sha256": {
+            "parameters.npz": "340eb16d0db4a41bc54333eb809f3084e1773054e091c68ee2e21205d65d9391",
+            "ratings.npz": "42e18cee7bede1d35e80c26a1cc3e1e5ef30bd2fe75942ab2aeb9164b3adac01",
+            "state.json": "5fc3e41240181ce7e71eb78bf2cf8999f502e8a8e658d4f45cb69b3b0c8b975e"
+          }
+        },
+        "44": {
+          "path": "/home/claude/musicrec-collaborative-filtering/outputs/chinh_thuc_cloud_20261026/chuong_4/tuning/svd/svd_lat16_lea0.001925_reg0.01025_seed44",
+          "metrics_sha256": "892e3c48d7c61a9b0dd86c553ab0b5401d726aba83eea4e10ee75b3d8c571156",
+          "model_sha256": {
+            "parameters.npz": "4d9d471dc42d5d82cffe6dcb8abc48721b8ba53536fb91a785268f99dc1c8a01",
+            "ratings.npz": "42e18cee7bede1d35e80c26a1cc3e1e5ef30bd2fe75942ab2aeb9164b3adac01",
+            "state.json": "ac8cc68ea96a0dff56f19bcb2603a0f8ddc551c526ee1ec6bcc0b67b54ff8adf"
+          }
+        }
+      }
+    },
+    "pure_svd": {
+      "selected": {
+        "latent_factors": 16
+      },
+      "validation_ndcg_at_10_seed42": 0.16661147142472735,
+      "runs": {
+        "42": {
+          "path": "/home/claude/musicrec-collaborative-filtering/outputs/chinh_thuc_cloud_20261026/chuong_4/tuning/pure_svd/pure_svd_lat16",
+          "metrics_sha256": "1e0feb29332512c7ca817e0e82afcb30df01cb357b8b15b96503a735641e3e16",
+          "model_sha256": {
+            "projection.npz": "bbbd38884e3975ac46c40d1ca319489055cc7203b843f7961f0e0cddd12b86de",
+            "ratings.npz": "7fb0527b7cc62c996f258c8cfa44055ad16195c4c700d7539490f4f2f965d69c",
+            "state.json": "4289f2d2457f062361acda15c71208e0d0ad45ae203996a95814876c9ee7d080"
+          }
+        },
+        "43": {
+          "path": "/home/claude/musicrec-collaborative-filtering/outputs/chinh_thuc_cloud_20261026/chuong_4/tuning/pure_svd/pure_svd_lat16_seed43",
+          "metrics_sha256": "deed15a80f001dfb19e92365aac7b59cc1f8aeb7a03d4b742ea778f5b105150a",
+          "model_sha256": {
+            "projection.npz": "7e3148d72e67a9909995b554cafdf5e0c22a449a8499df9aee08fa04fcd49aec",
+            "ratings.npz": "7fb0527b7cc62c996f258c8cfa44055ad16195c4c700d7539490f4f2f965d69c",
+            "state.json": "0edabb334f53b41c5339500efc507c7cd2ae58001c7a08adf4dd5c7eef68149c"
+          }
+        },
+        "44": {
+          "path": "/home/claude/musicrec-collaborative-filtering/outputs/chinh_thuc_cloud_20261026/chuong_4/tuning/pure_svd/pure_svd_lat16_seed44",
+          "metrics_sha256": "497afd0af6c5e7f7a28ff0b4517b4668437c11d1527d5f9cddeeabd3441a0083",
+          "model_sha256": {
+            "projection.npz": "58c41472b73e9f3725d565cbc3d209d1cfda8733c0c050028dc8826b01b998b0",
+            "ratings.npz": "7fb0527b7cc62c996f258c8cfa44055ad16195c4c700d7539490f4f2f965d69c",
+            "state.json": "5bb6977ff1f70d95a8eff7eab5ccc1903fa4f5e55a3d4338ccd2457eaf012fee"
+          }
+        }
+      }
+    },
+    "implicit_als": {
+      "selected": {
+        "latent_factors": 32,
+        "regularization": 0.1,
+        "confidence_scale": 1
+      },
+      "validation_ndcg_at_10_seed42": 0.19743316124043386,
+      "runs": {
+        "42": {
+          "path": "/home/claude/musicrec-collaborative-filtering/outputs/chinh_thuc_cloud_20261026/chuong_4/tuning/implicit_als/implicit_als_lat32_reg0.1_con1",
+          "metrics_sha256": "dc18d1e719a8e0f2c6149fd8666ce9721f4dc0e8e691ed186021147100b1f7de",
+          "model_sha256": {
+            "confidence.npz": "58f6563e35617e6f6630f38cde0ecdb200f46f320d6647fcb44e44067585859f",
+            "factors.npz": "f724163bad5677bfbaac940525f76bae84e6d282daea5e43ceae34fee3a99c13",
+            "state.json": "af3f25d26cca909a8059d1e2a26a2f00d08922f6589f3c23e3c9a09fa01a1afe"
+          }
+        },
+        "43": {
+          "path": "/home/claude/musicrec-collaborative-filtering/outputs/chinh_thuc_cloud_20261026/chuong_4/tuning/implicit_als/implicit_als_lat32_reg0.1_con1_seed43",
+          "metrics_sha256": "6926d6afed7d0fe803deb55d910ec51bd03b9498f396ab8a31557400f2b9e71e",
+          "model_sha256": {
+            "confidence.npz": "58f6563e35617e6f6630f38cde0ecdb200f46f320d6647fcb44e44067585859f",
+            "factors.npz": "4bdaf8236f83dca0a3f1d1b31818297f9c43061767d902604ae9715e56abb7ea",
+            "state.json": "1a48fc77ff7825112e1e8a839da61c51b7df456a7a0a2755d93712150f0389a6"
+          }
+        },
+        "44": {
+          "path": "/home/claude/musicrec-collaborative-filtering/outputs/chinh_thuc_cloud_20261026/chuong_4/tuning/implicit_als/implicit_als_lat32_reg0.1_con1_seed44",
+          "metrics_sha256": "add54500f1245a9ce5c8eadc6a40c99e4bffa049ba4f3873997bb9352c36b44b",
+          "model_sha256": {
+            "confidence.npz": "58f6563e35617e6f6630f38cde0ecdb200f46f320d6647fcb44e44067585859f",
+            "factors.npz": "2eee8dc09b0c4424497777bc95abb14b6d4069ebafa546cbce6e076e933c82cc",
+            "state.json": "58f4592ce8cbf5bd3660fecdc8a270bebf52cd3ebdc098f756f01c0b770e955e"
+          }
+        }
+      }
+    },
+    "m1": {
+      "base": "pure_svd",
+      "lambda": 0.75,
+      "beta": 0.5,
+      "candidate_size": 100,
+      "runs": {
+        "42": {
+          "path": "/home/claude/musicrec-collaborative-filtering/outputs/chinh_thuc_cloud_20261026/chuong_4/m1_pure_svd/seed_42/selected_model",
+          "model_sha256": {
+            "binary.npz": "8658e3a08ac9710b0438b7da9edc65061ceecbda2b231a27ceae0a7f61aabed8",
+            "state.json": "4cb67adc68c45029f2a54ce4244a70e8520bc6c03435d2f070a517746ea995f6"
+          }
+        },
+        "43": {
+          "path": "/home/claude/musicrec-collaborative-filtering/outputs/chinh_thuc_cloud_20261026/chuong_4/m1_pure_svd/seed_43/selected_model",
+          "model_sha256": {
+            "binary.npz": "8658e3a08ac9710b0438b7da9edc65061ceecbda2b231a27ceae0a7f61aabed8",
+            "state.json": "4cb67adc68c45029f2a54ce4244a70e8520bc6c03435d2f070a517746ea995f6"
+          }
+        },
+        "44": {
+          "path": "/home/claude/musicrec-collaborative-filtering/outputs/chinh_thuc_cloud_20261026/chuong_4/m1_pure_svd/seed_44/selected_model",
+          "model_sha256": {
+            "binary.npz": "8658e3a08ac9710b0438b7da9edc65061ceecbda2b231a27ceae0a7f61aabed8",
+            "state.json": "4cb67adc68c45029f2a54ce4244a70e8520bc6c03435d2f070a517746ea995f6"
+          }
+        }
+      },
+      "m1_metrics_sha256": "0040761daf4126251fa21f498b7f24bda53030a0c837b26ce2fde7f95958695a"
+    }
+  },
+  "comparison_pairs": [
+    [
+      "pure_svd",
+      "popularity"
+    ],
+    [
+      "svd",
+      "pure_svd"
+    ],
+    [
+      "m1",
+      "pure_svd"
+    ],
+    [
+      "implicit_als",
+      "pure_svd"
+    ]
+  ],
+  "ks": [
+    5,
+    10,
+    20
+  ],
+  "test_masks": "train_plus_validation",
+  "refit_on_validation": false,
+  "git_sha": "e1350ceee849daf4ab78ef607629996f96ae35ca"
+}

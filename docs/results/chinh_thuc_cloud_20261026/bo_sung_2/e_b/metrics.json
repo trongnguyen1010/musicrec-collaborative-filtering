@@ -1,0 +1,81 @@
+{
+  "created_at_utc": "2026-11-10T12:28:52.201173+00:00",
+  "command": [
+    "scripts/run_e_b_m1_beta.py",
+    "--output-dir",
+    "outputs/chuong_4_bo_sung_2/e_b"
+  ],
+  "locked_point_reproduced_max_abs_difference": 1.7763568394002505e-15,
+  "base_ndcg10_lambda1_beta0": 0.1666114714247273,
+  "bound_0.95": 0.15828089785349092,
+  "points_above_bound": [
+    [
+      0.5,
+      0.0
+    ],
+    [
+      0.5,
+      0.1
+    ],
+    [
+      0.75,
+      0.0
+    ],
+    [
+      0.75,
+      0.1
+    ],
+    [
+      0.75,
+      0.25
+    ],
+    [
+      0.75,
+      0.5
+    ],
+    [
+      1.0,
+      0.0
+    ],
+    [
+      1.0,
+      0.1
+    ],
+    [
+      1.0,
+      0.25
+    ],
+    [
+      1.0,
+      0.5
+    ],
+    [
+      0.75,
+      0.75
+    ],
+    [
+      1.0,
+      0.75
+    ],
+    [
+      1.0,
+      1.0
+    ]
+  ],
+  "runtime": {
+    "python": "3.11.9",
+    "platform": "Windows-10-10.0.26200-SP0",
+    "processor": "Intel64 Family 6 Model 140 Stepping 1, GenuineIntel",
+    "cpu_count": 8,
+    "threads": {
+      "OPENBLAS_NUM_THREADS": "1",
+      "OMP_NUM_THREADS": "1"
+    },
+    "numpy": "2.4.6",
+    "scipy": "1.17.1",
+    "pandas": "2.3.3",
+    "pyarrow": "19.0.1",
+    "git_sha": "26af632e9b0e90df58fb2532f68d682d1d7bbcea",
+    "git_status": " M scripts/evaluate_m2_test.py\n M scripts/report_ch4_extras.py\n M scripts/run_baseline.py\n M scripts/test_statistics.py\n M src/musicrec/recommenders/item_cf.py\n M src/musicrec/recommenders/popularity.py\n M src/musicrec/recommenders/user_cf.py\n M tests/unit/test_popularity.py\n?? SHA256SUMS_checkpoints_demo.txt\n?? configs/e7_topn_neighbors.yaml\n?? configs/e_s_sensitivity.yaml\n?? docs/results/chinh_thuc_cloud_20261026/bo_sung_2/\n?? docs/results/chuong_4_bo_sung_2.md\n?? scripts/compare_statistics.py\n?? scripts/report_e_c_groups.py\n?? scripts/report_e_d_data.py\n?? scripts/run_e7_topn.py\n?? scripts/run_e_b_m1_beta.py\n?? scripts/run_e_p_popularity.py\n?? scripts/run_e_s_sensitivity.py\n?? src/musicrec/evaluation/paired.py\n?? tests/unit/test_given_n_e7_scripts.py\n?? tests/unit/test_neighborhood_sum.py\n?? tests/unit/test_paired.py\n"
+  }
+}
