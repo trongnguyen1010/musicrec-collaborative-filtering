@@ -107,9 +107,11 @@ F(FIG + "luong_hai_lan.png", "Luồng xử lý ngoại tuyến và trực tuyế
 P(
     "Các tham số mô hình, ánh xạ mã và ngưỡng biến đổi phải được nạp cùng phiên bản. Tập kiểm thử được "
     "giữ riêng với dữ liệu phục vụ ứng dụng. Hình 3.3 thể hiện vị trí của mô hình và hai mô-đun M1, M2 "
-    "trong hệ thống."
+    "trong hệ thống. Lớp trên cùng là giao diện Next.js, giao diện chính của ứng dụng (Chương 5); giao "
+    "diện Streamlit chỉ là phương án dự phòng và gọi cùng dịch vụ API."
 )
-FKEEP(618, "Kiến trúc mô hình và dịch vụ MusicRec")
+# v23: redrawn (nguon_v23/ve_hinh_v23.py) with Next.js on top and Streamlit as fallback.
+F(FIG + "kien_truc_v23.png", "Kiến trúc mô hình và dịch vụ MusicRec", width_cm=15.0)
 KEEP(620)
 
 H2("3.4 Bộ dữ liệu Last.fm HetRec 2011")
@@ -340,7 +342,9 @@ P(
     "Quy tắc chọn ARP thấp nhất trong các cấu hình giảm NDCG@10 không quá 5% luôn đẩy ⟦β⟧ lên giá trị "
     "lớn nhất còn thỏa ngưỡng. Vì 10 trên 12 điểm của lưới thỏa ngưỡng, ⟦β=0,5⟧ được chọn chủ yếu do giới "
     "hạn của lưới chứ không do dữ liệu. Mục 4.11 mở rộng ⟦β⟧ trên tập xác thực để vẽ trọn đường đánh đổi; "
-    "kết quả mở rộng chỉ dùng để thảo luận, cấu hình đã khóa không thay đổi."
+    "kết quả mở rộng chỉ dùng để thảo luận, cấu hình đã khóa không thay đổi. Biên tương đương của kiểm "
+    "định TOST ở mục 4.7 lấy 5% NDCG@10 của mô hình nền trên tập kiểm thử; mục 4.7 kiểm tra thêm phương "
+    "án lấy biên từ NDCG@10 xác thực của mô hình nền."
 )
 H3("3.7.4 Minh họa cách chọn kết quả")
 KEEP(714)
