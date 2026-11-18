@@ -10,7 +10,7 @@ Tên tệp: `33_BaoCaoKhoaLuan_CaoTrongNguyen_LeKhacGiaKhang_vNN_DD-MM-YYYY.docx
 | --- | --- | --- | --- |
 | 06/11/2026 | [GopY_GVHD_06-11-2026](GopY_GVHD_06-11-2026_KLTN_TrongNguyen_GiaKhang.docx) | [GOP_Y_GVHD_06-11-2026.md](GOP_Y_GVHD_06-11-2026.md) | [KE_HOACH_SUA_THEO_GOP_Y_GVHD.md](KE_HOACH_SUA_THEO_GOP_Y_GVHD.md) (chờ nhóm duyệt) |
 | 10/11/2026 | [GopY_GVHD_10-11-2026](GopY_GVHD_10-11-2026_KLTN_TrongNguyen_GiaKhang.docx) (góp ý trên bản v18, có công thức viết sẵn) | Chữ đỏ là nhận xét, chữ xanh là đề xuất viết lại | Giai đoạn 1 (thực nghiệm, [chuong_4_bo_sung_2.md](../results/chuong_4_bo_sung_2.md)) và Giai đoạn 2 (Chương 2–4, bản v19) đã làm; Giai đoạn 3 (Chương 1, 5, 6, bìa, Tóm tắt, Phụ lục C, D) làm ở bản v20 |
-| 18/11/2026 | [Hướng dẫn viết bài SSRC](../bai-bao-ssrc/GopY_GVHD_18-11-2026_HuongDanVietBai_SSRC.docx), [bài báo mẫu](../bai-bao-ssrc/GopY_GVHD_18-11-2026_BaiBaoMau_SSRC.docx) (góp ý trên bản v22) | Mười điểm nhận xét khóa luận (mục 1.3 của hướng dẫn) và hướng dẫn viết bài báo SSRC | Mười điểm đã sửa ở v23 ([bao_cao_v23_thay_doi.md](../results/bao_cao_v23_thay_doi.md)); bài báo SSRC làm tiếp |
+| 18/11/2026 | [Hướng dẫn viết bài SSRC](../bai-bao-ssrc/GopY_GVHD_18-11-2026_HuongDanVietBai_SSRC.docx), [bài báo mẫu](../bai-bao-ssrc/GopY_GVHD_18-11-2026_BaiBaoMau_SSRC.docx) (góp ý trên bản v22) | [GOP_Y_GVHD_18-11-2026.md](GOP_Y_GVHD_18-11-2026.md) (mười điểm nhận xét khóa luận, câu hỏi Phần 6 và câu trả lời) | Mười điểm đã sửa ở v23 ([bao_cao_v23_thay_doi.md](../results/bao_cao_v23_thay_doi.md)); bài báo SSRC v1 ([ghi chú](../bai-bao-ssrc/GHI_CHU_BAI_BAO_v1.md)) chờ nhóm duyệt |
 
 ## Các bản đang giữ
 
