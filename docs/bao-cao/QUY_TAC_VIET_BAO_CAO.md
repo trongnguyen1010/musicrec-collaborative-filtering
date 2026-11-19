@@ -23,7 +23,7 @@ Tệp này dùng khi soạn, sửa và rà soát đề cương hoặc báo cáo 
 | Hệ thống khuyến nghị, lọc cộng tác | recommender system, collaborative filtering (CF) |
 | Lọc cộng tác theo người dùng, theo nghệ sĩ | user-based CF (UserCF), item-based CF (ItemCF) |
 | Phản hồi ngầm, phản hồi tường minh, số lượt nghe | implicit feedback, explicit feedback, listening count |
-| Dữ liệu thưa, khởi động nguội, thiên lệch phổ biến | data sparsity, cold-start, popularity bias |
+| Dữ liệu thưa, khởi động nguội, thiên lệch độ phổ biến | data sparsity, cold-start, popularity bias |
 | Mô hình đối sánh, tập ứng viên, xếp hạng top-K | baseline, candidate set, top-K ranking |
 | Tập huấn luyện, tập xác thực, tập kiểm thử | training set, validation set, test set |
 | Tập nghệ sĩ liên quan dùng để đánh giá, lấy mẫu âm | ground truth, negative sampling |
@@ -49,7 +49,7 @@ Tệp này dùng khi soạn, sửa và rà soát đề cương hoặc báo cáo 
 - Với lý thuyết nền tảng, giữ nguồn gốc phù hợp. Với so sánh thực nghiệm hoặc quyết định mới, ưu tiên công trình gần đây có dữ liệu, giao thức và chỉ số phù hợp. Khi dẫn kết quả từ công trình khác, ghi rõ dữ liệu, nhiệm vụ và điều kiện so sánh.
 - Tách đóng góp của tác giả bài báo khỏi cách nhóm hiện thực hoặc điều chỉnh. Ghi nguồn dưới hình, bảng hoặc sơ đồ lấy từ nguồn khác hoặc được vẽ lại từ nguồn đó. Giữ nguyên tên tài liệu trong ngôn ngữ gốc ở danh mục.
 - Kiểm tra trích dẫn hai chiều. Mọi số trong thân bài phải trỏ đến đúng tài liệu. Mỗi mục trong danh mục phải có chỗ sử dụng hoặc lý do xuất hiện theo yêu cầu của khoa. Rà lại liên kết và đánh số sau khi thêm, bỏ hoặc di chuyển nguồn.
-- Khi cập nhật cục bộ, giữ hệ `[n]` và thứ tự của bản hiện hành. Cách sắp xếp danh mục cho bản nộp chính thức được theo dõi ở mục 8.
+- Đánh số `[n]` theo thứ tự trích dẫn đầu tiên trong thân bài và ghi từng mục theo kiểu IEEE (tác giả viết tắt tên, tên bài trong ngoặc kép, tên tạp chí hoặc hội nghị in nghiêng, tập, số, trang, năm, DOI). Áp dụng từ v24 theo góp ý GVHD ngày 19/11/2026.
 
 ## 5. Công thức, dữ liệu và kết quả thực nghiệm
 
@@ -59,6 +59,7 @@ Tệp này dùng khi soạn, sửa và rà soát đề cương hoặc báo cáo 
 - Phân biệt SVD có độ lệch học bằng SGD, PureSVD và ALS cho phản hồi ngầm. Nêu thang và nguồn của điểm khi báo cáo RMSE. Điểm đại diện suy ra từ lượt nghe cần ghi rõ cách tạo và dữ liệu dùng để xác định ngưỡng.
 - Mỗi kết quả thực nghiệm phải truy được đến lần chạy, mã hoặc commit, mã băm dữ liệu, cấu hình, seed, giao thức và tệp kết quả. Ghi “chưa đo” hoặc “chưa có số liệu” nếu chưa có phép đo được xác minh. Ví dụ giả lập ghi rõ “minh họa”. [Quy tắc truy vết](../../DEVELOPMENT_RULES.md#dữ-liệu-và-báo-cáo) · [Hồ sơ kết quả](../results/)
 - Dùng tập xác thực để chọn cấu hình và khóa cấu hình trước khi chấm tập kiểm thử. So sánh mô hình trên cùng phép chia, tập ứng viên và bộ đánh giá trong từng giao thức. Ghi rõ điều kiện khác biệt khi trình bày các giao thức riêng hoặc lần chạy mở rộng.
+- Ghi các chỉ số, chênh lệch và khoảng tin cậy với bốn chữ số thập phân, thống nhất giữa khóa luận và bài báo. Làm tròn từ giá trị gốc trong tệp kết quả, không làm tròn lại từ số đã in sáu chữ số: số in 0,062650 có giá trị gốc 0,0626499 nên ghi 0,0626. Giá trị p ghi theo quy ước ở mục 4.1.2 của báo cáo, tham số mô hình (η, λreg) ghi đúng giá trị cấu hình, phần trăm và thời gian giữ cách ghi riêng.
 - Khi đọc một bảng, người đọc cần biết chỉ số, giá trị K nếu có, tập dữ liệu, nhóm người dùng, số mẫu thực sự được tính, đối chứng và chiều diễn giải. Phân biệt tỷ lệ thay đổi tương đối với chênh lệch theo điểm phần trăm. Tính chênh lệch từ giá trị gốc rồi làm tròn khi trình bày.
 - Báo cáo cả độ chính xác xếp hạng, độ bao phủ, độ đa dạng, mức phổ biến và chi phí suy luận khi chúng liên quan đến câu hỏi nghiên cứu. Nêu chênh lệch, khoảng tin cậy và phép kiểm định khi có. Giữ các kết quả âm và phân biệt ý nghĩa thống kê với ý nghĩa thực tiễn. Kết luận về mức phổ biến hoặc độ đa dạng cần phù hợp với phạm vi của chỉ số đã đo.
 
@@ -91,13 +92,11 @@ Tệp này dùng khi soạn, sửa và rà soát đề cương hoặc báo cáo 
 
 Khi nhóm hoặc GVHD chốt quy tắc mới, cập nhật mục liên quan trong tệp này và ghi một dòng ở lịch sử bên dưới. Ghi ngày, quyết định, phạm vi áp dụng và nguồn hoặc lý do. Nếu quyết định ảnh hưởng các bản đã giao, ghi phiên bản bắt đầu áp dụng và xác định phần cần đồng bộ. Dùng mục chờ chốt cho những lựa chọn đang thảo luận.
 
-| Điểm chờ chốt | Cách xử lý trong lúc chờ |
-| --- | --- |
-| Sắp xếp danh mục bản nộp theo thứ tự xuất hiện hay theo nhóm ngôn ngữ và tên tác giả như mẫu khoa | Giữ thứ tự hiện hành khi sửa cục bộ. Khi có quyết định, đồng bộ danh mục và số `[n]` trong thân bài. |
-| Dấu thập phân và số chữ số theo từng chỉ số | Theo cách trình bày của bản hiện hành trong từng nhóm bảng. Giữ đủ độ chính xác để thấy chênh lệch có ý nghĩa và ghi cách làm tròn nếu cần. |
+Hiện không còn điểm chờ chốt.
 
 ### Lịch sử quy tắc
 
 | Ngày | Thay đổi | Phạm vi và căn cứ |
 | --- | --- | --- |
 | 06/11/2026 | Tập hợp quy tắc văn phong, thuật ngữ, công thức, trích dẫn, thực nghiệm, định dạng và bàn giao. Thêm danh sách kiểm tra và mục chờ chốt. | Đề cương V2, lịch sử báo cáo v01–v16, mẫu khoa, hướng dẫn GVHD, ghi chú dựng các bản ngày 04/10 và quy tắc dự án. |
+| 19/11/2026 | Thuật ngữ “thiên lệch độ phổ biến”; bốn chữ số thập phân làm tròn từ giá trị gốc cho cả khóa luận và bài báo; danh mục tài liệu theo thứ tự trích dẫn đầu tiên, kiểu IEEE. Hai điểm chờ chốt về danh mục và số chữ số đã đóng. | Góp ý GVHD ngày 19/11/2026 trên v23 và bài báo SSRC v2; nhóm chọn bốn chữ số ngày 19/11/2026. Áp dụng từ v24. |
