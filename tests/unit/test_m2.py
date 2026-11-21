@@ -1,4 +1,6 @@
-"""M2 train-only tag features, profile inference, missing components and cold-user evaluation."""
+"""M2: đặc trưng thẻ chỉ từ tập huấn luyện, suy luận theo hồ sơ, thành phần thiếu và đánh giá
+người mới.
+"""
 
 from pathlib import Path
 from unittest.mock import patch
@@ -66,7 +68,7 @@ def test_v1_hand_example_per_candidate_missing_components():
         np.full(4, 0.2),
         2,
     )
-    # V1 example: w=.4; fallback=.75*.6+.25*.2=.5; mixed=.62.
+    # Ví dụ V1: ω = 0,4; fallback = 0,75·0,6 + 0,25·0,2 = 0,5; trộn = 0,62.
     np.testing.assert_allclose(mix_profile_scores(features, 0.75, 5), [0.62, 0.5, 0.44, 0.2])
     with pytest.raises(ValueError):
         mix_profile_scores(features, float("nan"), 5)
@@ -153,14 +155,14 @@ def test_cold_evaluator_matches_warm_formulas_without_learning_query_profiles():
     recs = {"q": ["2", "3"]}
     targets, profiles = {"q": {"2", "outside"}}, {"q": {"1"}}
     cold = evaluate_cold_start(recs, targets, learned, profiles, ks=(2,))
-    # Identical item statistics but a distinct query ID; warm includes a with same history.
+    # Thống kê nghệ sĩ giống hệt nhưng mã người hỏi khác; bản có sẵn gồm a với cùng lịch sử.
     warm = evaluate_ranking(
         {"a": ["2", "3"], "b": []},
         {"a": {"2", "outside"}, "b": set()},
         {"a": {"1"}, "b": {"2", "3"}},
         ks=(2,),
     )
-    # Accuracy uses the same public primitives; hand ARP=(2+1)/2, ILD=1-1/sqrt(2).
+    # Độ chính xác dùng cùng hàm công khai; tính tay ARP = (2 + 1)/2, ILD = 1 − 1/√2.
     assert cold["at_k"]["2"]["precision"] == warm["at_k"]["2"]["precision"] == 0.5
     assert cold["at_k"]["2"]["ndcg"] == 1
     assert cold["at_k"]["2"]["arp"] == 1.5

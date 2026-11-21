@@ -1,4 +1,4 @@
-"""Hand-computed bootstrap p-values, CIs, boundary cases, p_joint and Holm."""
+"""Kiểm tra bằng tay p bootstrap, khoảng tin cậy, trường hợp biên, p_joint và Holm."""
 
 import numpy as np
 import pytest
@@ -14,10 +14,10 @@ from musicrec.evaluation.inference import (
 def test_hand_p_value_and_quantile_on_explicit_resamples() -> None:
     indices = np.array([[0, 0, 0], [1, 1, 1], [2, 2, 2], [0, 1, 2]])
     result = bootstrap_contrast([1.0, -1.0, 2.0], indices)
-    # mean 2/3; centered resample means 1/3, -5/3, 4/3, 0: one of four reaches 2/3.
+    # trung bình 2/3; trung bình các mẫu đã trừ tâm là 1/3, −5/3, 4/3, 0: một trong bốn đạt 2/3.
     assert result["mean"] == pytest.approx(2 / 3)
     assert result["p_one_sided"] == pytest.approx(2 / 5)
-    # Uncentered means sorted -1, 2/3, 1, 2; linear q05 at position 0.15.
+    # Trung bình chưa trừ tâm đã sắp: −1, 2/3, 1, 2; phân vị 5% tuyến tính ở vị trí 0,15.
     assert result["ci95_one_sided_lower"] == pytest.approx(-1 + 0.15 * 5 / 3)
 
 
@@ -38,7 +38,7 @@ def test_zero_constant_and_invalid_contrasts() -> None:
 def test_joint_p_is_the_larger_component_and_uses_the_margin() -> None:
     indices = resample_indices(4, resamples=200)
     result = joint_test([0.5, 0.5, 0.5, 0.5], [0.5, 0.5, 0.5, 0.5], [1, 0, 0, 0], [0] * 4, indices)
-    # a - 0.95b is a constant 0.025 > 0, so its p is the minimum 1/(B+1).
+    # a − 0,95b là hằng số 0,025 > 0, nên p của nó là giá trị nhỏ nhất 1/(B + 1).
     assert result["ndcg_non_inferiority"]["mean"] == pytest.approx(0.025)
     assert result["ndcg_non_inferiority"]["p_one_sided"] == pytest.approx(1 / 201)
     assert result["p_joint"] == result["exposure_superiority"]["p_one_sided"]

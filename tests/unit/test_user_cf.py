@@ -36,7 +36,7 @@ def test_hand_example_means_full_cosine_unclipped_scores_and_global_neighbor_sel
     assert model.predict("1", "3") == pytest.approx(6)
     assert model.predict("1", "4") == pytest.approx(2)
     assert model.predict("1", "5") == 4
-    assert model.predict("4", "1") == 2  # No shared artists with other users.
+    assert model.predict("4", "1") == 2  # Không nghe chung nghệ sĩ nào với người khác.
     full = model.recommend("1", 10, set())
     assert [item.item_id for item in full] == ["3", "5", "4"]
     assert [item.reason for item in full] == ["user_cf", "user_cf_user_mean_fallback", "user_cf"]
@@ -49,7 +49,7 @@ def test_hand_example_means_full_cosine_unclipped_scores_and_global_neighbor_sel
         Interaction(row.user_id, row.item_id, 99999, row.proxy_score) for row in reversed(rows)
     ]
     assert UserCFRecommender().fit(changed_counts).recommend("1", 10, set()) == full
-    # With L=1 the closer user 3 is chosen globally. User 2 cannot replace them for item 3.
+    # Với L = 1, người 3 gần hơn được chọn. Người 2 không thể thay họ cho nghệ sĩ 3.
     one = UserCFRecommender(neighbors=1).fit(rows)
     assert one.predict("1", "3") == 4
     assert one.predict("1", "4") == pytest.approx(2)
@@ -140,7 +140,7 @@ def test_equal_cosines_ignore_roundoff_before_global_top_l_selection() -> None:
     rows = [Interaction("1", str(i), 100, 5) for i in range(1, 41)]
     rows += [Interaction("2", str(i), 100, 5) for i in [*range(1, 7), *range(41, 75)]]
     rows += [Interaction("10", str(i), 100, 2) for i in [*range(1, 4), *range(75, 82)]]
-    # Both exact cosines are 0.15: 150/sqrt(1000*1000) == 30/sqrt(1000*40).
+    # Cả hai côsin đúng bằng 0,15: 150/√(1000·1000) == 30/√(1000·40).
     model = UserCFRecommender(neighbors=1).fit(rows)
     result = model.recommend("1", 1, set())[0]
     assert result.item_id == "41" and result.reason == "user_cf"

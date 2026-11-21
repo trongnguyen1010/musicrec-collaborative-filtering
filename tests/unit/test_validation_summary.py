@@ -1,4 +1,4 @@
-"""Toy checks for fixed-catalog subgroup and model-seed summaries."""
+"""Kiểm tra trên ví dụ nhỏ cho tóm tắt nhóm con trên danh mục cố định và theo hạt giống."""
 
 from copy import deepcopy
 
@@ -26,7 +26,7 @@ def test_history_groups_keep_full_catalog_scores_zero_return_users_and_empty_gro
     groups = result["groups"]
     assert groups["below_mode"]["at_k"]["1"]["ndcg"] == 1
     assert groups["at_mode"]["at_k"]["1"]["ndcg"] == 0.5
-    assert groups["at_mode"]["users_eligible"] == 2  # Includes an empty recommendation list.
+    assert groups["at_mode"]["users_eligible"] == 2  # Có một danh sách gợi ý rỗng.
     assert groups["above_mode"]["users_eligible"] == 0
     assert groups["above_mode"]["targets_outside_catalog"] == 1
     assert groups["above_mode"]["at_k"]["1"]["ndcg"] is None
@@ -61,7 +61,7 @@ def test_retention_gate_requires_higher_mean_two_positive_seeds_and_same_cohort(
     assert compare_seed_models(candidate, control, k=1)["passes"]
     for seed, score in [(42, 1.0), (43, 0.45), (44, 0.45)]:
         candidate[seed]["at_k"]["1"]["ndcg"] = score
-    assert not compare_seed_models(candidate, control, k=1)["passes"]  # Higher mean, one win.
+    assert not compare_seed_models(candidate, control, k=1)["passes"]  # TB cao hơn, thắng 1 lần.
     assert not compare_seed_models(control, control, k=1)["passes"]
     candidate[42]["catalog_size"] += 1
     with pytest.raises(ValueError, match="cohort"):

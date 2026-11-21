@@ -1,4 +1,6 @@
-"""Hand-computed M1 features, greedy ablations, export and validation selection checks."""
+"""Kiểm tra bằng tay đặc trưng M1, các biến thể tham lam, xuất kết quả và quy tắc chọn trên tập
+xác thực.
+"""
 
 from pathlib import Path
 
@@ -12,7 +14,7 @@ from musicrec.recommenders.m1 import CandidatePool, M1Recommender, rerank_candid
 
 
 class FrozenBase(Recommender):
-    """A deterministic base that must never be fitted by the reranker."""
+    """Mô hình nền tất định, bộ tái xếp hạng không bao giờ được huấn luyện nó."""
 
     def fit(self, interactions):
         raise AssertionError("M1 must not fit its base")
@@ -51,13 +53,13 @@ def test_train_features_identity_masking_and_prefix():
     )
     assert model.recommend("new", 4, set()) == pool.recommendations
     assert [r.item_id for r in model.recommend("u1", 4, {"d"})] == ["c"]
-    # After a, b has utility -0.125; c has 0.25. The third pick is d (0 > -0.125).
+    # Sau a, b có lợi ích −0,125; c có 0,25. Lượt chọn thứ ba là d (0 > −0,125).
     diverse = rerank_candidates(pool, 4, 0.5, 0)
     assert [r.item_id for r in diverse] == ["a", "c", "d", "b"]
     assert [r.score for r in diverse] == [10, 8, 6, 9]
     assert rerank_candidates(pool, 2, 0.5, 0) == diverse[:2]
     assert model.predict("new", "b") == 9
-    # Count magnitude cannot alter any of the train-only reranker statistics.
+    # Độ lớn lượt nghe không được làm đổi thống kê huấn luyện nào của bộ tái xếp hạng.
     changed = M1Recommender(FrozenBase(), candidate_size=4).fit(
         [Interaction(r.user_id, r.item_id, 1) for r in train_rows()]
     )

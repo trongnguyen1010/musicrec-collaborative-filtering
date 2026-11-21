@@ -1,4 +1,4 @@
-"""Dense weighted-normal-equation checks and boundaries for the first ALS configuration."""
+"""Kiểm tra phương trình chuẩn có trọng số (ma trận đầy) và các biên của cấu hình ALS đầu tiên."""
 
 import hashlib
 import json
@@ -35,7 +35,7 @@ def test_one_native_cg_epoch_matches_dense_equations_and_full_weighted_loss() ->
     confidence = np.where(counts > 0, (1 + np.log1p(counts)).astype(np.float32), 1.0)
     preference = (counts > 0).astype(float)
     rng = np.random.default_rng(42)
-    rng.random((3, 2), dtype=np.float32)  # User initialization precedes item initialization.
+    rng.random((3, 2), dtype=np.float32)  # Khởi tạo nhân tố người dùng trước nhân tố nghệ sĩ.
     initial_items = rng.random((3, 2), dtype=np.float32) * 0.01
     for u in range(3):
         y = initial_items.astype(float)
@@ -183,7 +183,7 @@ def test_cli_fixed_config_hashes_checkpoint_reload_and_no_test_or_rmse(
     assert metadata["step"] == expected_step and not metadata["test_file_read"]
     state = json.loads((tmp_path / "run/model/state.json").read_text(encoding="utf-8"))
     assert metadata["seed"] == metadata["config"]["seed"] == state["config"]["seed"] == seed
-    assert metadata["input_sha256"] == hashes  # Split seed is still 42.
+    assert metadata["input_sha256"] == hashes  # Hạt giống chia tập vẫn là 42.
     assert metadata["supplementary"]["reload_verified_users"] == 3
     assert metadata["supplementary"]["process_peak_working_set_bytes"] > 0
     assert "proxy_rmse" not in metadata["supplementary"]

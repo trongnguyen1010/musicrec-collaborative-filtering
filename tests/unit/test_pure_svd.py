@@ -1,4 +1,4 @@
-"""Dense-SVD references and CLI boundaries for fixed-rank representation checks."""
+"""Đối chiếu với SVD ma trận đầy và các biên của dòng lệnh khi kiểm tra biểu diễn hạng cố định."""
 
 import hashlib
 import json
@@ -44,7 +44,7 @@ def test_matches_dense_svd_without_bias_scaling_or_clipping_and_masks_seen(tmp_p
             assert model.predict(str(user + 1), item_id) == pytest.approx(
                 expected[user, item], abs=1e-10
             )
-    assert model.predict("3", "3") < 0  # An association score, never clipped into [1, 5].
+    assert model.predict("3", "3") < 0  # Điểm liên kết, không bao giờ bị cắt về [1, 5].
     full = model.recommend("1", 20, set())
     assert [r.item_id for r in full] == ["3", "4", "10"]
     assert all(r.reason == "pure_svd" for r in full)

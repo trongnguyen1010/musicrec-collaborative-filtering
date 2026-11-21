@@ -1,4 +1,4 @@
-"""Protect the distinction between duplicate, conflicting and invalid feedback."""
+"""Bảo đảm phân biệt phản hồi trùng, mâu thuẫn và không hợp lệ."""
 
 import pandas as pd
 

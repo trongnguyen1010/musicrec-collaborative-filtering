@@ -1,4 +1,4 @@
-"""Protect holdout conservation, train-only IDs and immutable run outputs."""
+"""Bảo đảm không mất dòng để dành, mã chỉ từ tập huấn luyện và kết quả chạy không bị sửa."""
 
 import hashlib
 import json

@@ -1,4 +1,6 @@
-"""Top-N 'sum' aggregation of UserCF/ItemCF (E7) against hand values and a dense reference."""
+"""Cách tổng hợp top-N ('sum') của UserCF/ItemCF (E7) so với giá trị tính tay và bản tham chiếu
+đầy.
+"""
 
 from math import log2, sqrt
 from pathlib import Path
@@ -23,9 +25,9 @@ def test_user_cf_binary_sum_hand_example() -> None:
     cosine = 2 / sqrt(6)
     assert model.predict("1", "3") == pytest.approx(cosine)
     assert model.predict("1", "4") == pytest.approx(cosine)
-    assert model.predict("1", "5") == 0  # No neighbor listened: score 0, not a mean.
+    assert model.predict("1", "5") == 0  # Không láng giềng nào nghe: điểm 0, không phải trung bình.
     recs = model.recommend("1", 10, set())
-    assert [r.item_id for r in recs] == ["3", "4", "5"]  # Equal scores keep numeric order.
+    assert [r.item_id for r in recs] == ["3", "4", "5"]  # Điểm bằng nhau giữ thứ tự mã số.
     assert [r.reason for r in recs] == ["user_cf", "user_cf", "user_cf_no_support"]
     cold = model.recommend("unknown", 3, set())
     assert all(r.score == 0 and r.reason == "user_cf_no_support" for r in cold)
@@ -46,15 +48,15 @@ def test_log_count_uses_log2_one_plus_count_and_needs_no_proxy() -> None:
     counts = {("2", "3"): 7.0, ("3", "4"): 1.0}
     data = [Interaction(r.user_id, r.item_id, r.listening_count) for r in rows(counts)]
     model = UserCFRecommender(aggregation="sum", representation="log_count").fit(data)
-    # Row norms on log2(1 + 3) = 2, log2(8) = 3, log2(2) = 1.
+    # Chuẩn của hàng trên log2(1 + 3) = 2, log2(8) = 3, log2(2) = 1.
     sim_12 = (2 * 2 + 2 * 2) / (sqrt(8) * sqrt(4 + 4 + 9))
     assert model.predict("1", "3") == pytest.approx(sim_12 * log2(8))
     with pytest.raises(ValueError):
-        UserCFRecommender().fit(data)  # The default mean mode still needs proxy scores.
+        UserCFRecommender().fit(data)  # Chế độ mặc định (trung bình) vẫn cần điểm đại diện.
 
 
 def dense_reference(matrix: np.ndarray, neighbors: int, shrinkage: float) -> np.ndarray:
-    """Global top-L positive cosine neighbors of each row (ties by lower index)."""
+    """L láng giềng có côsin dương lớn nhất của mỗi hàng (hòa thì chỉ số nhỏ hơn)."""
     norms = np.sqrt((matrix**2).sum(axis=1))
     sim = np.clip(matrix @ matrix.T / np.outer(norms, norms), 0, 1)
     if shrinkage:

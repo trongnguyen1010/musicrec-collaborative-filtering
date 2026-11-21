@@ -1,4 +1,4 @@
-"""Dense-SVD, basis-change, identity and frozen-gate checks for the H1 spectral wrapper."""
+"""Kiểm tra SVD đầy, đổi cơ sở, trường hợp giữ nguyên và cổng cố định của bộ bọc H1 phổ."""
 
 from pathlib import Path
 
@@ -18,7 +18,7 @@ PAIRS = [("1", "1"), ("1", "2"), ("2", "2"), ("2", "3"), ("3", "1"), ("4", "4")]
 
 
 def toy_als(users: np.ndarray, items: np.ndarray) -> ImplicitALSRecommender:
-    """A loaded-looking checkpoint with fixed factors; it is never fitted."""
+    """Mô hình giả như đã nạp với nhân tố cố định; không bao giờ được huấn luyện."""
     model = ImplicitALSRecommender(latent_factors=users.shape[1])
     model._users = [str(u) for u in range(1, users.shape[0] + 1)]
     model._items = [str(i) for i in range(1, items.shape[0] + 1)]
@@ -40,7 +40,7 @@ def factors() -> tuple[np.ndarray, np.ndarray]:
 
 
 def interactions() -> list[Interaction]:
-    # Item 5 and 6 need a train listener so that the train catalog equals the checkpoint.
+    # Nghệ sĩ 5 và 6 cần một người nghe huấn luyện để danh mục huấn luyện bằng danh mục mô hình.
     return [Interaction(u, i, 1) for u, i in [*PAIRS, ("3", "5"), ("4", "6")]]
 
 
@@ -87,7 +87,7 @@ def test_deviation_weights_hand_quantile_and_no_positive_case() -> None:
     weights, reference = deviation_weights(
         np.array([0.5, 0.5, 0.5, 0.5]), np.array([0.4, 0.6, 0.7, 0.9])
     )
-    # Positive deviations 0.1, 0.2, 0.4: linear q90 at position 1.8 is 0.2 + 0.8*0.2.
+    # Độ lệch dương 0,1; 0,2; 0,4: phân vị 90% tuyến tính ở vị trí 1,8 là 0,2 + 0,8·0,2.
     assert reference == pytest.approx(0.36)
     np.testing.assert_allclose(weights, [0, 0.1 / 0.36, 0.2 / 0.36, 1])
     weights, reference = deviation_weights(np.array([0.5, 0.7]), np.array([0.5, 0.2]))

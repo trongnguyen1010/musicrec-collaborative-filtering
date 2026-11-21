@@ -1,4 +1,6 @@
-"""Check train-only thresholds, boundary ties, mappings and immutable CLI inputs."""
+"""Kiểm tra ngưỡng chỉ học từ tập huấn luyện, hòa ở biên, ánh xạ và đầu vào dòng lệnh không bị
+sửa.
+"""
 
 import hashlib
 import json
@@ -15,7 +17,7 @@ from musicrec.data.representations import prepare_representations
 
 
 def sample_splits() -> tuple[dict[str, pd.DataFrame], dict[str, dict[str, int]]]:
-    """Use train log-counts 1..6 and one artist absent from the train catalog."""
+    """Dùng log lượt nghe huấn luyện 1..6 và một nghệ sĩ không có trong danh mục huấn luyện."""
 
     def frame(items: list[str], counts: list[int]) -> pd.DataFrame:
         result = pd.DataFrame(
@@ -71,7 +73,7 @@ def test_linear_interpolation_and_repeated_thresholds() -> None:
     assert summary["transform"]["thresholds"] == [1, 1, 1, 2]
     assert tables["train"].proxy_score.tolist() == [1, 1, 1, 1, 4, 5]
     splits["train"]["listening_count"] = [1, 1, 1, 3, 7, 7]
-    # A five-row sample puts the quantile positions between observed log-counts.
+    # Mẫu năm dòng đặt vị trí phân vị nằm giữa các giá trị log lượt nghe quan sát.
     splits["train"] = splits["train"].iloc[:5].copy()
     mappings["item_id_to_index"].pop("6")
     _, _, summary = prepare_representations(splits, mappings)

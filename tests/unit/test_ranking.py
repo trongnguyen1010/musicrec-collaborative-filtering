@@ -176,7 +176,7 @@ def test_gini_and_proxy_rmse_hand_examples_and_validation() -> None:
     assert gini_index([4, 0, 0, 0]) == 0.75
     assert gini_index([0, 0]) is None
     assert proxy_rmse([1, 3, 5], [2, 3, 4]) == pytest.approx(sqrt(2 / 3))
-    assert proxy_rmse([5], [6]) == 1  # No implicit clipping of predictions.
+    assert proxy_rmse([5], [6]) == 1  # Không ngầm cắt giá trị dự đoán.
     for values in [[], [-1], [1.5]]:
         with pytest.raises(ValueError):
             gini_index(values)

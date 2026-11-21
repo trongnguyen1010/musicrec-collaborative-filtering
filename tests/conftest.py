@@ -1,4 +1,4 @@
-"""A tiny but complete demo release built from fitted models, shared by service and API tests."""
+"""Một gói demo nhỏ nhưng đầy đủ, dựng từ các mô hình đã học, dùng chung cho test dịch vụ và API."""
 
 from pathlib import Path
 
@@ -21,7 +21,7 @@ TRAIN = [
     ("6", "1", 25), ("6", "7", 11), ("6", "8", 1),
 ]  # fmt: skip
 VALIDATION = [("1", "4", 9), ("2", "3", 2), ("6", "2", 3)]
-M2_LEARNING_USERS = {"1", "2", "3", "4"}  # catalog 1-6; artists 7 and 8 stay unknown to M2
+M2_LEARNING_USERS = {"1", "2", "3", "4"}  # danh mục 1–6; nghệ sĩ 7, 8 ngoài danh mục M2
 TAGS = [("1", "1", "rock"), ("2", "1", "rock"), ("3", "3", "jazz"), ("4", "4", "jazz")]
 
 

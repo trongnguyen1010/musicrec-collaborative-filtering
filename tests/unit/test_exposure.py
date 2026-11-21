@@ -1,4 +1,4 @@
-"""Hand-computed head/non-head boundaries, exposure denominators and alignment values."""
+"""Kiểm tra bằng tay ranh giới nhóm đầu/ngoài đầu, mẫu số độ xuất hiện và giá trị độ khớp."""
 
 import pytest
 
@@ -12,11 +12,11 @@ from musicrec.evaluation.exposure import (
 
 def test_shortest_prefix_ties_at_cut_and_empty_non_head() -> None:
     split = head_split({"a": 5, "b": 3, "c": 3, "d": 1, "e": 1})
-    # M=13, target 2.6: the first artist already reaches it.
+    # M = 13, mục tiêu 2,6: nghệ sĩ đầu tiên đã đạt.
     assert split.head == {"a"} and split.non_head == {"b", "c", "d", "e"}
     assert split.threshold_listeners == 5 and split.head_pair_share == pytest.approx(5 / 13)
     tied = head_split({"a": 3, "b": 3, "c": 3, "d": 1})
-    # M=10, target 2: the cut lands on a tie, so all artists with 3 listeners join the head.
+    # M = 10, mục tiêu 2: điểm cắt rơi vào chỗ hòa, nên mọi nghệ sĩ có 3 người nghe vào nhóm đầu.
     assert tied.head == {"a", "b", "c"} and tied.head_pair_share == pytest.approx(0.9)
     empty = head_split({"a": 1, "b": 1})
     assert empty.non_head == frozenset() and empty.summary()["non_head_artists"] == 0

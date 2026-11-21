@@ -1,4 +1,4 @@
-"""Protect count preservation, exclusion accounting and tag provenance."""
+"""Bảo đảm giữ nguyên lượt nghe, đếm đúng dòng bị loại và giữ nguồn gốc của thẻ."""
 
 from pathlib import Path
 

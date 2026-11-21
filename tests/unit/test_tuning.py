@@ -1,4 +1,4 @@
-"""The Chapter 4 tuning grids match the agreed budgets and start from the first config."""
+"""Lưới tinh chỉnh Chương 4 khớp ngân sách đã thống nhất và bắt đầu từ cấu hình đầu tiên."""
 
 from pathlib import Path
 

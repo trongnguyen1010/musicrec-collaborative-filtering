@@ -1,4 +1,6 @@
-"""Release integrity and demo routing: existing user, new user (M2) and Popularity fallback."""
+"""Tính toàn vẹn của gói và điều hướng demo: người dùng có sẵn, người mới (M2), dự phòng
+Popularity.
+"""
 
 import json
 import shutil

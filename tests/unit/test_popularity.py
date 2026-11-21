@@ -34,7 +34,7 @@ def test_log_count_hand_example_numeric_ties_prefix_and_cold_start() -> None:
         Interaction("3", "3", 7),
     ]
     model = PopularityRecommender().fit(interactions)
-    assert model.predict("1", "2") == 4  # log2(4) + log2(4), not log2(7).
+    assert model.predict("1", "2") == 4  # log2(4) + log2(4), không phải log2(7).
     assert model.predict("1", "10") == 4
     assert model.predict("1", "3") == 3
     full = model.recommend("1", 20, set())

@@ -1,4 +1,4 @@
-"""Hand examples, sparse orientation and persistence checks for Step 10 ItemCF."""
+"""Ví dụ tính tay, chiều ma trận thưa và kiểm tra lưu/nạp cho ItemCF ở Bước 10."""
 
 from math import sqrt
 from pathlib import Path
@@ -68,7 +68,7 @@ def test_hand_cosines_weighted_mean_fallback_masks_and_count_independence(tmp_pa
 def test_global_target_neighbors_then_history_intersection_not_source_expansion() -> None:
     rows = sample_rows() + [Interaction("5", "1", 100, 1), Interaction("5", "5", 100, 5)]
     model = ItemCFRecommender(neighbors=1).fit(rows)
-    # Target 3 globally chooses item 2. User 5 cannot replace it with item 1.
+    # Nghệ sĩ đích 3 chọn nghệ sĩ 2 làm láng giềng. Người 5 không thể thay bằng nghệ sĩ 1.
     assert model.predict("5", "3") == 3
     rec = next(item for item in model.recommend("5", 20, set()) if item.item_id == "3")
     assert rec.reason == "item_cf_user_mean_fallback"
@@ -81,7 +81,7 @@ def test_numeric_ties_block_boundary_and_reload_without_fit(tmp_path: Path) -> N
     model = ItemCFRecommender(neighbors=1).fit(rows)
     model.save(tmp_path / "model")
     weights = load_npz(tmp_path / "model/neighbors.npz")
-    # Identical cosine at both sides of the 256-item block boundary uses numeric IDs.
+    # Côsin bằng nhau ở hai phía ranh giới khối 256 nghệ sĩ thì phân xử theo mã số.
     assert weights.getrow(0).indices.tolist() == [1]
     assert weights.getrow(1).indices.tolist() == [0]
     assert weights.getrow(258).indices.tolist() == [0]
@@ -102,7 +102,7 @@ def test_numeric_ties_block_boundary_and_reload_without_fit(tmp_path: Path) -> N
 def test_equal_cosines_round_before_neighbor_selection_and_empty_neighborhoods(
     tmp_path: Path,
 ) -> None:
-    # Exact 0.15 cosines with different column norms must tie numerically.
+    # Côsin đúng bằng 0,15 với chuẩn cột khác nhau vẫn phải hòa về số học.
     rows = [Interaction(str(u), "1", 100, 5) for u in range(1, 41)]
     rows += [Interaction(str(u), "2", 100, 5) for u in [*range(1, 7), *range(41, 75)]]
     rows += [Interaction(str(u), "10", 100, 2) for u in [*range(1, 4), *range(75, 82)]]

@@ -1,4 +1,4 @@
-"""Hand cases for the agreed H1 gate: dominance, infeasible control, ties and fallbacks."""
+"""Ca tính tay cho cổng H1: quan hệ trội, đối chứng không khả thi, hòa và dự phòng."""
 
 from musicrec.evaluation.h1_gate import apply_gate, dominates
 
@@ -37,7 +37,7 @@ def test_no_feasible_direct_point_advances_with_flag_and_locks_by_e_n_gamma() ->
     assert not result["direct_control_has_feasible_point"]
     assert result["locked"]["global"]["coefficient"] == 0.1
     assert result["locked"]["deviation"]["coefficient"] == 0.5
-    # Equal exposure: the higher NDCG of the deviation lock wins the representative slot.
+    # Độ xuất hiện bằng nhau: cấu hình deviation có NDCG cao hơn được chọn làm đại diện.
     assert result["representative"]["family"] == "deviation"
     assert result["direct_control"] == {"family": "direct", "coefficient": 0.0, **BASE}
 

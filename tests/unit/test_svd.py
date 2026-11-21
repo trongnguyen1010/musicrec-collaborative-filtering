@@ -1,4 +1,4 @@
-"""Independent scalar SGD, checkpoint selection and inference checks for biased MF."""
+"""Kiểm tra SGD vô hướng độc lập, chọn vòng lặp và suy luận cho SVD có độ lệch."""
 
 import json
 from math import fsum, sqrt
@@ -93,7 +93,7 @@ def test_full_ranking_numeric_ties_masks_cold_bias_and_no_clipping() -> None:
     assert model.recommend("unknown", 1, set()) == full[:1]
     assert [item.item_id for item in model.recommend("1", 20, set())] == ["1", "2"]
     assert model.recommend("1", 20, {"1", "2", "missing"}) == []
-    # Controlled parameters make the decomposition and absence of clipping explicit.
+    # Tham số được kiểm soát để thấy rõ cách phân tách và việc không cắt điểm.
     model._user_bias[0] = 0.2
     model._item_bias[0] = -0.3
     model._user_factors[0] = [0.1, 0.9]

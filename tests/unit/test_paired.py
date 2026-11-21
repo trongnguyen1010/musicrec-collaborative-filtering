@@ -14,7 +14,7 @@ from musicrec.evaluation.paired import (
 
 
 def test_signed_rank_sums_drop_zeros_and_average_ties() -> None:
-    # |d| = 1, 1, 2 after dropping the zero -> ranks 1.5, 1.5, 3.
+    # |d| = 1, 1, 2 sau khi bỏ số 0 → hạng 1,5; 1,5; 3.
     plus, minus = signed_rank_sums([0.0, 1.0, -1.0, 2.0])
     assert (plus, minus) == (4.5, 1.5)
 
@@ -40,7 +40,7 @@ def test_tost_interval_rule() -> None:
     upper = equivalence_test(-0.004, 0.01, 0.009)
     assert not upper["equivalent"] and upper["lower_test_rejects"]
     assert not upper["upper_test_rejects"]
-    # The margin is open: touching the bound is not equivalence.
+    # Biên là khoảng mở: chạm biên không được coi là tương đương.
     assert not equivalence_test(-0.009, 0.0, 0.009)["equivalent"]
     with pytest.raises(ValueError):
         equivalence_test(-0.1, 0.1, 0.0)
@@ -60,7 +60,7 @@ def test_shared_indices_make_mirrored_pairs_consistent() -> None:
     assert ab["ci95_low"] == pytest.approx(-ba["ci95_high"])
     assert ab["ci90_high"] == pytest.approx(-ba["ci90_low"])
     assert ab["rank_biserial"] == pytest.approx(-ba["rank_biserial"])
-    # Bootstrap means are linear in the per-user values when the indices are shared.
+    # Khi dùng chung chỉ số, trung bình bootstrap tuyến tính theo giá trị từng người.
     ac = paired_comparison(a, c, indices)
     cb = paired_comparison(c, b, indices)
     means = lambda x, y: (np.array([x[u] - y[u] for u in users]))[indices].mean(axis=1)  # noqa: E731

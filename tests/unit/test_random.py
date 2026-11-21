@@ -82,7 +82,7 @@ def test_validation_cli_reproducibility_checksums_no_test_read_and_no_overwrite(
         json.dumps({"step": 4, "seed": 42, "output_sha256": hashes}),
         encoding="utf-8",
     )
-    # A missing test file is intentional: this step must not open it, even for hashing.
+    # Cố ý thiếu tệp kiểm thử: bước này không được mở nó, kể cả để tính mã băm.
     root = Path(__file__).resolve().parents[2]
     command = [
         sys.executable,
@@ -132,7 +132,7 @@ def test_validation_cli_reproducibility_checksums_no_test_read_and_no_overwrite(
     assert seeded.returncode == 0, seeded.stderr
     seed_metrics = json.loads((tmp_path / "seed43/metrics.json").read_text(encoding="utf-8"))
     assert seed_metrics["step"] == 14 and seed_metrics["seed"] == 43
-    assert seed_metrics["input_sha256"] == hashes  # Split still comes from seed 42.
+    assert seed_metrics["input_sha256"] == hashes  # Phép chia vẫn từ hạt giống 42.
     assert seed_metrics["config"]["seed"] == 43 and seed_metrics["test_file_read"] is False
     seed_command[seed_command.index("--model-seed") + 1] = "99"
     invalid_seed = subprocess.run(seed_command, cwd=root, capture_output=True, text=True)

@@ -1,4 +1,4 @@
-"""HTTP contract of the demo API over a tiny release."""
+"""Kiểm thử hợp đồng HTTP của API demo trên một gói nhỏ."""
 
 from collections.abc import Iterator
 from pathlib import Path
