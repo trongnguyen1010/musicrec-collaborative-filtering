@@ -5,12 +5,12 @@ import type { Recommendation } from "@/lib/api";
 import { explainReason, int } from "@/lib/format";
 import { ArtistAvatar, Badge } from "./ui";
 
-/** Width of a listener bar on a log scale shared by every list on screen. */
+/** Độ dài thanh số người nghe theo thang log, dùng chung cho mọi danh sách trên màn hình. */
 export function listenerShare(listeners: number, maxListeners: number): number {
   return Math.log1p(listeners) / Math.log1p(Math.max(maxListeners, 1));
 }
 
-/** Listener bar: longer means more listeners on train (more popular). */
+/** Thanh số người nghe: càng dài càng nhiều người nghe trong tập huấn luyện (càng phổ biến). */
 export function ListenerBar({ share }: { share: number }) {
   return (
     <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-white/10">
@@ -22,7 +22,7 @@ export function ListenerBar({ share }: { share: number }) {
   );
 }
 
-/** One ranked list with staggered, re-orderable rows. */
+/** Một danh sách xếp hạng, các dòng hiện lần lượt và có thể đổi thứ tự. */
 export function RecommendationList({
   items,
   maxListeners,

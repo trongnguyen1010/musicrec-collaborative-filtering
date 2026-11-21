@@ -5,9 +5,9 @@ import { useEffect, useState } from "react";
 type State<T> = { key: string; data?: T; error?: string };
 
 /**
- * Run `load` whenever `key` changes and keep only the answer for the latest key.
- * `loading` is derived (answer key differs from the requested key), so the effect
- * never sets state synchronously.
+ * Chạy `load` mỗi khi `key` đổi và chỉ giữ câu trả lời của key mới nhất.
+ * `loading` được suy ra (key của câu trả lời khác key đang yêu cầu), nên effect
+ * không bao giờ đặt state đồng bộ.
  */
 export function useApi<T>(requested: string | null | false, load: () => Promise<T>) {
   const key = requested || null;
@@ -23,13 +23,13 @@ export function useApi<T>(requested: string | null | false, load: () => Promise<
     return () => {
       live = false;
     };
-    // `load` is recreated each render; `key` captures everything it depends on.
+    // `load` được tạo lại mỗi lần render; `key` đã bao gồm mọi thứ nó phụ thuộc.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [key]);
   const current = state?.key === key ? state : null;
   return {
     data: current?.data,
-    /** Last successful answer, possibly for an older key; lets lists animate between answers. */
+    /** Câu trả lời thành công gần nhất (có thể của key cũ); giúp danh sách chuyển động giữa hai lần trả lời. */
     latest: state?.data,
     error: current?.error,
     loading: key !== null && current === null,

@@ -278,7 +278,7 @@ function Lane({
   );
 }
 
-/** Connector between steps: dim until reached; once reached, lit with a glowing pulse running along it. */
+/** Đường nối giữa các bước: mờ khi chưa tới; tới rồi thì sáng lên với một xung sáng chạy dọc. */
 function Beam({ lit }: { lit: boolean }) {
   return (
     <div
@@ -304,7 +304,7 @@ function Facts({ items }: { items: [string, string][] }) {
   );
 }
 
-/** A formula with its symbols explained underneath. */
+/** Một công thức kèm giải thích các ký hiệu bên dưới. */
 function Formula({ tex, terms }: { tex: string; terms: [string, string][] }) {
   return (
     <div className="space-y-3 rounded-xl bg-white/5 p-4">

@@ -1,6 +1,6 @@
 import katex from "katex";
 
-/** Render a fixed LaTeX formula written in this codebase (never user input). */
+/** Hiển thị công thức LaTeX cố định viết sẵn trong mã (không bao giờ là dữ liệu người dùng nhập). */
 export function Tex({ children, block = false }: { children: string; block?: boolean }) {
   const html = katex.renderToString(children, {
     displayMode: block,

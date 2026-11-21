@@ -32,7 +32,7 @@ export const MODEL_NAMES: Record<string, string> = {
   m2: "M2",
 };
 
-/** Turn the API reason code into a short Vietnamese explanation. */
+/** Đổi mã lý do gợi ý của API thành câu giải thích ngắn bằng tiếng Việt. */
 export function explainReason(reason: string): string {
   if (reason.startsWith("m1_")) return "Tái xếp hạng M1 từ ứng viên PureSVD";
   if (reason === "pure_svd") return "Tương đồng tiềm ẩn (PureSVD)";

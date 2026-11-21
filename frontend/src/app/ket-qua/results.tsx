@@ -23,7 +23,7 @@ const RADAR: { key: Metric; label: string; lower?: boolean }[] = [
   { key: "ild", label: "ILD" },
   { key: "arp", label: "ARP thấp", lower: true },
 ];
-// Hex values (not CSS variables) so SVG presentation attributes render everywhere.
+// Dùng mã màu hex (không dùng biến CSS) để thuộc tính trình bày của SVG hiển thị ở mọi nơi.
 const COLORS: Record<string, string> = {
   pure_svd: "#4da3ff",
   m1: "#4ade80",
@@ -33,7 +33,7 @@ const COLORS: Record<string, string> = {
 const MUTED = "#a8b6d4";
 
 const rows = results.warm_test_k10;
-// Hand-placed label offsets so neighbouring points (PureSVD/M1, UserCF/ItemCF) stay readable.
+// Vị trí nhãn đặt tay để các điểm sát nhau (PureSVD/M1, UserCF/ItemCF) vẫn đọc được.
 const LABELS: Record<string, { dx: number; dy: number; anchor: "start" | "end" }> = {
   pure_svd: { dx: 10, dy: 14, anchor: "start" },
   m1: { dx: -10, dy: -8, anchor: "end" },
@@ -45,7 +45,7 @@ const LABELS: Record<string, { dx: number; dy: number; anchor: "start" | "end" }
   random: { dx: 10, dy: -6, anchor: "start" },
 };
 
-/** Models no other model beats on both axes (higher NDCG and lower ARP). */
+/** Các mô hình không bị mô hình nào trội hơn ở cả hai trục (NDCG cao hơn và ARP thấp hơn). */
 function paretoFront(data: WarmRow[]): Set<string> {
   return new Set(
     data

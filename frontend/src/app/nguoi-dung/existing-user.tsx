@@ -43,7 +43,7 @@ export function ExistingUser() {
   const [applied, setApplied] = useState(true);
   const userId = picked ?? users.data?.[0]?.user_id ?? null;
   const known = useMemo(() => new Set(users.data?.map((u) => u.user_id)), [users.data]);
-  // M1 with lambda = 1, beta = 0 keeps the PureSVD order exactly (tested in the backend).
+  // M1 với λ = 1, β = 0 giữ nguyên thứ tự của PureSVD (đã kiểm thử ở phía máy chủ).
   const point = applied ? { lambda, beta } : { lambda: "1", beta: "0" };
 
   const history = useApi(userId && `history:${userId}`, () => api.history(userId!, 20));
@@ -275,7 +275,7 @@ function M1Inputs(props: {
   );
 }
 
-/** Compact live numbers that stay visible in the pinned toolbar. */
+/** Các con số gọn, cập nhật trực tiếp, luôn hiện trên thanh công cụ ghim. */
 function LiveStats({
   base,
   m1,
@@ -469,7 +469,7 @@ function Delta({ delta }: { delta: number | null }) {
   );
 }
 
-/** Lines from each PureSVD rank to the same artist's M1 rank; dashed if it left the list. */
+/** Đường nối thứ hạng PureSVD tới thứ hạng M1 của cùng nghệ sĩ; nét đứt nếu nghệ sĩ bị đẩy khỏi danh sách. */
 function Connectors({
   base,
   m1Rank,

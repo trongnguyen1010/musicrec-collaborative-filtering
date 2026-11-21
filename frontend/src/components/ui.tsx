@@ -27,7 +27,7 @@ const TONES: Record<Tone, string> = {
   lilac: "bg-lilac-soft text-ice",
 };
 
-/** Animated number that counts from its previous value; `format` renders each frame. */
+/** Số có hiệu ứng đếm từ giá trị trước; `format` định dạng từng khung hình. */
 export function Counter({ value, format }: { value: number; format: (v: number) => string }) {
   const ref = useRef<HTMLSpanElement>(null);
   const previous = useRef(0);
@@ -48,7 +48,7 @@ export function Counter({ value, format }: { value: number; format: (v: number) 
       },
     });
     previous.current = value;
-    // Guarantee the exact final value even if animation frames are throttled.
+    // Bảo đảm hiện đúng giá trị cuối kể cả khi khung hình hoạt ảnh bị trình duyệt giảm tần suất.
     const settle = setTimeout(() => {
       controls.stop();
       node.textContent = format(value);
@@ -115,7 +115,7 @@ export function Segmented<T extends string>({
 
 const PALETTE = ["#4f7dd9", "#6c63c9", "#2f8f86", "#3e86b0", "#7a6fd0", "#4a90c2"];
 
-/** Last.fm 2011 picture links are mostly dead; fall back to coloured initials. */
+/** Liên kết ảnh Last.fm 2011 phần lớn đã hỏng; khi đó hiện chữ cái đầu trên nền màu. */
 export function ArtistAvatar({ name, src, size = 40 }: { name: string; src: string; size?: number }) {
   const [failed, setFailed] = useState(!src);
   const color = PALETTE[[...name].reduce((sum, ch) => sum + ch.charCodeAt(0), 0) % PALETTE.length];
@@ -153,7 +153,7 @@ export function Spinner({ label = "Đang tải" }: { label?: string }) {
   );
 }
 
-/** Show `pageSize` items at a time with numbered page buttons. */
+/** Hiện `pageSize` mục mỗi lần, kèm nút số trang. */
 export function usePaged<T>(items: T[], pageSize: number, resetKey: string) {
   const [state, setState] = useState({ key: resetKey, page: 0 });
   const page = state.key === resetKey ? state.page : 0;
@@ -211,7 +211,7 @@ export function Pager({
   );
 }
 
-/** A light band sweeping across its (relative, overflow-hidden) parent whenever `trigger` changes. */
+/** Dải sáng quét ngang phần tử cha (relative, overflow-hidden) mỗi khi `trigger` đổi. */
 export function Sweep({ trigger }: { trigger: string }) {
   return (
     <AnimatePresence>
