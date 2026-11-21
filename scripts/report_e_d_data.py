@@ -1,10 +1,10 @@
-"""E-D: descriptive statistics of the raw HetRec Last.fm 2k tables and of the cleaned data.
+"""E-D: thống kê mô tả các bảng HetRec Last.fm 2k gốc và dữ liệu đã làm sạch.
 
-Reads data/raw/hetrec2011 (user_artists.dat, artists.dat, user_taggedartists.dat; UTF-8,
-tags.dat Latin-1) and the locked cleaning outputs (rebuilt locally, chuong_4_bo_sung/
-cleaning, whose counts equal the official Step 3 run). Checks the numbers quoted in the
-advisor's draft, redraws Figures 4.1 and 4.2 on the RAW data and records how much of the
-train catalog has usable tag vectors (the basis of tag ILD). Nothing is filtered here.
+Đọc data/raw/hetrec2011 (user_artists.dat, artists.dat, user_taggedartists.dat; UTF-8,
+tags.dat Latin-1) và kết quả làm sạch đã khóa (dựng lại cục bộ ở chuong_4_bo_sung/cleaning,
+số đếm bằng lần chạy Bước 3 chính thức). Kiểm tra các con số trong bản nháp của GVHD, vẽ
+lại Hình 4.1 và 4.2 trên dữ liệu GỐC và ghi tỷ lệ danh mục huấn luyện có véc-tơ thẻ dùng
+được (cơ sở của ILD theo thẻ). Không lọc gì ở đây.
 """
 
 import argparse
@@ -29,7 +29,7 @@ from run_e7_topn import runtime  # noqa: E402
 RAW = Path("data/raw/hetrec2011")
 CLEAN = Path("outputs/chinh_thuc_cloud_20261026/chuong_4_bo_sung/cleaning")
 ILD_REPORT = Path("outputs/chuong_4_bo_sung_2/thong_ke/phan_tich/ild_the_mo_hinh.json")
-# Numbers quoted in the advisor's draft (feedback of 06/11/2026), checked one by one.
+# Các con số trong bản nháp của GVHD (góp ý ngày 06/11/2026), kiểm tra từng số.
 DRAFT = {
     "users_raw": 1892,
     "artists_catalog_raw": 17632,

@@ -1,4 +1,4 @@
-"""Run Step 3 only: clean HetRec observations into a new, auditable directory."""
+"""Chỉ chạy Bước 3: làm sạch quan sát HetRec vào thư mục mới, có thể kiểm tra lại."""
 
 import argparse
 import hashlib
@@ -18,7 +18,7 @@ from musicrec.data.cleaning import clean_tables, read_source_table
 
 
 def main() -> None:
-    """Save cleaned tables, exclusions, configuration and immutable source hashes."""
+    """Lưu bảng đã làm sạch, dòng bị loại, cấu hình và mã băm cố định của dữ liệu gốc."""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--raw-dir", type=Path, default=Path("data/raw/hetrec2011"))
     parser.add_argument("--config", type=Path, default=Path("configs/dataset.yaml"))

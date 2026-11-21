@@ -1,7 +1,7 @@
-"""E-P: Popularity ranked by distinct train listeners c_i, validation only.
+"""E-P: Popularity xếp theo số người nghe c_i trên tập huấn luyện, chỉ trên tập xác thực.
 
-The locked Popularity (sum of log2(1 + count)) is rescored too and must reproduce the
-Chapter 4 validation NDCG@10; nothing is selected or locked.
+Popularity đã khóa (tổng log2(1 + lượt nghe)) cũng được chấm lại và phải tái tạo đúng
+NDCG@10 xác thực ở Chương 4; không chọn hay khóa gì.
 """
 
 import argparse

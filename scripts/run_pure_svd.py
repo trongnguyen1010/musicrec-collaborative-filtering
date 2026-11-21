@@ -1,4 +1,6 @@
-"""Run fixed rank-32 PureSVD on validation: proxy control or Step 13 binary/log check."""
+"""Chạy PureSVD hạng 32 cố định trên tập xác thực: đối chứng điểm đại diện hoặc kiểm tra
+nhị phân/log ở Bước 13.
+"""
 
 import os
 

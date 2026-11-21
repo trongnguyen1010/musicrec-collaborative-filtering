@@ -1,10 +1,10 @@
-"""E-S: sensitivity table around grid boundaries, validation only (configs/e_s_sensitivity.yaml).
+"""E-S: bảng độ nhạy quanh biên lưới, chỉ trên tập xác thực (configs/e_s_sensitivity.yaml).
 
-Baselines run through the existing validation runners (run_baseline.py) with
---tuning-config pointing at the E-S file, seed 42, so the evaluation is identical to the
-Chapter 4 tuning. M2 reuses the locked Step 16 model (learning users only) and rescores the
-tuning users' validation targets for every (alpha, n_min) point; the locked point must
-reproduce the saved Step 16 NDCG@10 exactly. Nothing is selected or locked here.
+Các mô hình cơ sở chạy qua trình chạy xác thực sẵn có (run_baseline.py) với
+--tuning-config trỏ tới tệp E-S, hạt giống 42, nên cách đánh giá giống hệt lúc tinh chỉnh
+ở Chương 4. M2 dùng lại mô hình đã khóa ở Bước 16 (chỉ nhóm học) và chấm lại đích xác
+thực của nhóm tinh chỉnh cho mọi điểm (α, n_min); điểm đã khóa phải tái tạo đúng
+NDCG@10 đã lưu ở Bước 16. Không chọn hay khóa gì ở đây.
 """
 
 import argparse
@@ -72,7 +72,7 @@ def run_baseline(model: str, point: dict[str, Any], root: Path, settings: Path) 
 
 
 def run_m2(settings: dict[str, Any], out: Path) -> list[dict[str, Any]]:
-    """Rescore tuning users for every (alpha, n_min); returns one row per point and N."""
+    """Chấm lại nhóm tinh chỉnh cho mọi (α, n_min); trả một dòng cho mỗi điểm và mỗi N."""
     experiment = json.loads((M2_RUN / "experiment.json").read_text(encoding="utf-8"))
     split = Path(experiment["split_run"])
     train = pd.read_parquet(split / "train.parquet")

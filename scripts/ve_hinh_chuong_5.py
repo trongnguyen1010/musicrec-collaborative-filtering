@@ -1,7 +1,7 @@
-"""Draw Figure 5.1 (source tree of the delivered system) as a PNG for the report.
+"""Vẽ Hình 5.1 (cây mã nguồn của hệ thống) dạng PNG cho báo cáo.
 
-The tree lists the folders and modules that exist in the repository; the script fails if
-any listed path is missing, so the figure cannot drift from the code.
+Cây liệt kê các thư mục và mô-đun có trong kho mã; script báo lỗi nếu thiếu đường dẫn
+nào, nên hình không thể lệch so với mã.
 
     python scripts/ve_hinh_chuong_5.py --output outputs/demo/chuong_5_<date>/anh/hinh_5_1_cay.png
 """

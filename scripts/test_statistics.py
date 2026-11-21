@@ -1,10 +1,11 @@
-"""Step 4.6: paired tests on saved test results for the pairs predeclared in lock.json.
+"""Mục 4.6: kiểm định theo cặp trên kết quả kiểm thử đã lưu, cho các cặp khai báo trước trong
+lock.json.
 
-Reads only the per-user metrics evaluate_test.py saved; never recommends or reads data.
-Per pair: mean difference of per-user metric (A - B) on the shared eligible cohort,
-95% and 90% percentile bootstrap CIs over users (1,000 resamples, seed 42; one index
-matrix shared by every pair), two-sided Wilcoxon signed-rank p-value, matched-pairs
-rank-biserial r, and Holm-adjusted p across all predeclared pairs.
+Chỉ đọc chỉ số theo người dùng mà evaluate_test.py đã lưu; không gợi ý, không đọc dữ liệu.
+Mỗi cặp: chênh lệch trung bình chỉ số theo người dùng (A − B) trên nhóm hợp lệ chung, KTC
+bootstrap phân vị 95% và 90% theo người dùng (1.000 lần lấy mẫu, hạt giống 42; một ma trận
+chỉ số chung cho mọi cặp), p Wilcoxon có dấu hai phía, cỡ hiệu ứng r_rb, và p hiệu chỉnh
+Holm trên mọi cặp khai báo trước.
 """
 
 import argparse
@@ -22,7 +23,7 @@ SEED = 42
 
 
 def per_user(run: Path, model: str, seed: int, k: str, metric: str) -> dict[str, float]:
-    """Eligible users' metric at K from one saved test evaluation."""
+    """Chỉ số tại K của người dùng hợp lệ, lấy từ một lần đánh giá kiểm thử đã lưu."""
     path = run / model / f"seed_{seed}" / "evaluation.json"
     evaluation: dict[str, Any] = json.loads(path.read_text(encoding="utf-8"))
     return {
@@ -33,7 +34,13 @@ def per_user(run: Path, model: str, seed: int, k: str, metric: str) -> dict[str,
 
 
 def holm(p_values: list[float]) -> list[float]:
-    """Holm step-down adjustment, monotone and capped at 1."""
+    """Hiệu chỉnh Holm từng bước xuống, công thức (2.29); đơn điệu và chặn trên ở 1.
+
+    Khi so nhiều cặp cùng lúc, xác suất có ít nhất một kết luận sai tăng lên; Holm kiểm soát
+    xác suất đó ở mức 0,05 mà ít bảo thủ hơn Bonferroni.
+    """
+    # Sắp p tăng dần. p nhỏ thứ j (j từ 1) nhân với (m − j + 1): p nhỏ nhất nhân m,
+    # p kế tiếp nhân m − 1, ... Lấy max cộng dồn để p đã hiệu chỉnh không giảm, chặn ở 1.
     order = np.argsort(p_values)
     adjusted = [0.0] * len(p_values)
     running = 0.0
@@ -44,7 +51,7 @@ def holm(p_values: list[float]) -> list[float]:
 
 
 def main() -> None:
-    """Write statistics.json beside the test run."""
+    """Ghi statistics.json cạnh lần chạy kiểm thử."""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--test-run", type=Path, required=True)
     parser.add_argument("--metric", default="ndcg")

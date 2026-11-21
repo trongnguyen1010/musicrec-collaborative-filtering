@@ -1,9 +1,9 @@
-"""Run H1 round 1 on validation seed 42; never fit ALS, never open test.
+"""Chạy vòng 1 của H1 trên tập xác thực với hạt giống 42; không học lại ALS, không mở tập kiểm thử.
 
-Spectral H1 (global and deviation-gated gamma) and the direct popularity-penalty control
-are scored on the pinned Chapter 4 ALS checkpoint, then the agreed development gate locks
-at most one configuration per family. Seed 43/44 confirmation and the test pass are not
-implemented here yet (TODO, see DAC_TA_H1_THONG_NHAT_SAU_DEBATE.md sections 6.7 and 7).
+H1 phổ (γ toàn cục và γ theo cổng độ lệch) và đối chứng phạt phổ biến trực tiếp được chấm
+trên mô hình ALS đã ghim ở Chương 4, rồi cổng phát triển đã thống nhất khóa tối đa một
+cấu hình mỗi họ. Xác nhận với hạt giống 43/44 và lượt chấm kiểm thử chưa làm ở đây
+(TODO, xem DAC_TA_H1_THONG_NHAT_SAU_DEBATE.md mục 6.7 và 7).
 """
 
 import os
@@ -62,7 +62,7 @@ EXPECTED = {
 
 
 def main() -> None:
-    """Save every configuration's outcome, including infeasible ones, in a new local run."""
+    """Lưu kết quả của mọi cấu hình, kể cả cấu hình không khả thi, vào lần chạy cục bộ mới."""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--config", type=Path, default=Path("configs/models/h1.yaml"))
     parser.add_argument("--evaluation-config", type=Path, default=Path("configs/evaluation.yaml"))
@@ -71,8 +71,8 @@ def main() -> None:
         "--max-configs", type=int, help="Timing trial only: at most N non-base configurations"
     )
     args = parser.parse_args()
-    # A user sample would shrink the train catalog the evaluator derives, so timing trials
-    # keep every user and only limit the number of configurations.
+    # Lấy mẫu người dùng sẽ làm co danh mục huấn luyện mà bộ đánh giá suy ra, nên khi đo
+    # thời gian vẫn giữ mọi người dùng và chỉ giới hạn số cấu hình.
     sample = args.max_configs is not None
 
     def guard(event: str, values: tuple[object, ...]) -> None:
@@ -113,7 +113,7 @@ def main() -> None:
             raise ValueError(f"Source checksum mismatch: {path}")
         input_hashes[str(path)] = actual
 
-    # The lock records cloud paths; local copies are accepted only through equal hashes.
+    # Tệp khóa ghi đường dẫn trên máy đám mây; bản cục bộ chỉ được chấp nhận khi trùng mã băm.
     lock_path = Path(config["lock"]).resolve()
     pin(lock_path)
     locked = read(lock_path)["models"]["implicit_als"]
@@ -137,7 +137,7 @@ def main() -> None:
     for name in ["train.parquet", "validation.parquet", "id_mappings.json", "transform.json"]:
         if info["input_sha256"][name] != metadata["output_sha256"][name]:
             raise ValueError("Base model used different data")
-    # The base ran on Linux; a Windows checkout may hold the same code with CRLF endings.
+    # Mô hình nền chạy trên Linux; bản trên Windows có thể cùng mã nhưng xuống dòng CRLF.
     for relative, folder in [("implicit_als.py", "recommenders"), ("ranking.py", "evaluation")]:
         text = (root / "src/musicrec" / folder / relative).read_bytes().replace(b"\r\n", b"\n")
         if hashlib.sha256(text).hexdigest() != info["code_sha256"][relative]:

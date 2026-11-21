@@ -1,4 +1,4 @@
-"""Inspect raw HetRec tables without cleaning, splitting or training."""
+"""Khảo sát bảng HetRec gốc, không làm sạch, không chia tập, không huấn luyện."""
 
 import argparse
 import csv
@@ -20,12 +20,12 @@ import pandas as pd
 
 
 def sha256(path: Path) -> str:
-    """Fingerprint a file without modifying it."""
+    """Lấy dấu vân tay (SHA-256) của tệp mà không sửa tệp."""
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
 def interaction_quality(frame: pd.DataFrame) -> tuple[dict[str, int], pd.Series]:
-    """Count invalid/duplicate observations; do not remove or combine source rows."""
+    """Đếm quan sát lỗi/trùng; không xóa hay gộp dòng gốc."""
     keys = ["userID", "artistID"]
     missing_ids = frame[keys].apply(lambda col: col.str.strip().eq("")).any(axis=1)
     weights = pd.to_numeric(frame["weight"], errors="coerce")
@@ -47,13 +47,13 @@ def interaction_quality(frame: pd.DataFrame) -> tuple[dict[str, int], pd.Series]
 
 
 def describe(series: pd.Series) -> dict[str, float | None]:
-    """Use pandas linear quantiles and sample standard deviation (ddof=1)."""
+    """Dùng phân vị tuyến tính của pandas và độ lệch chuẩn mẫu (ddof=1)."""
     values = series.describe(percentiles=[0.05, 0.25, 0.5, 0.75, 0.9, 0.95, 0.99])
     return {str(k): float(v) if np.isfinite(v) else None for k, v in values.items()}
 
 
 def read_table(path: Path) -> pd.DataFrame:
-    """Retain blank fields and literal text such as NA; tags are inspected by ID."""
+    """Giữ ô trống và chữ như NA; thẻ được khảo sát theo mã."""
     encoding = "latin-1" if path.name == "tags.dat" else "utf-8"
     return pd.read_csv(
         path,
@@ -68,7 +68,7 @@ def read_table(path: Path) -> pd.DataFrame:
 def make_figures(
     out: Path, weights: pd.Series, histories: pd.Series, artists: pd.DataFrame
 ) -> list[str]:
-    """Plot raw descriptive quantities, without producing model input transforms."""
+    """Vẽ các đại lượng mô tả của dữ liệu gốc, không tạo biến đổi đầu vào cho mô hình."""
     os.environ.setdefault("MPLCONFIGDIR", str(out / ".matplotlib"))
     import matplotlib
 

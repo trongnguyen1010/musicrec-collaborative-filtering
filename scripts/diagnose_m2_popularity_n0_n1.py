@@ -1,13 +1,14 @@
-"""Read-only diagnosis: why Popularity has the same NDCG@10 at N = 0 and N = 1 (Table 4.13).
+"""Chẩn đoán chỉ đọc: vì sao Popularity có cùng NDCG@10 ở N = 0 và N = 1.
 
-Rebuilds, with the locked M2 model of the official run, the Popularity lists of the reserved
-users at N = 0 and N = 1 exactly as scripts/evaluate_m2_test.py does (target mode test_pairs:
-user roles from user_roles.json, train/test of the split, profile_order seed 42,
-rank_scores on features.popularity), then reports per user whether the supplied artist is in
-the Popularity top-10, whether any target lies in the top-10, and whether NDCG@10 changes.
-Nothing is refit and no existing file is written; results go to a new --output-dir.
+Dùng mô hình M2 đã khóa của lần chạy chính thức, dựng lại danh sách Popularity của
+người dùng để dành ở N = 0 và N = 1 đúng như scripts/evaluate_m2_test.py (chế độ đích
+test_pairs: vai trò từ user_roles.json, tập huấn luyện/kiểm thử của phép chia,
+profile_order hạt giống 42, rank_scores trên features.popularity), rồi báo cáo với từng
+người: nghệ sĩ được cung cấp có trong top-10 Popularity không, có đích nào trong top-10
+không, và NDCG@10 có đổi không. Không học lại, không ghi đè tệp nào; kết quả ghi vào
+--output-dir mới.
 
-    python -B scripts/diagnose_m2_popularity_n0_n1.py \
+    python -B scripts/diagnose_m2_popularity_n0_n1.py
         --output-dir outputs/chuong_4_bo_sung_3/popularity_n0_n1
 """
 

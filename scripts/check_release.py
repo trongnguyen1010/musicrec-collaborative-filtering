@@ -1,12 +1,12 @@
-"""Check that the demo service reproduces the official test metrics from the release alone.
+"""Kiểm tra dịch vụ demo tái tạo đúng chỉ số kiểm thử chính thức chỉ từ gói phát hành.
 
-Every train user is ranked through DemoService (train + validation masked, K=20) for
-PureSVD, M1 and ALS, plus the refit Popularity; reserved M2 users are ranked through
-DemoService.recommend_new with the same N = 1/3/5 profiles as the official M2 test.
-Metrics are recomputed with the shared evaluators and compared, column by column, with
-the committed official metrics.csv files. Any difference above 1e-12 fails the check.
+Mọi người dùng huấn luyện được xếp hạng qua DemoService (loại huấn luyện + xác thực, K=20)
+cho PureSVD, M1 và ALS, cùng Popularity học lại; người dùng để dành của M2 được xếp hạng
+qua DemoService.recommend_new với cùng hồ sơ N = 1/3/5 như khi chấm M2 chính thức.
+Chỉ số được tính lại bằng bộ đánh giá dùng chung và so từng cột với các tệp metrics.csv
+chính thức đã commit. Chênh lệch bất kỳ lớn hơn 1e-12 là không đạt.
 
-    python scripts/check_release.py --release artifacts/releases/demo-chinh-thuc-20261026 \
+    python scripts/check_release.py --release artifacts/releases/demo-chinh-thuc-20261026
         --output-dir outputs/demo/check_release_<date>
 """
 
@@ -40,7 +40,7 @@ def grouped(frame: pd.DataFrame) -> dict[str, set[str]]:
 
 
 def compare(rows: list[dict[str, Any]], official: pd.DataFrame, keys: list[str]) -> list[str]:
-    """Return mismatch descriptions between recomputed rows and the official table."""
+    """Trả mô tả các chỗ lệch giữa dòng tính lại và bảng chính thức."""
     errors = []
     mine = pd.DataFrame(rows).set_index(keys)
     reference = official.set_index(keys)

@@ -1,9 +1,9 @@
-"""Steps 4.4-4.5: freeze the validation-selected models, then score the test split exactly once.
+"""Mục 4.4–4.5: khóa các mô hình đã chọn trên tập xác thực, rồi chấm tập kiểm thử đúng một lần.
 
-The lock (selected configs, checkpoints and their hashes, predeclared comparison pairs)
-is written before test.parquet is opened. Models are loaded from the validation runs and
-never refit, except Random and Popularity, which are deterministic train-only statistics.
-Test lists mask train + validation; training statistics stay train-only.
+Tệp khóa (cấu hình đã chọn, mô hình và mã băm, các cặp so sánh khai báo trước) được ghi
+trước khi mở test.parquet. Mô hình được nạp từ các lần chạy xác thực, không học lại, trừ
+Random và Popularity vốn là thống kê tất định chỉ từ tập huấn luyện. Danh sách trên tập
+kiểm thử loại cả huấn luyện + xác thực; thống kê huấn luyện vẫn chỉ từ tập huấn luyện.
 """
 
 import argparse
@@ -45,7 +45,7 @@ LOADERS: dict[str, Any] = {
     "implicit_als": ImplicitALSRecommender,
 }
 RMSE_MODELS = {"user_cf", "item_cf", "svd"}
-# Predeclared before opening test (ROADMAP Q12 proposal, adapted to Q3/Q4 decisions).
+# Khai báo trước khi mở tập kiểm thử (đề xuất Q12 của ROADMAP, theo quyết định Q3/Q4).
 PAIRS = [
     ["pure_svd", "popularity"],
     ["svd", "pure_svd"],
@@ -56,12 +56,12 @@ SEEDS = [42, 43, 44]
 
 
 def sha256(path: Path) -> str:
-    """Fingerprint one file."""
+    """Lấy dấu vân tay (SHA-256) của một tệp."""
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
 def tree_hashes(directory: Path) -> dict[str, str]:
-    """Hashes of every file under a checkpoint directory."""
+    """Mã băm của mọi tệp trong thư mục mô hình."""
     return {
         p.relative_to(directory).as_posix(): sha256(p)
         for p in sorted(directory.rglob("*"))
@@ -70,8 +70,15 @@ def tree_hashes(directory: Path) -> dict[str, str]:
 
 
 def build_lock(tuning: Path, m1_run: Path, representations: Path) -> dict[str, Any]:
-    """Freeze the selection made on validation; refuse anything not selected there."""
+    """Khóa lựa chọn đã làm trên tập xác thực; từ chối mọi thứ không được chọn ở đó.
+
+    Đây là bằng chứng tập kiểm thử không được dùng để chọn cấu hình: tệp lock.json ghi
+    cấu hình đã chọn và mã băm SHA-256 của từng mô hình, được ghi ra trước khi mở
+    test.parquet, và refit_on_validation = False.
+    """
     summary = json.loads((tuning / "tuning_summary.json").read_text(encoding="utf-8"))
+    # Với mỗi mô hình, lấy cấu hình thắng trên tập xác thực (hạt giống 42) từ tuning_summary.json
+    # và ghi mã băm của mô hình đã lưu, để sau này chứng minh đúng mô hình đó được chấm.
     models: dict[str, Any] = {"random": {"refit": True}, "popularity": {"refit": True}}
     for model in ["user_cf", "item_cf", "svd", "pure_svd", "implicit_als"]:
         selected = summary[model]["selected"]
@@ -121,10 +128,11 @@ def build_lock(tuning: Path, m1_run: Path, representations: Path) -> dict[str, A
 
 
 def summarize_test_seeds(evaluations: dict[int, dict[str, Any]]) -> dict[str, Any]:
-    """Equal-weight mean and sample std across the predeclared seeds, never the best seed.
+    """Trung bình và độ lệch chuẩn mẫu qua các hạt giống khai báo trước, không chọn hạt giống tốt
+    nhất.
 
-    musicrec.evaluation.validation.summarize_seeds only accepts validation runs, and that
-    audited code stays unchanged; this applies the same rule to the test cohort.
+    musicrec.evaluation.validation.summarize_seeds chỉ nhận lần chạy xác thực và mã đó được
+    giữ nguyên; hàm này áp cùng quy tắc cho nhóm người dùng của tập kiểm thử.
     """
     if set(evaluations) != set(SEEDS):
         raise ValueError("Expected exactly the predeclared model seeds 42, 43 and 44")
@@ -153,7 +161,7 @@ def summarize_test_seeds(evaluations: dict[int, dict[str, Any]]) -> dict[str, An
 
 
 def main() -> None:
-    """Write lock.json, then evaluate every locked model and seed on test once."""
+    """Ghi lock.json, rồi chấm mọi mô hình và hạt giống đã khóa trên tập kiểm thử một lần."""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--representations-run", type=Path, required=True)
     parser.add_argument("--tuning-dir", type=Path, required=True)

@@ -1,7 +1,7 @@
-"""Write the static numbers the Next.js frontend shows, straight from saved result files.
+"""Ghi các con số tĩnh mà giao diện Next.js hiển thị, lấy thẳng từ tệp kết quả đã lưu.
 
-No number is typed by hand: every value comes from the official run outputs or the
-Chapter 5 backend check, and the JSON lists the files it was read from.
+Không con số nào gõ tay: mọi giá trị đến từ kết quả lần chạy chính thức hoặc kiểm tra
+phía máy chủ của Chương 5, và tệp JSON ghi rõ đọc từ tệp nào.
 
     python scripts/export_frontend_data.py
 """

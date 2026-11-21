@@ -1,4 +1,4 @@
-"""Verify Step 6 on synthetic hand examples; never read held-out data or fit models."""
+"""Kiểm tra Bước 6 bằng ví dụ tính tay tổng hợp; không đọc dữ liệu để dành, không huấn luyện."""
 
 import argparse
 import hashlib
@@ -26,7 +26,7 @@ from musicrec.evaluation.ranking import (
 
 
 def main() -> None:
-    """Persist reproducible toy evidence without overwriting an existing run."""
+    """Lưu bằng chứng trên ví dụ nhỏ có thể chạy lại, không ghi đè lần chạy cũ."""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--toy-check", action="store_true", required=True)
     parser.add_argument("--output-dir", type=Path, required=True)

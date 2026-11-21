@@ -1,15 +1,17 @@
-"""E-C: user-group analyses of test NDCG@10 with intervals and tests (no model is rerun).
+"""E-C: phân tích NDCG@10 kiểm thử theo nhóm người dùng, kèm khoảng tin cậy và kiểm định
+(không chạy lại mô hình).
 
-Reads the per-user test NDCG@10 of the eight locked models (ndcg10_tung_nguoi_dung.csv,
-whose aggregates match the official test file) and the locked train split.
-1. History length (train artists per user): "Dưới 40" and "Từ 40 trở lên" (40 is the
-   modal train length), mean NDCG@10 per model with a 95% bootstrap CI per cell.
-2. Table 4.10 groups (three equal-size groups by mainstreaminess = mean train listeners
-   of the user's artists, same rule as report_ch4_extras.py): 95% CI per cell and a
-   Kruskal-Wallis test across the three groups per model (Holm over the eight models).
-3. M1 - PureSVD within each mainstreaminess group: shared-bootstrap CI, Wilcoxon,
-   rank-biserial r, Holm over the three groups (the low group is the one of interest).
-Bootstrap: 1,000 resamples, seed 42, one index matrix per group shared by all models.
+Đọc NDCG@10 kiểm thử theo người dùng của tám mô hình đã khóa (ndcg10_tung_nguoi_dung.csv,
+có tổng hợp khớp tệp kiểm thử chính thức) và tập huấn luyện đã khóa.
+1. Độ dài lịch sử (số nghệ sĩ huấn luyện mỗi người): "Dưới 40" và "Từ 40 trở lên" (40 là
+   giá trị mốt), NDCG@10 trung bình từng mô hình kèm KTC bootstrap 95% mỗi ô.
+2. Ba nhóm bằng nhau theo mức ưa chuộng phổ biến (số người nghe trung bình của nghệ sĩ
+   người đó nghe, cùng quy tắc với report_ch4_extras.py): KTC 95% mỗi ô và kiểm định
+   Kruskal–Wallis giữa ba nhóm cho từng mô hình (Holm trên tám mô hình).
+3. M1 − PureSVD trong từng nhóm: KTC bootstrap chung, Wilcoxon, r_rb, Holm trên ba nhóm
+   (nhóm thấp là nhóm cần quan tâm).
+Bootstrap: 1.000 lần lấy mẫu, hạt giống 42, mỗi nhóm một ma trận chỉ số dùng chung cho
+mọi mô hình.
 """
 
 import argparse

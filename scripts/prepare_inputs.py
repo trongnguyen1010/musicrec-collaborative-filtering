@@ -1,4 +1,4 @@
-"""Run Step 5 only, preserving split rows and fitting proxy thresholds on train."""
+"""Chỉ chạy Bước 5: giữ nguyên các dòng đã chia, học ngưỡng điểm đại diện trên tập huấn luyện."""
 
 import argparse
 import hashlib
@@ -19,7 +19,7 @@ from musicrec.data.representations import REPRESENTATION_CONFIG, prepare_represe
 
 
 def main() -> None:
-    """Save four input representations and their train-fitted transformation metadata."""
+    """Lưu bốn biểu diễn đầu vào và thông tin biến đổi học từ tập huấn luyện."""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--split-run", type=Path, required=True)
     parser.add_argument("--config", type=Path, default=Path("configs/base.yaml"))

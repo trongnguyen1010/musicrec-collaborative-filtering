@@ -1,4 +1,4 @@
-"""Train the current baseline and write a transparent JSON artifact."""
+"""Huấn luyện mô hình cơ sở hiện tại và ghi tệp JSON dễ kiểm tra."""
 
 import json
 from pathlib import Path

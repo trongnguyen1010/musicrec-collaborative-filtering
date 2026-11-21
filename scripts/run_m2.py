@@ -1,4 +1,6 @@
-"""Run Step 16 on disjoint tuning users and supplied profiles; reserve test for Step 17."""
+"""Chạy Bước 16 trên nhóm tinh chỉnh tách biệt với hồ sơ được cung cấp; để dành tập kiểm thử cho
+Bước 17.
+"""
 
 import os
 
@@ -30,7 +32,7 @@ from musicrec.recommenders.popularity import PopularityRecommender  # noqa: E402
 
 
 def main() -> None:
-    """Fit shared components once, evaluate all nine mixtures and three matching controls."""
+    """Học các thành phần dùng chung một lần, chấm đủ chín cách trộn và ba đối chứng tương ứng."""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--config", type=Path, default=Path("configs/models/m2.yaml"))
     parser.add_argument("--output-dir", type=Path, required=True)

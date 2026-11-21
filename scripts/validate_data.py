@@ -1,4 +1,4 @@
-"""Validate the HetRec `user_artists.dat` source file into a stable schema."""
+"""Kiểm tra tệp nguồn HetRec `user_artists.dat` theo một lược đồ cố định."""
 
 from pathlib import Path
 

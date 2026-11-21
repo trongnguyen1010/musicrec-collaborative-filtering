@@ -1,4 +1,4 @@
-"""Run Step 9 only: UserCF L=40, shrinkage=0 on validation, never test."""
+"""Chỉ chạy Bước 9: UserCF L=40, co rút = 0 trên tập xác thực, không dùng tập kiểm thử."""
 
 from run_baseline import main
 

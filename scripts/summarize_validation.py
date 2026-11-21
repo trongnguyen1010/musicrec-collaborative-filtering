@@ -1,4 +1,6 @@
-"""Verify frozen model runs and summarize Step 14 validation evidence, never test."""
+"""Kiểm tra các lần chạy mô hình đã cố định và tóm tắt bằng chứng xác thực Bước 14, không dùng
+tập kiểm thử.
+"""
 
 import argparse
 import hashlib
@@ -20,7 +22,7 @@ from musicrec.evaluation.validation import (
 
 
 def main() -> None:
-    """Persist a new summary of verified run metrics, cohorts, seeds and resources."""
+    """Lưu bản tóm tắt mới gồm chỉ số, nhóm người dùng, hạt giống và tài nguyên đã kiểm tra."""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--config", type=Path, default=Path("configs/validation_summary.yaml"))
     parser.add_argument("--output-dir", type=Path, required=True)

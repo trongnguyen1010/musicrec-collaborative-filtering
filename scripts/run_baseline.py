@@ -1,4 +1,4 @@
-"""Shared CLI I/O for one authorized validation baseline at a time."""
+"""Phần đọc/ghi dòng lệnh dùng chung cho từng lần chạy mô hình cơ sở trên tập xác thực."""
 
 import argparse
 import hashlib
@@ -38,7 +38,9 @@ def main(
         "random", "popularity", "user_cf", "item_cf", "svd", "pure_svd", "implicit_als"
     ],
 ) -> None:
-    """Verify source hashes, fit the train catalog and persist validation evidence."""
+    """Kiểm tra mã băm dữ liệu nguồn, học trên tập huấn luyện và lưu bằng chứng trên tập xác
+    thực.
+    """
     proxy_model = model_name in ("user_cf", "item_cf", "svd", "pure_svd", "implicit_als")
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(

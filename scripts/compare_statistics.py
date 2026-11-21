@@ -1,9 +1,9 @@
-"""Side-by-side table of the locked paired tests and their shared-bootstrap recomputation.
+"""Bảng đặt cạnh nhau kiểm định theo cặp đã khóa và bản tính lại với bootstrap dùng chung.
 
-The locked files drew a fresh bootstrap per pair from one running generator; the new files
-resample every pair of a cohort with one shared index matrix. Mean differences and Wilcoxon
-p-values do not depend on the bootstrap and must agree exactly; only the CIs may move.
-Writes doi_chieu_thong_ke.csv and doi_chieu_thong_ke.json into --output-dir.
+Tệp đã khóa lấy bootstrap riêng cho từng cặp từ một bộ sinh chạy liên tục; tệp mới lấy
+mẫu lại mọi cặp của một nhóm bằng một ma trận chỉ số chung. Chênh lệch trung bình và p
+Wilcoxon không phụ thuộc bootstrap nên phải khớp tuyệt đối; chỉ khoảng tin cậy được đổi.
+Ghi doi_chieu_thong_ke.csv và doi_chieu_thong_ke.json vào --output-dir.
 """
 
 import argparse
@@ -24,7 +24,7 @@ def load(path: Path) -> Any:
 
 
 def table(name: str, old: list[dict[str, Any]], new: list[dict[str, Any]]) -> list[dict[str, Any]]:
-    """One row per pair; raises if a bootstrap-free field differs."""
+    """Mỗi cặp một dòng; báo lỗi nếu trường không phụ thuộc bootstrap bị lệch."""
     rows = []
     if len(old) != len(new):
         raise ValueError(f"{name}: pair count differs")

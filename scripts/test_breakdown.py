@@ -1,8 +1,8 @@
-"""Steps 4.7-4.8 from saved outputs only: test NDCG@10 by train history group, and cost.
+"""Mục 4.7–4.8 chỉ từ kết quả đã lưu: NDCG@10 kiểm thử theo nhóm lịch sử huấn luyện, và chi phí.
 
-History groups follow summarize_history_groups: below, at and above the train-only modal
-history length. Costs are read from the selected runs' metrics.json (single BLAS thread)
-and the saved model directories. Nothing is refit, recommended or re-evaluated.
+Nhóm lịch sử theo summarize_history_groups: dưới, bằng và trên độ dài mốt của lịch sử
+huấn luyện. Chi phí đọc từ metrics.json của các lần chạy đã chọn (một luồng BLAS) và các
+thư mục mô hình đã lưu. Không học lại, không gợi ý lại, không chấm lại.
 """
 
 import argparse
@@ -18,14 +18,14 @@ MODELS = ["random", "popularity", "user_cf", "item_cf", "svd", "pure_svd", "m1",
 
 
 def size(path: Path) -> int:
-    """Total bytes of a file or directory tree."""
+    """Tổng số byte của một tệp hoặc cây thư mục."""
     if path.is_file():
         return path.stat().st_size
     return sum(p.stat().st_size for p in path.rglob("*") if p.is_file())
 
 
 def main() -> None:
-    """Write history_groups.csv and cost.csv beside the test run."""
+    """Ghi history_groups.csv và cost.csv cạnh lần chạy kiểm thử."""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--test-run", type=Path, required=True)
     parser.add_argument("--split-run", type=Path, required=True)

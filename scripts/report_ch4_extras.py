@@ -1,20 +1,20 @@
-"""Supplementary Chapter 4 analyses requested by the advisor (feedback of 06/11/2026).
+"""Các phân tích bổ sung cho Chương 4 theo yêu cầu của GVHD (góp ý ngày 06/11/2026).
 
-Nothing here selects a model or a configuration. Every model is the one locked in
+Không có gì ở đây chọn mô hình hay cấu hình. Mọi mô hình là mô hình đã khóa trong
 outputs/chinh_thuc_cloud_20261026/chuong_4/test/lock.json:
 
-1. Rescore the test split at seed 42 with the locked models (UserCF, ItemCF and SVD from
-   the local refit of rebuild_locked_runs.py) and compare every aggregate with the
-   official test/metrics.csv. Per-user values are only used if the aggregates match.
-2. Recompute the four predeclared paired tests (must equal the official file), then add
-   supplementary tests (PureSVD against every other comparison model, Holm within that
-   family) and per-model bootstrap CIs of mean NDCG@10.
-3. Per-user analyses: NDCG@10 distribution, PureSVD - Popularity differences, and three
-   equal-size user groups by mainstreaminess (mean train listeners of the user's artists).
-4. M1 on test for the four ablation variants (supplementary: test was already opened),
-   with an independent tag-based ILD and two example lists.
-5. M2 decision paths per profile size on the reserved users (Table 4.10).
-6. Figures 4.1-4.7 as PNG plus the CSV each one is drawn from.
+1. Chấm lại tập kiểm thử với hạt giống 42 bằng mô hình đã khóa (UserCF, ItemCF và SVD lấy
+   từ bản học lại cục bộ của rebuild_locked_runs.py) và so mọi chỉ số tổng hợp với
+   test/metrics.csv chính thức. Giá trị theo người dùng chỉ được dùng nếu tổng hợp khớp.
+2. Tính lại bốn kiểm định theo cặp khai báo trước (phải bằng tệp chính thức), rồi thêm
+   kiểm định bổ sung (PureSVD so với từng mô hình đối sánh khác, Holm trong họ đó) và KTC
+   bootstrap của NDCG@10 trung bình từng mô hình.
+3. Phân tích theo người dùng: phân bố NDCG@10, chênh lệch PureSVD − Popularity, và ba nhóm
+   bằng nhau theo mức ưa chuộng phổ biến (số người nghe trung bình của nghệ sĩ người đó nghe).
+4. M1 trên tập kiểm thử cho bốn biến thể loại bỏ thành phần (bổ sung: tập kiểm thử đã mở),
+   kèm ILD theo thẻ độc lập và hai danh sách ví dụ.
+5. Đường xử lý của M2 theo cỡ hồ sơ trên người dùng để dành.
+6. Hình 4.1–4.7 dạng PNG kèm tệp CSV dùng để vẽ.
 """
 
 import os
@@ -92,7 +92,7 @@ INK, MUTED, GRID = "#1f1f1e", "#6b6a63", "#e4e3dd"
 
 
 def style(ax: Any) -> None:
-    """Recessive grid and axes, ink-colored text."""
+    """Lưới và trục mờ, chữ màu mực."""
     ax.grid(axis="y", color=GRID, linewidth=0.8)
     ax.set_axisbelow(True)
     for side in ["top", "right"]:
@@ -113,12 +113,12 @@ def save(fig: Any, out: Path, name: str) -> None:
 
 
 def compare(a: dict[str, float], b: dict[str, float], indices: Any) -> dict[str, Any]:
-    """Paired comparison on one shared bootstrap index matrix (musicrec.evaluation.paired)."""
+    """So sánh theo cặp trên một ma trận chỉ số bootstrap chung (musicrec.evaluation.paired)."""
     return paired_comparison(a, b, indices)
 
 
 def holm_families(first: list[dict[str, Any]], second: list[dict[str, Any]]) -> dict[str, Any]:
-    """Size of each Holm family and the unordered pairs that appear in both."""
+    """Cỡ của từng họ Holm và các cặp (không xét thứ tự) xuất hiện ở cả hai họ."""
     key = lambda r: tuple(sorted((r["a"], r["b"])))  # noqa: E731
     shared = sorted(set(map(key, first)) & set(map(key, second)))
     return {
@@ -131,7 +131,7 @@ def holm_families(first: list[dict[str, Any]], second: list[dict[str, Any]]) -> 
 
 
 def m1_equivalence(predeclared: list[dict[str, Any]], base_mean: float) -> dict[str, Any]:
-    """TOST for M1 - PureSVD on NDCG@10 with delta = 5% of PureSVD's mean NDCG@10."""
+    """TOST cho M1 − PureSVD trên NDCG@10 với delta = 5% NDCG@10 trung bình của PureSVD (4.1)."""
     row = next(r for r in predeclared if (r["a"], r["b"]) == ("m1", "pure_svd"))
     return {
         "pair": ["m1", "pure_svd"],
@@ -143,7 +143,9 @@ def m1_equivalence(predeclared: list[dict[str, Any]], base_mean: float) -> dict[
 
 
 def tag_ild(lists: dict[str, list[str]], features: Any, index: dict[str, int], tagged: Any) -> Any:
-    """Mean over lists of mean (1 - tag cosine) over pairs whose two artists both have tags."""
+    """Trung bình qua các danh sách của trung bình (1 − côsin thẻ) trên các cặp mà cả hai nghệ sĩ
+    có thẻ.
+    """
     values = []
     for items in lists.values():
         rows = [index[i] for i in items if i in index and tagged[index[i]]]
@@ -211,7 +213,7 @@ def main() -> None:
         RUN / "chuong_4/m1_pure_svd/seed_42/selected_model", base=loaded["pure_svd"]
     )
 
-    # 1. Rescore and compare with the official aggregates.
+    # 1. Chấm lại và so với chỉ số tổng hợp chính thức.
     official = pd.read_csv(DOCS / "test/metrics.csv")
     official = official[official.seed == 42]
     lists: dict[str, dict[str, list[str]]] = {}
@@ -249,7 +251,7 @@ def main() -> None:
         {LABELS[m]: [per_user[m][u] for u in eligible] for m in MODELS}, index=eligible
     ).rename_axis("user_id").to_csv(out / "ndcg10_tung_nguoi_dung.csv")
 
-    # 2. Statistics.
+    # 2. Thống kê.
     indices = resample_indices(len(per_user["pure_svd"]), RESAMPLES, SEED)
     predeclared = [
         {"a": a, "b": b, **compare(per_user[a], per_user[b], indices)}
@@ -270,7 +272,7 @@ def main() -> None:
         model: mean_interval([per_user[model][u] for u in eligible], indices) for model in MODELS
     }
     official_stats = json.loads((DOCS / "test/statistics_ndcg_at_10.json").read_text("utf-8"))
-    # Bootstrap-free fields only: the official file drew a fresh bootstrap per pair.
+    # Chỉ so các trường không phụ thuộc bootstrap: tệp chính thức lấy bootstrap riêng mỗi cặp.
     reproduced = all(
         abs(a["holm_p"] - b["holm_p"]) <= 1e-12 * max(1.0, b["holm_p"])
         and abs(a["mean_difference"] - b["mean_difference"]) <= 1e-12
@@ -294,7 +296,7 @@ def main() -> None:
     (out / "kiem_dinh_bo_sung.json").write_text(json.dumps(stats, indent=2) + "\n", "utf-8")
     print("predeclared pairs equal official:", reproduced, flush=True)
 
-    # 3. Per-user analyses.
+    # 3. Phân tích theo người dùng.
     listeners = train.groupby("item_id").user_id.nunique()
     mainstream = (
         train.assign(listeners=train.item_id.map(listeners)).groupby("user_id").listeners.mean()
@@ -333,7 +335,7 @@ def main() -> None:
         out / "hinh/hinh_4_5.csv", index=False
     )
 
-    # 4. M1 variants on test (supplementary) and tag ILD.
+    # 4. Các biến thể M1 trên tập kiểm thử (bổ sung) và ILD theo thẻ.
     cleaning = args.cleaning_run
     assignments = pd.read_parquet(cleaning / "tag_assignments.parquet")
     dictionary = pd.read_parquet(cleaning / "tags.parquet").set_index("tagID")["tagValue"].to_dict()
@@ -426,7 +428,7 @@ def main() -> None:
             )
     pd.DataFrame(examples).to_csv(out / "m1_vi_du.csv", index=False)
 
-    # 5. M2 decision paths on the reserved users (same cohort and profiles as Step 17).
+    # 5. Đường xử lý của M2 trên người để dành (cùng nhóm và hồ sơ như Bước 17).
     m2_run = RUN / "chuong_4/m2_tuning"
     split_train = pd.read_parquet(RUN / "chuong_3/run/split/train.parquet")
     roles = json.loads((m2_run / "user_roles.json").read_text(encoding="utf-8"))
@@ -460,7 +462,7 @@ def main() -> None:
         )
     pd.DataFrame(path_rows).to_csv(out / "m2_duong_xu_ly.csv", index=False)
 
-    # 6. Figures.
+    # 6. Vẽ hình.
     counts_artist = listeners.sort_values(ascending=False).to_numpy()
     pd.DataFrame(
         {"hang": np.arange(1, len(counts_artist) + 1), "so_nguoi_nghe": counts_artist}

@@ -1,6 +1,6 @@
-"""Measure end-to-end HTTP latency of a running demo API and record the machine it ran on.
+"""Đo độ trễ HTTP đầu–cuối của API demo đang chạy và ghi lại cấu hình máy.
 
-uvicorn musicrec.api.main:app --port 8000   (in another shell)
+uvicorn musicrec.api.main:app --port 8000   (ở cửa sổ khác)
 python scripts/measure_latency.py --output-dir outputs/demo/latency_<date>
 """
 
@@ -55,7 +55,7 @@ def main() -> None:
             elapsed = (perf_counter() - start) * 1000
             response.raise_for_status()
             timings.append(elapsed)
-        timings = timings[args.warmup :]  # warm-up calls fill connection and caches
+        timings = timings[args.warmup :]  # gọi khởi động để làm nóng kết nối và bộ nhớ đệm
         results[label] = {
             "warmup": args.warmup,
             "repeats": args.repeats,

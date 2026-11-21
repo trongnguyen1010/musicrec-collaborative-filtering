@@ -1,4 +1,4 @@
-"""Re-run Steps 1-6 (Chapter 3) from raw HetRec files twice and record the environment."""
+"""Chạy lại Bước 1–6 (Chương 3) từ tệp HetRec gốc hai lần và ghi lại môi trường chạy."""
 
 import argparse
 import ctypes
@@ -24,7 +24,7 @@ KEY_PACKAGES = ["numpy", "pandas", "pyarrow", "scipy", "scikit-learn", "matplotl
 
 
 def total_ram_bytes() -> int | None:
-    """Physical memory without third-party packages; None if the OS hides it."""
+    """Dung lượng RAM vật lý không cần gói ngoài; None nếu hệ điều hành không cho biết."""
     if hasattr(os, "sysconf") and "SC_PHYS_PAGES" in os.sysconf_names:
         return int(os.sysconf("SC_PAGE_SIZE") * os.sysconf("SC_PHYS_PAGES"))
     if sys.platform == "win32":
@@ -45,7 +45,7 @@ def total_ram_bytes() -> int | None:
 
 
 def cpu_name() -> str:
-    """Readable CPU model; platform.processor() is empty on most Linux systems."""
+    """Tên CPU dễ đọc; platform.processor() thường rỗng trên Linux."""
     cpuinfo = Path("/proc/cpuinfo")
     if cpuinfo.exists():
         for line in cpuinfo.read_text(encoding="utf-8").splitlines():
@@ -55,7 +55,7 @@ def cpu_name() -> str:
 
 
 def environment(label: str) -> dict[str, Any]:
-    """Machine, OS, Python and library versions for the thesis 'Môi trường chạy' table."""
+    """Máy, hệ điều hành, phiên bản Python và thư viện cho bảng 'Môi trường chạy' của khóa luận."""
     versions: dict[str, str | None] = {}
     for name in KEY_PACKAGES:
         try:
@@ -85,7 +85,7 @@ def environment(label: str) -> dict[str, Any]:
 
 
 def run_pipeline(base: Path, raw: Path) -> dict[str, float]:
-    """Run every step into base/<step>; return wall-clock seconds per step."""
+    """Chạy từng bước vào base/<bước>; trả số giây thực của mỗi bước."""
     paths = {"raw": str(raw)}
     seconds = {}
     for name, template in STEPS:
@@ -99,7 +99,9 @@ def run_pipeline(base: Path, raw: Path) -> dict[str, float]:
 
 
 def compare(first: Path, second: Path) -> dict[str, Any]:
-    """Byte-compare data outputs of two runs; metadata and code snapshots differ by design."""
+    """So từng byte kết quả dữ liệu của hai lần chạy; siêu dữ liệu và bản chụp mã khác nhau là
+    bình thường.
+    """
     report: dict[str, Any] = {}
     for name, _ in STEPS:
         left = first / name
@@ -127,7 +129,7 @@ def compare(first: Path, second: Path) -> dict[str, Any]:
 
 
 def main() -> None:
-    """Write run/, recheck/, environment.json and summary.json under a new directory."""
+    """Ghi run/, recheck/, environment.json và summary.json vào thư mục mới."""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--raw-dir", type=Path, default=Path("data/raw/hetrec2011"))
     parser.add_argument("--output-dir", type=Path, required=True)

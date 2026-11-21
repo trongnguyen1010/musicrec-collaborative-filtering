@@ -1,4 +1,4 @@
-"""Run Step 4 only from a verified cleaning run into a new directory."""
+"""Chỉ chạy Bước 4, từ một lần làm sạch đã kiểm tra, vào thư mục mới."""
 
 import argparse
 import hashlib
@@ -18,7 +18,7 @@ from musicrec.data.splitting import split_interactions
 
 
 def main() -> None:
-    """Save complete holdouts, train mappings and auditable split diagnostics."""
+    """Lưu đủ các tập để dành, ánh xạ của tập huấn luyện và thông tin kiểm tra phép chia."""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--clean-run", type=Path, required=True)
     parser.add_argument("--config", type=Path, default=Path("configs/base.yaml"))

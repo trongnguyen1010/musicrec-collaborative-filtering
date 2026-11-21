@@ -1,4 +1,4 @@
-"""Run Step 11 only: one biased MF configuration with validation epoch selection."""
+"""Chỉ chạy Bước 11: một cấu hình SVD có độ lệch, chọn vòng lặp trên tập xác thực."""
 
 import os
 

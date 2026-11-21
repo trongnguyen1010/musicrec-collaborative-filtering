@@ -1,12 +1,12 @@
-"""Small load test of POST /recommend on a running demo API (PureSVD, K = 10).
+"""Kiểm thử tải nhỏ cho POST /recommend trên API demo đang chạy (PureSVD, K = 10).
 
-uvicorn musicrec.api.main:app --port 8010   (in another shell, one worker)
+uvicorn musicrec.api.main:app --port 8010   (ở cửa sổ khác, một tiến trình)
 python scripts/load_test.py --api-url http://127.0.0.1:8010 --output-dir outputs/demo/load_<date>
 
-For each concurrency level, `concurrency` client threads (one HTTP session each) send requests
-back to back until `requests` responses are collected; user ids cycle through the first users
-of /users so requests differ. Reports throughput, median and P95 latency and error rate,
-plus the machine and library versions. Requests before `warmup` are not counted.
+Với mỗi mức đồng thời, `concurrency` luồng (mỗi luồng một phiên HTTP) gửi yêu cầu liên
+tục tới khi đủ `requests` phản hồi; mã người dùng xoay vòng qua các người đầu của /users
+để các yêu cầu khác nhau. Báo cáo thông lượng, độ trễ trung vị và P95, tỷ lệ lỗi, cùng
+cấu hình máy và phiên bản thư viện. Các yêu cầu trước `warmup` không được tính.
 """
 
 import argparse

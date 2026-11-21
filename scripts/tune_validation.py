@@ -1,4 +1,6 @@
-"""Run the agreed Chapter 4 tuning grids on validation only, then confirm winners on seeds 43/44."""
+"""Chạy lưới tinh chỉnh đã thống nhất của Chương 4 chỉ trên tập xác thực, rồi xác nhận mô hình
+thắng với hạt giống 43/44.
+"""
 
 import argparse
 import csv
@@ -33,7 +35,7 @@ STOCHASTIC = {"svd", "pure_svd", "implicit_als"}
 
 
 def candidates(model: str, space: dict[str, Any], base: dict[str, Any]) -> list[dict[str, Any]]:
-    """The full budget for one model, first agreed configuration first."""
+    """Toàn bộ ngân sách cấu hình của một mô hình, cấu hình thống nhất đầu tiên đứng trước."""
     if "log_uniform" not in space:
         keys = list(space["grid"])
         grid = [
@@ -55,12 +57,12 @@ def candidates(model: str, space: dict[str, Any], base: dict[str, Any]) -> list[
 
 
 def name_of(model: str, point: dict[str, Any]) -> str:
-    """Readable, unique run directory name for one configuration."""
+    """Tên thư mục dễ đọc và duy nhất cho một cấu hình."""
     return model + "".join(f"_{key[:3]}{value:g}" for key, value in point.items())
 
 
 def run(model: str, config: dict[str, Any], out: Path, source: Path, seed: int) -> dict[str, Any]:
-    """Run one validation fit through the existing runner and return its summary row."""
+    """Chạy một lần học trên tập xác thực qua trình chạy sẵn có và trả dòng tóm tắt."""
     config_path = out.parent / "configs" / f"{out.name}.yaml"
     config_path.parent.mkdir(parents=True, exist_ok=True)
     config_path.write_text(yaml.safe_dump(config, sort_keys=False), encoding="utf-8")
@@ -94,7 +96,12 @@ def run(model: str, config: dict[str, Any], out: Path, source: Path, seed: int) 
 
 
 def main() -> None:
-    """Tune each requested model into <output-dir>/<model>/ and write tuning_summary.json."""
+    """Tinh chỉnh từng mô hình vào <output-dir>/<model>/ và ghi tuning_summary.json.
+
+    Dò lưới trên tập xác thực: mỗi cấu hình học trên tập huấn luyện, chấm NDCG@10 trên tập
+    xác thực (hạt giống 42); cấu hình có NDCG@10 cao nhất được chọn. Tập kiểm thử không
+    được đọc ở đây.
+    """
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--representations-run", type=Path, required=True)
     parser.add_argument("--output-dir", type=Path, required=True)
@@ -116,9 +123,12 @@ def main() -> None:
             out = root / model / name_of(model, point)
             rows.append({**point, **run(model, {**base, **point}, out, source, 42)})
             print(json.dumps(rows[-1]), flush=True)
+        # Tiêu chí chọn duy nhất: NDCG@10 trên tập xác thực, hạt giống 42.
         best_row = max(rows, key=lambda row: row["ndcg_at_10"])
         best = points[rows.index(best_row)]
         confirmations = []
+        # Mô hình có yếu tố ngẫu nhiên (SVD, ALS) chạy lại cấu hình thắng với hạt giống 43, 44
+        # để kiểm tra kết quả không phụ thuộc may rủi của một hạt giống.
         if model in STOCHASTIC and not args.no_confirm:
             for seed in tuning["confirmation_seeds"]:
                 out = root / model / f"{name_of(model, best)}_seed{seed}"

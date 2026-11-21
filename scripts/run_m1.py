@@ -1,4 +1,6 @@
-"""Run the frozen Step 15 grid and matching seed ablations; never fit the base or open test."""
+"""Chạy lưới cố định của Bước 15 và các biến thể loại bỏ theo hạt giống; không học lại mô hình
+nền, không mở tập kiểm thử.
+"""
 
 import os
 
@@ -38,7 +40,7 @@ BASE_CLASSES = {"implicit_als": ImplicitALSRecommender, "pure_svd": PureSVDRecom
 
 
 def main() -> None:
-    """Save all outcomes, including infeasible configurations, in a new local run."""
+    """Lưu mọi kết quả, kể cả cấu hình không khả thi, vào lần chạy cục bộ mới."""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--config", type=Path, default=Path("configs/models/m1.yaml"))
     parser.add_argument("--evaluation-config", type=Path, default=Path("configs/evaluation.yaml"))
@@ -113,8 +115,8 @@ def main() -> None:
             or info["evaluation_config"] != evaluation_config
         ):
             raise ValueError("Expected matching base runs for every seed")
-        # The ALS runs of 26/10 carry an independent audit; runs from the tuning
-        # driver do not, and that absence is recorded instead of being hidden.
+        # Các lần chạy ALS ngày 26/10 có kiểm tra độc lập kèm theo; các lần chạy từ trình tinh
+        # chỉnh thì không, và việc thiếu đó được ghi lại thay vì giấu đi.
         if (run / "verification.json").exists():
             if not read(run / "verification.json")["all_checks_passed"]:
                 raise ValueError("Base run failed its independent verification")
@@ -165,7 +167,7 @@ def main() -> None:
         root / "src/musicrec/evaluation/validation.py",
         root / "tests/unit/test_m1.py",
     ]
-    # Keep package-relative names: recommender and selection modules are both named m1.py.
+    # Giữ tên theo gói: mô-đun mô hình và mô-đun chọn cấu hình đều tên là m1.py.
     for path in code_paths:
         relative = path.resolve().relative_to(root)
         destination = code / relative

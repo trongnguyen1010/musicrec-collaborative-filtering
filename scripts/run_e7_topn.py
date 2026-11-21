@@ -1,17 +1,18 @@
-"""E7: UserCF/ItemCF with top-N 'sum' aggregation on the locked Chapter 3 representations.
+"""E7: UserCF/ItemCF với cách tổng hợp top-N ('sum') trên các biểu diễn đã khóa ở Chương 3.
 
-Phases (one per call):
-- validation: fit on train and score validation for the selected grid points (all by
-  default). --max-users scores only the first users by id and is a timing sample: it
-  reports NDCG@10 of that subset only and is never used for selection.
-- select: read every full validation result, pick the NDCG@10 winner per model
-  (ties: grid order), write selection.json. Fails if a grid point is missing.
-- stats: paired tests of the two test winners against Popularity and PureSVD (per-user
-  NDCG@10 from --baseline-csv), Holm within the E7 family of four pairs, one shared
-  bootstrap index matrix, rank-biserial r. Labelled a post-lock supplementary analysis.
-- test: write lock.json (winners and result hashes) before test.parquet is opened, refit
-  each winner on train (no refit on validation), mask train + validation, score test once.
-Every run directory records timings, machine and library versions.
+Các pha (mỗi lần gọi một pha):
+- validation: học trên tập huấn luyện và chấm tập xác thực cho các điểm lưới đã chọn (mặc
+  định là tất cả). --max-users chỉ chấm vài người đầu theo mã để đo thời gian: chỉ báo
+  NDCG@10 của tập con đó và không bao giờ dùng để chọn.
+- select: đọc mọi kết quả xác thực đầy đủ, chọn cấu hình có NDCG@10 cao nhất mỗi mô hình
+  (hòa: theo thứ tự lưới), ghi selection.json. Báo lỗi nếu thiếu điểm lưới.
+- stats: kiểm định theo cặp hai mô hình thắng so với Popularity và PureSVD (NDCG@10 từng
+  người lấy từ --baseline-csv), Holm trong họ E7 gồm bốn cặp, một ma trận chỉ số bootstrap
+  chung, r_rb. Ghi rõ là phân tích bổ sung sau khi khóa.
+- test: ghi lock.json (mô hình thắng và mã băm kết quả) trước khi mở test.parquet, học lại
+  mô hình thắng trên tập huấn luyện (không học trên xác thực), loại huấn luyện + xác thực,
+  chấm tập kiểm thử một lần.
+Mỗi thư mục chạy ghi thời gian, cấu hình máy và phiên bản thư viện.
 """
 
 import os
@@ -49,7 +50,7 @@ def sha256(path: Path) -> str:
 
 
 def grid_points(config: dict[str, Any]) -> list[dict[str, Any]]:
-    """Grid in YAML order: representation, then neighbors, then shrinkage."""
+    """Lưới theo thứ tự trong YAML: biểu diễn, rồi số láng giềng, rồi hệ số co rút."""
     keys = list(config["grid"])
     return [
         dict(zip(keys, values, strict=True))
@@ -62,7 +63,7 @@ def run_name(model: str, point: dict[str, Any]) -> str:
 
 
 def runtime() -> dict[str, Any]:
-    """Machine and library versions recorded with every run."""
+    """Cấu hình máy và phiên bản thư viện ghi kèm mỗi lần chạy."""
     return {
         "python": platform.python_version(),
         "platform": platform.platform(),
@@ -100,7 +101,7 @@ def fit_and_rank(
     masks: dict[str, set[str]],
     k: int,
 ) -> tuple[dict[str, list[str]], dict[str, float]]:
-    """Fit one configuration and rank the given users; returns lists and timings."""
+    """Học một cấu hình và xếp hạng cho các người dùng đã cho; trả danh sách và thời gian."""
     recommender = CLASSES[model](
         point["neighbors"], float(point["shrinkage"]), "sum", point["representation"]
     )

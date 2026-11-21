@@ -1,10 +1,10 @@
-"""Rebuild the locked UserCF, ItemCF and SVD validation runs on this machine (report v17).
+"""Dựng lại các lần chạy xác thực đã khóa của UserCF, ItemCF và SVD trên máy này (báo cáo v17).
 
-The official run (chinh_thuc_cloud_20261026) kept only aggregate test metrics on this
-machine. To draw per-user figures, the selected configurations from the official
-tuning_summary.json are refitted here at seed 42 through the same runners. Nothing is
-selected again: the configurations are read, not searched. A second SVD run with
-patience equal to max_epochs records the full 100-epoch learning curve (Figure 4.3).
+Lần chạy chính thức (chinh_thuc_cloud_20261026) chỉ giữ chỉ số kiểm thử tổng hợp trên máy
+này. Để vẽ hình theo từng người dùng, các cấu hình đã chọn trong tuning_summary.json chính
+thức được học lại ở đây với hạt giống 42 qua cùng các trình chạy. Không chọn lại gì: cấu
+hình chỉ được đọc, không dò. Lần chạy SVD thứ hai với patience bằng max_epochs ghi đủ
+đường học 100 vòng (Hình 4.3).
 """
 
 import os
@@ -34,7 +34,7 @@ MODELS = ["user_cf", "item_cf", "svd"]
 
 
 def main() -> None:
-    """Refit each locked configuration, then the long SVD curve, and compare validation NDCG."""
+    """Học lại từng cấu hình đã khóa, rồi đường học SVD dài, và so NDCG xác thực."""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--representations-run", type=Path, required=True)
     parser.add_argument("--tuning-summary", type=Path, required=True)
@@ -80,10 +80,10 @@ def main() -> None:
 
 
 def svd_curve(source: Path, selected: dict[str, Any]) -> list[dict[str, Any]]:
-    """Fit the locked SVD for all 100 epochs, logging validation NDCG@10 and proxy RMSE.
+    """Học SVD đã khóa đủ 100 vòng, ghi NDCG@10 xác thực và RMSE điểm đại diện mỗi vòng.
 
-    Same callback as run_baseline.py (validation NDCG@10 masking train only); patience is
-    set to max_epochs so the curve is not cut. Only validation is read.
+    Cùng hàm gọi lại như run_baseline.py (NDCG@10 xác thực, chỉ loại tập huấn luyện); patience
+    đặt bằng max_epochs để đường học không bị cắt. Chỉ đọc tập xác thực.
     """
     base = yaml.safe_load((ROOT / BASE_CONFIGS["svd"]).read_text(encoding="utf-8"))
     train = pd.read_parquet(source / "train.parquet")

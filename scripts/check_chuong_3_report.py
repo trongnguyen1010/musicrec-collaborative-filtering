@@ -1,4 +1,4 @@
-"""Compare every Chapter 3 / Appendix B number of report v15 (25-10-2026) with a rerun."""
+"""Đối chiếu mọi con số của Chương 3 / Phụ lục B trong báo cáo v15 (25-10-2026) với lần chạy lại."""
 
 import argparse
 import json
@@ -6,7 +6,7 @@ import math
 from pathlib import Path
 from typing import Any
 
-# (section, description, value written in report v15, path in the run, tolerance)
+# (mục, mô tả, giá trị ghi trong báo cáo v15, đường dẫn trong lần chạy, dung sai)
 CLAIMS: list[tuple[str, str, float, str, float]] = [
     ("3.4.2", "Người dùng gốc", 1892, "raw_eda:users", 0),
     ("3.4.2", "Nghệ sĩ gốc", 17632, "raw_eda:artists", 0),
@@ -148,7 +148,7 @@ CLAIMS: list[tuple[str, str, float, str, float]] = [
 
 
 def lookup(data: Any, dotted: str) -> Any:
-    """Follow a dotted path; keys may themselves contain dots (e.g. tags.dat)."""
+    """Đi theo đường dẫn có dấu chấm; bản thân khóa có thể chứa dấu chấm (ví dụ tags.dat)."""
     if not dotted:
         return data
     if isinstance(data, list):
@@ -161,7 +161,7 @@ def lookup(data: Any, dotted: str) -> Any:
 
 
 def actual(run: Path, spec: str) -> float:
-    """Resolve a claim path against the saved run outputs."""
+    """Tìm giá trị của một mục cần đối chiếu trong kết quả đã lưu."""
     if spec == "@ndcg_single_hit":
         return 1 / (1 + 1 / math.log2(3))
     step, _, expression = spec.partition(":")
@@ -180,7 +180,7 @@ def actual(run: Path, spec: str) -> float:
 
 
 def main() -> None:
-    """Write report_check.json and print the mismatches."""
+    """Ghi report_check.json và in các chỗ không khớp."""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--run", type=Path, required=True, help="The run/ folder of run_chuong_3")
     parser.add_argument("--output", type=Path, required=True)

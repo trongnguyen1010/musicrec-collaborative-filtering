@@ -1,15 +1,16 @@
-"""Evidence for Chapter 5: release contents, load time, API test cases, online/offline lists.
+"""Bằng chứng cho Chương 5: nội dung gói phát hành, thời gian nạp, ca kiểm thử API,
+đối chiếu danh sách trực tuyến/ngoại tuyến.
 
-1. Files of the demo release with sizes, and the time to load it (load_release + DemoService),
-   measured in three fresh processes.
-2. Test cases T01-T12 run over HTTP (FastAPI TestClient) on the real release; each case
-   records its expectation, what happened and Đạt / Không đạt.
-3. Online versus offline: for every train user and PureSVD, M1, ALS, the top-10 returned by
-   POST /recommend is compared with the top-10 of the original checkpoints in
-   outputs/chinh_thuc_cloud_20261026 (not the release copy), masked with train + validation
-   as in the official test. Same for M2 on the 189 reserved users with N = 1, 3, 5. Three
-   indicators: share of users whose lists are identical in order, mean Jaccard of the item
-   sets, and the largest absolute score difference on shared items.
+1. Các tệp của gói demo kèm kích thước, và thời gian nạp gói (load_release + DemoService),
+   đo trong ba tiến trình mới.
+2. Ca kiểm thử T01–T12 chạy qua HTTP (FastAPI TestClient) trên gói thật; mỗi ca ghi
+   kỳ vọng, kết quả thực tế và Đạt / Không đạt.
+3. Trực tuyến so với ngoại tuyến: với mọi người dùng huấn luyện và PureSVD, M1, ALS,
+   top-10 do POST /recommend trả về được so với top-10 của mô hình gốc trong
+   outputs/chinh_thuc_cloud_20261026 (không phải bản chép trong gói), loại lịch sử
+   huấn luyện + xác thực như khi chấm tập kiểm thử. Tương tự cho M2 trên 189 người để
+   dành với N = 1, 3, 5. Ba chỉ số: tỷ lệ người dùng có danh sách trùng cả thứ tự,
+   Jaccard trung bình của tập nghệ sĩ, và chênh lệch điểm lớn nhất trên nghệ sĩ chung.
 
     python scripts/check_chuong_5.py --output-dir outputs/demo/chuong_5_<date>
 """
@@ -58,7 +59,9 @@ def release_files() -> list[dict[str, Any]]:
 
 
 def load_times() -> list[float]:
-    """Seconds from import to a ready DemoService, each in a fresh interpreter."""
+    """Số giây từ lúc import tới khi DemoService sẵn sàng, mỗi lần trong một trình thông dịch
+    mới.
+    """
     return [
         float(
             subprocess.run(

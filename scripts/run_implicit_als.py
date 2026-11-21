@@ -1,4 +1,4 @@
-"""Run one authorized implicit ALS configuration on validation, never test."""
+"""Chạy một cấu hình implicit ALS đã duyệt trên tập xác thực, không bao giờ dùng tập kiểm thử."""
 
 import os
 

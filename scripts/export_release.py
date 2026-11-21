@@ -1,10 +1,10 @@
-"""Package the official locked checkpoints into a demo release without refitting anything.
+"""Đóng gói các mô hình đã khóa chính thức thành gói demo, không học lại gì.
 
-Sources come from the test locks of the official run: PureSVD k=16, M1 over it and ALS at
-seed 42 (chuong_4/test/lock.json), M2 (chuong_4/m2_test/lock.json). Every checkpoint file
-must match the lock hash and the train/validation interactions must match the
-representations run, otherwise nothing is written. Lock paths recorded on the cloud
-machine are re-rooted onto this checkout.
+Nguồn lấy từ tệp khóa kiểm thử của lần chạy chính thức: PureSVD k=16, M1 trên PureSVD và
+ALS ở hạt giống 42 (chuong_4/test/lock.json), M2 (chuong_4/m2_test/lock.json). Mọi tệp mô
+hình phải khớp mã băm trong tệp khóa và dữ liệu huấn luyện/xác thực phải khớp lần chạy
+biểu diễn, nếu không thì không ghi gì. Đường dẫn ghi trên máy đám mây được chuyển sang
+thư mục dự án hiện tại.
 
     python scripts/export_release.py --version demo-chinh-thuc-20261026
 """
@@ -24,14 +24,14 @@ SEED = "42"
 
 
 def local(path: str) -> Path:
-    """Map a path recorded on the cloud machine onto this checkout."""
+    """Chuyển đường dẫn ghi trên máy đám mây sang thư mục dự án hiện tại."""
     if not path.startswith(CLOUD_ROOT):
         raise ValueError(f"Unexpected lock path root: {path}")
     return ROOT / path.removeprefix(CLOUD_ROOT)
 
 
 def checked(directory: Path, expected: dict[str, str], name: str) -> Path:
-    """Require the exact locked file set and hashes for one checkpoint directory."""
+    """Yêu cầu đúng tập tệp và mã băm đã khóa cho một thư mục mô hình."""
     actual = tree_hashes(directory)
     if actual != expected:
         bad = sorted(k for k in expected.keys() | actual.keys() if actual.get(k) != expected.get(k))
@@ -40,7 +40,7 @@ def checked(directory: Path, expected: dict[str, str], name: str) -> Path:
 
 
 def collect(run: Path, artists: Path) -> ReleaseSources:
-    """Resolve and verify every input against the official locks."""
+    """Tìm và kiểm tra mọi đầu vào theo các tệp khóa chính thức."""
     test_lock_path = run / "chuong_4/test/lock.json"
     m2_lock_path = run / "chuong_4/m2_test/lock.json"
     test_lock: dict[str, Any] = json.loads(test_lock_path.read_text(encoding="utf-8"))

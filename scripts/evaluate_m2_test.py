@@ -1,16 +1,16 @@
-"""Step 17: score the validation-selected M2 once on the reserved users' test pairs.
+"""Bước 17: chấm M2 (cấu hình chọn trên tập xác thực) một lần trên cặp kiểm thử của người để dành.
 
-The saved Step 16 model is loaded, never refit. The lock (selected alpha/threshold, model
-hashes, cohort rule and predeclared comparisons) is written before test.parquet is opened.
-Reserved users supply nested train profiles (N = 0/1/3/5). Target modes:
-- test_pairs (default, the locked Step 17 protocol): T_u = test pairs of u.
-- all_but_profile (Given-N, section 3.14): T_u^N = (train u validation u test of u) minus
-  the N supplied artists; only the supplied artists are masked.
-Both intersect the learning catalog. Learning-user statistics stay the only source of
-catalog, popularity, novelty and ILD. Per comparison: mean per-user NDCG@10 difference,
-95%/90% user bootstrap CIs (1,000 resamples, seed 42, one index matrix shared by every
-pair of the same cohort), rank-biserial r, two-sided Wilcoxon signed-rank p and Holm
-adjustment over all predeclared pairs.
+Nạp mô hình đã lưu ở Bước 16, không học lại. Tệp khóa (α, n_min đã chọn, mã băm mô hình,
+quy tắc nhóm và các phép so sánh khai báo trước) được ghi trước khi mở test.parquet.
+Người để dành cung cấp hồ sơ huấn luyện lồng nhau (N = 0/1/3/5). Hai chế độ đích:
+- test_pairs (mặc định, giao thức đã khóa của Bước 17): T_u = cặp kiểm thử của u.
+- all_but_profile (Given-N, công thức (3.14)): T_u^N = (huấn luyện ∪ xác thực ∪ kiểm thử
+  của u) trừ N nghệ sĩ đã cung cấp; chỉ nghệ sĩ đã cung cấp bị loại khỏi ứng viên.
+Cả hai đều giao với danh mục của nhóm học. Thống kê của nhóm học là nguồn duy nhất cho
+danh mục, mức phổ biến, độ mới và ILD. Mỗi phép so sánh: chênh lệch NDCG@10 trung bình
+theo người dùng, KTC bootstrap 95%/90% (1.000 lần lấy mẫu, hạt giống 42, một ma trận
+chỉ số chung cho mọi cặp của cùng nhóm), r_rb, p Wilcoxon hai phía và hiệu chỉnh Holm
+trên mọi cặp khai báo trước.
 """
 
 import os
@@ -59,12 +59,12 @@ SEED = 42
 
 
 def sha256(path: Path) -> str:
-    """Hex SHA-256 of one file."""
+    """Mã băm SHA-256 (dạng hex) của một tệp."""
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
 def tree_hashes(directory: Path) -> dict[str, str]:
-    """SHA-256 of every file below a directory, keyed by relative path."""
+    """SHA-256 của mọi tệp trong thư mục, khóa là đường dẫn tương đối."""
     return {
         p.relative_to(directory).as_posix(): sha256(p)
         for p in sorted(directory.rglob("*"))
@@ -73,7 +73,7 @@ def tree_hashes(directory: Path) -> dict[str, str]:
 
 
 def compare(a: dict[str, float], b: dict[str, float], indices: Any) -> dict[str, Any]:
-    """Paired comparison on one shared bootstrap index matrix (musicrec.evaluation.paired)."""
+    """So sánh theo cặp trên một ma trận chỉ số bootstrap chung (musicrec.evaluation.paired)."""
     return paired_comparison(a, b, indices)
 
 
@@ -84,7 +84,7 @@ def given_n_targets(
     test_items: dict[str, set[str]],
     all_items: dict[str, set[str]],
 ) -> dict[str, set[str]]:
-    """Targets of one profile size; catalog intersection happens in evaluate_cold_start."""
+    """Đích của một cỡ hồ sơ; phép giao với danh mục làm trong evaluate_cold_start."""
     if mode == "test_pairs":
         return {u: test_items[u] for u in users}
     if mode == "all_but_profile":
@@ -95,7 +95,7 @@ def given_n_targets(
 
 
 def main() -> None:
-    """Write lock.json, then evaluate reserved users on test exactly once."""
+    """Ghi lock.json, rồi chấm người để dành trên tập kiểm thử đúng một lần."""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--m2-run", type=Path, required=True)
     parser.add_argument("--output-dir", type=Path, required=True)
@@ -235,7 +235,7 @@ def main() -> None:
         timing[f"n_{n}"] = time.perf_counter() - started
     pd.DataFrame(rows).to_csv(out / "metrics.csv", index=False)
 
-    # Pairs at the same N share one cohort; one index matrix per cohort (same seed).
+    # Các cặp cùng N chung một nhóm; mỗi nhóm một ma trận chỉ số (cùng hạt giống).
     stats = [
         {
             "a": a,

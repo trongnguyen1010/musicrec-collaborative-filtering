@@ -1,13 +1,12 @@
-"""E-B: M1 with a wider popularity penalty, validation only, and the redrawn trade-off figure.
+"""E-B: M1 với mức phạt phổ biến rộng hơn, chỉ trên tập xác thực, và vẽ lại hình đánh đổi.
 
-New grid: beta in {0.75, 1, 1.5, 2} x the old lambda grid {0.5, 0.75, 1}, on the locked
-PureSVD binary k = 16 base (seed 42), candidate pool 100, train masked, validation targets.
-The locked point (lambda 0.75, beta 0.5) is rescored first and must equal the saved Step 15
-validation metrics. Figure: all 24 points (old 12 from docs m1_metrics.csv + new 12),
-ARP@10 against NDCG@10, with the 5% drop bound (0.95 x NDCG@10 of lambda 1, beta 0) and
-every point below it marked, and the interpolated point where the lambda = 0.75 path crosses
-the bound. --redraw-only redraws the figure from the saved CSV without rescoring.
-Nothing is selected; the locked M1 stays (0.75, 0.5).
+Lưới mới: β ∈ {0,75; 1; 1,5; 2} × lưới λ cũ {0,5; 0,75; 1}, trên mô hình nền PureSVD nhị
+phân k = 16 đã khóa (hạt giống 42), 100 ứng viên, loại tập huấn luyện, đích xác thực.
+Điểm đã khóa (λ 0,75, β 0,5) được chấm lại trước và phải bằng chỉ số xác thực đã lưu ở
+Bước 15. Hình: đủ 24 điểm (12 cũ từ m1_metrics.csv + 12 mới), ARP@10 theo NDCG@10, kèm
+biên giảm 5% (0,95 × NDCG@10 của λ 1, β 0), đánh dấu mọi điểm dưới biên, và điểm nội suy
+nơi đường λ = 0,75 cắt biên. --redraw-only vẽ lại hình từ CSV đã lưu mà không chấm lại.
+Không chọn gì; M1 đã khóa vẫn là (0,75; 0,5).
 """
 
 import os
@@ -47,7 +46,7 @@ METRICS = ["precision", "recall", "ndcg", "catalog_coverage", "gini", "arp", "no
 
 
 def draw(grid: pd.DataFrame, bound: float, path: Path) -> None:
-    """Trade-off figure: 24 points, the 5% bound, the locked point and the bound crossing."""
+    """Hình đánh đổi: 24 điểm, biên 5%, điểm đã khóa và điểm cắt biên."""
     fig, ax = plt.subplots(figsize=(6.3, 3.9))
     markers = {0.5: "o", 0.75: "s", 1.0: "^"}
     for _, row in grid.iterrows():
