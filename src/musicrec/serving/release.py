@@ -1,9 +1,9 @@
-"""Package pinned experiment checkpoints into a self-checking demo release, and load it back.
+"""Đóng gói các mô hình đã khóa thành gói phát hành tự kiểm tra, và nạp lại gói đó (mục 5.2).
 
-A release copies checkpoint directories byte for byte (no refit), the train/validation
-interactions needed for history masks and Popularity, and an artist name table. Every
-file is listed with its SHA-256 in manifest.json; loading refuses missing, extra or
-changed files before any model is restored.
+Gói chép nguyên từng byte thư mục mô hình (không huấn luyện lại), dữ liệu huấn luyện và
+xác thực cần để loại lịch sử và tính Popularity, cùng bảng tên nghệ sĩ. Mỗi tệp được ghi
+kèm mã băm SHA-256 trong manifest.json; khi nạp, gói bị từ chối nếu thiếu, thừa hoặc có
+tệp bị sửa, trước khi nạp bất kỳ mô hình nào. Nhờ vậy API chạy đúng mô hình đã đánh giá.
 """
 
 import csv
@@ -32,12 +32,12 @@ DATA_FILES = ("train.parquet", "validation.parquet", "artists.json")
 
 
 def sha256(path: Path) -> str:
-    """Hex SHA-256 of one file."""
+    """Mã băm SHA-256 (dạng hex) của một tệp."""
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
 def tree_hashes(directory: Path) -> dict[str, str]:
-    """SHA-256 of every file below a directory, keyed by POSIX relative path."""
+    """SHA-256 của mọi tệp trong thư mục, khóa là đường dẫn tương đối kiểu POSIX."""
     return {
         p.relative_to(directory).as_posix(): sha256(p)
         for p in sorted(directory.rglob("*"))
@@ -47,7 +47,7 @@ def tree_hashes(directory: Path) -> dict[str, str]:
 
 @dataclass(frozen=True, slots=True)
 class ReleaseSources:
-    """Already verified inputs; model directories hold the files the loaders expect."""
+    """Đầu vào đã kiểm tra; mỗi thư mục mô hình chứa đúng các tệp mà hàm nạp cần."""
 
     models: dict[str, Path]
     train: Path
@@ -57,7 +57,7 @@ class ReleaseSources:
 
 
 def read_artists(path: Path, item_ids: set[str]) -> list[dict[str, str]]:
-    """Read HetRec artists.dat (tab separated, UTF-8) restricted to catalog ids."""
+    """Đọc artists.dat của HetRec (phân tách TAB, UTF-8), chỉ giữ nghệ sĩ trong danh mục."""
     with path.open(encoding="utf-8", newline="") as handle:
         rows = list(csv.DictReader(handle, delimiter="\t", quoting=csv.QUOTE_NONE))
     return [
@@ -68,7 +68,7 @@ def read_artists(path: Path, item_ids: set[str]) -> list[dict[str, str]]:
 
 
 def build_release(sources: ReleaseSources, directory: Path, version: str) -> dict[str, Any]:
-    """Copy inputs into a new directory and write the manifest; never overwrite."""
+    """Chép đầu vào sang thư mục mới và ghi manifest.json kèm SHA-256 từng tệp; không ghi đè."""
     if set(sources.models) != set(MODEL_DIRS):
         raise ValueError(f"Expected model sources {sorted(MODEL_DIRS)}")
     directory.mkdir(parents=True, exist_ok=False)
@@ -107,7 +107,7 @@ def build_release(sources: ReleaseSources, directory: Path, version: str) -> dic
 
 @dataclass(frozen=True)
 class Release:
-    """Restored models plus the train-only statistics the service needs."""
+    """Các mô hình đã nạp cùng thống kê huấn luyện mà dịch vụ cần."""
 
     version: str
     manifest: dict[str, Any]
@@ -122,7 +122,10 @@ class Release:
 
 
 def verify_release(directory: Path) -> dict[str, Any]:
-    """Return the manifest after checking the exact file set and every hash."""
+    """Kiểm tra gói: đúng tập tệp và đúng mã băm của từng tệp, rồi trả manifest.
+
+    Chỉ cần sửa một byte trong tệp mô hình là mã băm đổi và gói bị từ chối.
+    """
     manifest: dict[str, Any] = json.loads((directory / "manifest.json").read_text(encoding="utf-8"))
     if manifest.get("schema_version") != SCHEMA_VERSION:
         raise ValueError("Unsupported release schema")
@@ -139,7 +142,7 @@ def verify_release(directory: Path) -> dict[str, Any]:
 
 
 def load_release(directory: Path) -> Release:
-    """Verify, then restore checkpoints without fitting; Popularity is a train statistic."""
+    """Kiểm tra gói rồi nạp các mô hình, không huấn luyện lại; Popularity tính từ tập huấn luyện."""
     manifest = verify_release(directory)
     models = directory / "models"
     pure_svd = PureSVDRecommender.load(models / "pure_svd")

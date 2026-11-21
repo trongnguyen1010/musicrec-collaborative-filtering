@@ -1,4 +1,4 @@
-"""Summarize verified validation evaluations without changing their cohorts or catalog."""
+"""Tóm tắt kết quả đánh giá trên tập xác thực, không đổi nhóm người dùng hay danh mục."""
 
 from math import fsum
 from statistics import multimode, stdev
@@ -8,10 +8,10 @@ from typing import Any
 def summarize_history_groups(
     evaluation: dict[str, Any], history_lengths: dict[str, int]
 ) -> dict[str, Any]:
-    """Group by the train-only modal history length, retaining empty eligible groups.
+    """Chia người dùng theo độ dài lịch sử huấn luyện so với giá trị mốt, giữ cả nhóm rỗng.
 
-    Reuse per-user accuracy/ILD already measured on the full train catalog.
-    Evaluating a filtered train table would incorrectly change that catalog.
+    Dùng lại độ chính xác và ILD từng người đã đo trên toàn danh mục huấn luyện. Nếu chấm
+    lại trên bảng huấn luyện đã lọc thì danh mục sẽ đổi, làm sai kết quả.
     """
     users = evaluation["per_user"]
     if evaluation["split"] != "validation" or set(users) != set(history_lengths):
@@ -51,6 +51,7 @@ def summarize_history_groups(
 
 
 def _check_cohort(evaluation: dict[str, Any], reference: dict[str, Any]) -> None:
+    # So sánh giữa các hạt giống chỉ hợp lệ khi cùng nhóm người dùng và cùng ứng viên.
     cohort_fields = ["eligible", "targets_total", "targets_in_catalog", "candidate_count"]
     if (
         evaluation["split"] != "validation"
@@ -66,7 +67,7 @@ def _check_cohort(evaluation: dict[str, Any], reference: dict[str, Any]) -> None
 
 
 def summarize_seeds(evaluations: dict[int, dict[str, Any]]) -> dict[str, Any]:
-    """Report equal-weight seed means and sample standard deviations, never best seed."""
+    """Trung bình và độ lệch chuẩn qua hạt giống 42, 43, 44; không chọn hạt giống tốt nhất."""
     if set(evaluations) != {42, 43, 44}:
         raise ValueError("Expected exactly the predeclared model seeds 42, 43 and 44")
     reference = evaluations[42]
@@ -107,7 +108,7 @@ def compare_seed_models(
     *,
     k: int = 10,
 ) -> dict[str, Any]:
-    """Apply the predeclared gate: higher mean NDCG and positive delta in at least 2/3 seeds."""
+    """Cổng khai báo trước: NDCG trung bình cao hơn và chênh lệch dương ở ít nhất 2/3 hạt giống."""
     candidate_summary, control_summary = summarize_seeds(candidate), summarize_seeds(control)
     _check_cohort(candidate[42], control[42])
     if type(k) is not int or k <= 0 or str(k) not in candidate_summary["at_k"]:

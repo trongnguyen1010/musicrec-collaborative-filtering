@@ -1,1 +1,1 @@
-"""FastAPI application and request/response schemas."""
+"""Ứng dụng FastAPI và các lược đồ yêu cầu/phản hồi."""

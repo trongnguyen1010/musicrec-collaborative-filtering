@@ -1,4 +1,4 @@
-"""Fallback Streamlit demo; it only calls the REST API, never model code.
+"""Giao diện Streamlit dự phòng; chỉ gọi REST API, không gọi trực tiếp mã mô hình.
 
 streamlit run src/musicrec/ui/app.py   (API at MUSICREC_API_URL, default 127.0.0.1:8000)
 """

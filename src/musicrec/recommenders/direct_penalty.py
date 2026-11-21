@@ -1,4 +1,4 @@
-"""H1 control: per-user min-max ALS scores minus a direct train-popularity penalty."""
+"""Đối chứng của H1: điểm ALS chuẩn hóa min–max theo người dùng trừ trực tiếp mức phạt phổ biến."""
 
 from collections.abc import Iterable
 from math import isfinite
@@ -12,10 +12,10 @@ from musicrec.recommenders.implicit_als import ImplicitALSRecommender
 
 
 class DirectPenaltyRecommender(Recommender):
-    """s_direct = s_norm - beta * p(i), with s_norm min-max over the train-unseen catalog.
+    """s_direct = s_norm − β·p(i), với s_norm chuẩn hóa min–max trên nghệ sĩ chưa nghe.
 
-    The min/max pair of every user is learned once from the checkpoint and train, so a
-    later validation mask never refits the scale. A flat range normalizes to ones.
+    Cặp min/max của mỗi người dùng học một lần từ mô hình và tập huấn luyện, nên khi loại
+    thêm lịch sử xác thực thì thang đo không bị học lại. Khoảng phẳng được chuẩn hóa thành 1.
     """
 
     def __init__(self, base: ImplicitALSRecommender, *, beta: float = 0.0) -> None:
@@ -25,7 +25,7 @@ class DirectPenaltyRecommender(Recommender):
         self._fitted = False
 
     def fit(self, interactions: Iterable[Interaction]) -> "DirectPenaltyRecommender":
-        """Learn binary listener counts and per-user score ranges; never fit ALS."""
+        """Học số người nghe nhị phân và khoảng điểm của từng người dùng; không học lại ALS."""
         base = self.base
         rows = list(interactions)
         if not rows or len({(r.user_id, r.item_id) for r in rows}) != len(rows):
@@ -63,7 +63,7 @@ class DirectPenaltyRecommender(Recommender):
         return adjusted
 
     def predict(self, user_id: str, item_id: str) -> float:
-        """Return the penalized normalized score; beta=0 keeps the raw base score."""
+        """Trả điểm chuẩn hóa đã trừ phạt; β = 0 giữ nguyên điểm gốc."""
         self._require_fit()
         if self.beta == 0 or user_id not in self.base._user_index:
             return self.base.predict(user_id, item_id)
@@ -72,7 +72,7 @@ class DirectPenaltyRecommender(Recommender):
         return float(self._scores(user_id)[self.base._item_index[item_id]])
 
     def recommend(self, user_id: str, k: int, seen_item_ids: set[str]) -> list[Recommendation]:
-        """Mask exactly like the base; beta=0 returns the base call unchanged."""
+        """Loại nghệ sĩ giống hệt mô hình nền; β = 0 thì trả nguyên kết quả mô hình nền."""
         self._require_fit()
         if type(k) is not int or k <= 0:
             raise ValueError("k must be a positive integer")

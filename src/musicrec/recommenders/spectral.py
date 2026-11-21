@@ -1,4 +1,7 @@
-"""H1: post-hoc removal of the principal spectral component of a frozen ALS score matrix."""
+"""H1: trừ thành phần phổ chính khỏi ma trận điểm của ALS đã khóa (thử nghiệm giảm thiên lệch).
+
+Thành phần ứng với giá trị kỳ dị lớn nhất tương quan mạnh với số người nghe (mục 6.4).
+"""
 
 import hashlib
 import json
@@ -22,7 +25,7 @@ GATE_QUANTILE = 0.9
 
 @dataclass(frozen=True)
 class Spectrum:
-    """Singular values and the principal pair of S=PQ^T, never materializing S."""
+    """Giá trị kỳ dị và cặp véc-tơ chính của S = PQᵀ, không dựng toàn bộ ma trận S."""
 
     singular_values: NDArray[np.float64]
     left: NDArray[np.float64]
@@ -30,10 +33,10 @@ class Spectrum:
 
 
 def score_spectrum(users: NDArray[Any], items: NDArray[Any]) -> Spectrum:
-    """Thin QR of both factors, then an SVD of the small R_P R_Q^T matrix.
+    """Phân rã QR rút gọn hai ma trận nhân tố, rồi SVD ma trận nhỏ R_P R_Qᵀ.
 
-    The sign of the pair is fixed so that the item vector has a non-negative sum;
-    the product sigma * l r^T, which is all H1 uses, does not depend on that sign.
+    Dấu của cặp véc-tơ được cố định để véc-tơ nghệ sĩ có tổng không âm; tích σ·l·rᵀ
+    mà H1 dùng không phụ thuộc dấu này.
     """
     p, q = np.asarray(users, dtype=np.float64), np.asarray(items, dtype=np.float64)
     if p.ndim != 2 or q.ndim != 2 or p.shape[1] != q.shape[1] or not min(p.shape + q.shape):
@@ -52,9 +55,9 @@ def score_spectrum(users: NDArray[Any], items: NDArray[Any]) -> Spectrum:
 def deviation_weights(
     history_popularity: NDArray[np.float64], top_popularity: NDArray[np.float64]
 ) -> tuple[NDArray[np.float64], float | None]:
-    """Return min(1, d_u/d_ref) with d_u=max(0, g_u-h_u) and d_ref=q90 of positive d_u.
+    """Trả min(1, d_u / d_ref) với d_u = max(0, g_u − h_u) và d_ref = phân vị 90% của các d_u dương.
 
-    Without any positive deviation every weight is zero and d_ref is None.
+    Nếu không có độ lệch dương nào thì mọi trọng số bằng 0 và d_ref là None.
     """
     h, g = np.asarray(history_popularity, dtype=np.float64), np.asarray(top_popularity)
     if h.shape != g.shape or h.ndim != 1 or not (np.isfinite(h).all() and np.isfinite(g).all()):
@@ -68,10 +71,10 @@ def deviation_weights(
 
 
 class SpectralDebiasRecommender(Recommender):
-    """Wrap a loaded ALS checkpoint; fit learns train context and a frozen gate, never ALS.
+    """Bọc mô hình ALS đã nạp; fit chỉ học thống kê huấn luyện và cổng cố định, không học lại ALS.
 
-    Score: s'_ui = s_ui - gamma_u * sigma_1 * l_1(u) * r_1(i). The global mode uses
-    gamma_u = gamma_0; the deviation mode scales gamma_0 by the frozen gate weight.
+    Điểm: s'_ui = s_ui − γ_u·σ_1·l_1(u)·r_1(i). Chế độ "global" dùng γ_u = γ_0; chế độ
+    "deviation" nhân γ_0 với trọng số cổng của từng người dùng.
     """
 
     def __init__(
@@ -85,7 +88,7 @@ class SpectralDebiasRecommender(Recommender):
         self._fitted = False
 
     def fit(self, interactions: Iterable[Interaction]) -> "SpectralDebiasRecommender":
-        """Use binary train pairs for p(i), h_u and the base Top-10 behind the gate."""
+        """Dùng cặp huấn luyện nhị phân để tính p(i), h_u và top-10 của mô hình nền cho cổng."""
         base = self.base
         rows = list(interactions)
         if not rows or len({(r.user_id, r.item_id) for r in rows}) != len(rows):
@@ -127,7 +130,7 @@ class SpectralDebiasRecommender(Recommender):
             raise RuntimeError("Fit the spectral context before inference")
 
     def gamma(self, user_id: str) -> float:
-        """Per-user strength; users outside the checkpoint keep the base ranking."""
+        """Mức trừ của từng người dùng; người ngoài mô hình giữ nguyên xếp hạng gốc."""
         self._require_fit()
         if user_id not in self.base._user_index:
             return 0.0
@@ -143,7 +146,7 @@ class SpectralDebiasRecommender(Recommender):
         return scores
 
     def predict(self, user_id: str, item_id: str) -> float:
-        """Return the adjusted latent score, not a probability or rating."""
+        """Trả điểm đã điều chỉnh, không phải xác suất hay điểm đánh giá."""
         gamma = self.gamma(user_id)
         if gamma == 0:
             return self.base.predict(user_id, item_id)
@@ -152,7 +155,7 @@ class SpectralDebiasRecommender(Recommender):
         return float(self._scores(user_id, gamma)[self.base._item_index[item_id]])
 
     def recommend(self, user_id: str, k: int, seen_item_ids: set[str]) -> list[Recommendation]:
-        """Mask exactly like the base; gamma_u=0 returns the base call unchanged."""
+        """Loại nghệ sĩ giống hệt mô hình nền; γ_u = 0 thì trả nguyên kết quả mô hình nền."""
         if type(k) is not int or k <= 0:
             raise ValueError("k must be a positive integer")
         gamma = self.gamma(user_id)
@@ -170,7 +173,7 @@ class SpectralDebiasRecommender(Recommender):
         return [Recommendation(base._items[i], float(scores[i]), reason) for i in ranked]
 
     def save(self, directory: Path) -> None:
-        """Save the frozen gate and spectrum; the ALS checkpoint stays separately pinned."""
+        """Lưu cổng và phổ đã cố định; mô hình ALS được lưu và ghim riêng."""
         self._require_fit()
         directory.mkdir(parents=True, exist_ok=False)
         np.savez_compressed(
@@ -196,7 +199,7 @@ class SpectralDebiasRecommender(Recommender):
 
     @classmethod
     def load(cls, directory: Path, *, base: ImplicitALSRecommender) -> "SpectralDebiasRecommender":
-        """Load the frozen context without recomputing it from the supplied pinned base."""
+        """Nạp lại ngữ cảnh đã cố định, không tính lại từ mô hình nền."""
         state: dict[str, Any] = json.loads((directory / "state.json").read_text(encoding="utf-8"))
         if state.get("schema_version") != 1 or state.get("model") != "h1_spectral":
             raise ValueError("Unsupported H1 schema")

@@ -1,8 +1,8 @@
-"""FastAPI entry point serving a verified demo release (see scripts/export_release.py).
+"""Điểm vào FastAPI, phục vụ một gói phát hành đã kiểm tra (xem scripts/export_release.py).
 
-Environment: MUSICREC_RELEASE_DIR (release directory) and MUSICREC_CORS_ORIGINS
-(comma-separated origins allowed to call the API from a browser, e.g. the Vercel domain).
-Local frontends on localhost or 127.0.0.1 are allowed on any port.
+Biến môi trường: MUSICREC_RELEASE_DIR (thư mục gói) và MUSICREC_CORS_ORIGINS (các nguồn,
+cách nhau bằng dấu phẩy, được gọi API từ trình duyệt, ví dụ tên miền Vercel). Giao diện
+chạy cục bộ trên localhost hoặc 127.0.0.1 được phép ở mọi cổng.
 """
 
 import os
@@ -48,7 +48,7 @@ def _artist(info: ArtistInfo) -> dict[str, Any]:
 
 
 def create_app(load_service: Callable[[], DemoService] = _load_from_environment) -> FastAPI:
-    """Build the app; the service is loaded once at startup, never per request."""
+    """Tạo ứng dụng năm endpoint; gói mô hình nạp một lần lúc khởi động."""
 
     @asynccontextmanager
     async def lifespan(app: FastAPI) -> AsyncIterator[None]:
@@ -91,7 +91,7 @@ def create_app(load_service: Callable[[], DemoService] = _load_from_environment)
 
     @app.get("/health", response_model=HealthResponse)
     def health(request: Request) -> HealthResponse:
-        """Release version and the pinned model configurations it serves."""
+        """Phiên bản gói và cấu hình các mô hình đang phục vụ."""
         svc = service(request)
         return HealthResponse(
             status="ok",
@@ -103,7 +103,7 @@ def create_app(load_service: Callable[[], DemoService] = _load_from_environment)
     def artists(
         request: Request, q: str = "", limit: int = Query(default=20, ge=1, le=100)
     ) -> list[ArtistResponse]:
-        """Search artists a new user can pick (the M2 catalog), most listened first."""
+        """Tìm nghệ sĩ cho người dùng mới chọn (danh mục M2), nhiều người nghe trước."""
         return [ArtistResponse(**_artist(a)) for a in service(request).search_artists(q, limit)]
 
     @app.get("/users", response_model=list[UserSummary])
@@ -112,7 +112,7 @@ def create_app(load_service: Callable[[], DemoService] = _load_from_environment)
         offset: int = Query(default=0, ge=0),
         limit: int = Query(default=50, ge=1, le=2000),
     ) -> list[UserSummary]:
-        """Existing train users with the size of their masked history."""
+        """Danh sách người dùng có sẵn kèm số nghệ sĩ trong lịch sử bị loại."""
         svc = service(request)
         return [
             UserSummary(user_id=user, history_size=len(svc.masked_items(user)))
@@ -123,7 +123,7 @@ def create_app(load_service: Callable[[], DemoService] = _load_from_environment)
     def history(
         request: Request, user_id: str, limit: int = Query(default=20, ge=1, le=500)
     ) -> UserHistoryResponse:
-        """Train and validation artists of a user, the items the demo never recommends."""
+        """Nghệ sĩ huấn luyện và xác thực của một người, những nghệ sĩ demo không bao giờ gợi ý."""
         svc = service(request)
         frames: list[tuple[Literal["train", "validation"], str, float]] = []
         splits: list[tuple[Literal["train", "validation"], pd.DataFrame]] = [
@@ -150,7 +150,10 @@ def create_app(load_service: Callable[[], DemoService] = _load_from_environment)
 
     @app.post("/recommend", response_model=RecommendResponse)
     def recommend(request: Request, body: RecommendRequest) -> RecommendResponse:
-        """Existing user -> chosen model; new user -> M2; empty profile -> Popularity."""
+        """Gợi ý: người dùng có sẵn → mô hình đã chọn; người mới → M2; hồ sơ rỗng → Popularity.
+
+        Người dùng không tồn tại trả 404; đầu vào sai kiểu hoặc quá giới hạn trả 422.
+        """
         svc = service(request)
         try:
             if body.user_id:

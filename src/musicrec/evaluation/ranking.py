@@ -1,4 +1,9 @@
-"""Shared full-ranking evaluation on a train-only artist catalog."""
+"""Bộ đánh giá xếp hạng dùng chung, xếp hạng trên toàn bộ danh mục nghệ sĩ của tập huấn luyện.
+
+Các thước đo ứng với mục 2.5 của báo cáo: Precision@K (2.15), Recall@K (2.16),
+NDCG@K (2.17)–(2.19), RMSE (2.20), độ bao phủ (2.21), Gini (2.22), ARP (2.23),
+độ mới (2.24) và ILD (2.25).
+"""
 
 from collections import Counter
 from itertools import combinations
@@ -7,6 +12,7 @@ from typing import Any
 
 
 def _top_k(recommended_ids: list[str], k: int) -> list[str]:
+    # Chặn k không hợp lệ và danh sách gợi ý trùng nghệ sĩ trước khi cắt K phần tử đầu.
     if type(k) is not int or k <= 0:
         raise ValueError("k must be a positive integer")
     if len(recommended_ids) != len(set(recommended_ids)):
@@ -15,12 +21,15 @@ def _top_k(recommended_ids: list[str], k: int) -> list[str]:
 
 
 def precision_at_k(recommended_ids: list[str], relevant_ids: set[str], k: int) -> float:
-    """Return the fraction of the first k recommendations that are relevant."""
+    """Precision@K, công thức (2.15): tỷ lệ nghệ sĩ đúng trong K gợi ý đầu.
+
+    Nhận danh sách gợi ý, tập nghệ sĩ đích và K; trả về số trong [0, 1].
+    """
     return len(set(_top_k(recommended_ids, k)) & relevant_ids) / k
 
 
 def recall_at_k(recommended_ids: list[str], relevant_ids: set[str], k: int) -> float:
-    """Return the fraction of relevant items discovered in the first k results."""
+    """Recall@K, công thức (2.16): tỷ lệ nghệ sĩ đích được tìm thấy trong K gợi ý đầu."""
     top_k = _top_k(recommended_ids, k)
     if not relevant_ids:
         return 0.0
@@ -28,9 +37,16 @@ def recall_at_k(recommended_ids: list[str], relevant_ids: set[str], k: int) -> f
 
 
 def ndcg_at_k(recommended_ids: list[str], relevant_ids: set[str], k: int) -> float:
-    """Return binary NDCG; the cohort evaluator excludes users with no targets."""
+    """NDCG@K nhị phân, công thức (2.17)–(2.19).
+
+    Nhận danh sách gợi ý, tập nghệ sĩ đích và K; trả về DCG / IDCG trong [0, 1].
+    Người dùng không có đích bị loại ở bộ đánh giá theo nhóm, không phải ở đây.
+    """
     top_k = _top_k(recommended_ids, k)
+    # IDCG (2.19): mọi đích xếp ở đầu danh sách, tối đa min(K, |T_u|) vị trí.
+    # rank bắt đầu từ 0 nên vị trí j = rank + 1, mẫu số là log2(j + 1) = log2(rank + 2).
     ideal = fsum(1 / log2(rank + 2) for rank in range(min(k, len(relevant_ids))))
+    # DCG (2.17): đích ở vị trí càng sâu thì đóng góp càng nhỏ (chia log2 của vị trí).
     dcg = fsum(1 / log2(rank + 2) for rank, item in enumerate(top_k) if item in relevant_ids)
     return dcg / ideal if ideal else 0.0
 
@@ -38,10 +54,10 @@ def ndcg_at_k(recommended_ids: list[str], relevant_ids: set[str], k: int) -> flo
 def rank_candidates(
     scores: dict[str, float], catalog: list[str], seen: set[str], k: int
 ) -> list[str]:
-    """Rank every unseen train item, breaking ties by the train mapping order.
+    """Xếp hạng mọi nghệ sĩ chưa nghe trong danh mục huấn luyện, hòa điểm thì theo thứ tự ánh xạ.
 
-    Callers must supply scores for all candidates, never just sampled negatives.
-    Scores for seen catalog items are allowed and masked before sorting.
+    Bên gọi phải đưa điểm cho mọi ứng viên, không lấy mẫu âm. Điểm của nghệ sĩ đã nghe
+    được phép có nhưng bị loại trước khi sắp xếp.
     """
     _top_k(catalog, k)
     if not catalog or set(scores) - set(catalog):
@@ -51,11 +67,15 @@ def rank_candidates(
         raise ValueError("Full ranking requires a score for every unseen catalog item")
     if not all(isfinite(score) for score in scores.values()):
         raise ValueError("Scores must be finite")
+    # sorted ổn định: hai nghệ sĩ cùng điểm giữ thứ tự trong danh mục, nên kết quả tất định.
     return sorted(candidates, key=lambda item: -scores[item])[:k]
 
 
 def gini_index(frequencies: list[int]) -> float | None:
-    """Return unnormalized finite-catalog Gini, including zero-exposure artists."""
+    """Hệ số Gini, công thức (2.22), tính trên cả nghệ sĩ không được gợi ý lần nào.
+
+    Gini gần 1 nghĩa là số lần xuất hiện dồn vào ít nghệ sĩ; trả None nếu không có lượt nào.
+    """
     if not frequencies or any(type(value) is not int or value < 0 for value in frequencies):
         raise ValueError("Expected a non-empty catalog of non-negative integer counts")
     total, n = sum(frequencies), len(frequencies)
@@ -66,9 +86,10 @@ def gini_index(frequencies: list[int]) -> float | None:
 
 
 def proxy_rmse(actual: list[float], predicted: list[float]) -> float:
-    """RMSE only for aligned predictions of the same observed 1–5 proxy target.
+    """RMSE, công thức (2.20), chỉ cho dự đoán trên cùng điểm đại diện 1–5 đã quan sát.
 
-    The caller opts in only for a compatible model; predictions are not clipped.
+    Chỉ mô hình dự đoán điểm (UserCF, ItemCF, SVD có độ lệch) mới gọi hàm này;
+    dự đoán không bị cắt về [1, 5]. RMSE chỉ để tham khảo vì điểm 1–5 do nhóm quy đổi.
     """
     if not actual or len(actual) != len(predicted):
         raise ValueError("Expected non-empty aligned targets and predictions")
@@ -88,14 +109,15 @@ def evaluate_ranking(
     split: str = "validation",
     validation: dict[str, set[str]] | None = None,
 ) -> dict[str, Any]:
-    """Evaluate supplied lists; do not fit, refit, sample or read data files.
+    """Chấm các danh sách gợi ý đã có; không huấn luyện, không lấy mẫu, không đọc tệp.
 
-    All supplied users must have a list (possibly empty) and targets. Ranking
-    averages include zero-return users with valid targets. Beyond-accuracy
-    metrics use the same eligible cohort. ARP/Novelty pool returned positions;
-    ILD averages users with at least two results and reports that denominator.
-    Train determines catalog, listener counts and binary interaction cosine.
-    Test additionally masks validation but never adds it to training statistics.
+    Mọi người dùng phải có danh sách (có thể rỗng) và tập đích. Trung bình xếp hạng
+    tính cả người trả về danh sách rỗng nhưng có đích hợp lệ; các thước đo ngoài độ
+    chính xác dùng cùng nhóm người dùng đó. ARP và độ mới gộp theo vị trí được trả về;
+    ILD lấy trung bình trên người có ít nhất hai kết quả và báo cáo mẫu số này.
+    Tập huấn luyện quyết định danh mục, số người nghe và côsin nhị phân. Khi chấm tập
+    kiểm thử, lịch sử xác thực bị loại khỏi ứng viên nhưng không cộng vào thống kê
+    huấn luyện (chống rò rỉ).
     """
     if not train or set(recommendations) != set(train) or set(targets) != set(train):
         raise ValueError("Train, targets and recommendation user sets must match and be non-empty")
@@ -111,6 +133,7 @@ def evaluate_ranking(
     elif validation is not None:
         raise ValueError("Validation evaluation must only mask train")
 
+    # Danh mục và số người nghe của mỗi nghệ sĩ chỉ học từ tập huấn luyện.
     listeners: dict[str, set[str]] = {}
     for user, history in train.items():
         if not history:
@@ -121,6 +144,7 @@ def evaluate_ranking(
     eligible: dict[str, set[str]] = {}
     per_user: dict[str, Any] = {}
     for user in sorted(train):
+        # Khi chấm tập kiểm thử, loại cả lịch sử huấn luyện lẫn xác thực khỏi ứng viên.
         seen = train[user] | (validation[user] if validation is not None else set())
         if validation is not None and train[user] & validation[user]:
             raise ValueError("Train and validation histories overlap")
@@ -130,6 +154,7 @@ def evaluate_ranking(
         _top_k(items, max(ks))
         if set(items) - catalog or set(items) & seen:
             raise ValueError("Recommendations contain out-of-catalog or seen items")
+        # Đích ngoài danh mục không thể được gợi ý nên được đếm và báo cáo riêng.
         relevant = targets[user] & catalog
         if relevant:
             eligible[user] = relevant
@@ -142,6 +167,7 @@ def evaluate_ranking(
             "at_k": {},
         }
 
+    # Mẫu số của P_i trong công thức độ mới (2.24), có làm trơn +1.
     denominator = sum(len(users) + 1 for users in listeners.values())
     by_k = {}
     for k in ks:
@@ -153,6 +179,7 @@ def evaluate_ranking(
             precision = precision_at_k(items, relevant, k)
             recall = recall_at_k(items, relevant, k)
             ndcg = ndcg_at_k(items, relevant, k)
+            # ILD (2.25): khoảng cách 1 - côsin trên véc-tơ người nghe nhị phân của từng cặp.
             distances = [
                 1 - len(listeners[a] & listeners[b]) / sqrt(len(listeners[a]) * len(listeners[b]))
                 for a, b in combinations(items, 2)
@@ -180,6 +207,7 @@ def evaluate_ranking(
             "ndcg": fsum(ndcgs) / n if n else None,
             "catalog_coverage": len(exposure) / len(catalog) if n else None,
             "gini": gini_index([exposure[item] for item in catalog]),
+            # ARP (2.23): số người nghe trung bình của các nghệ sĩ được gợi ý.
             "arp": fsum(count * len(listeners[item]) for item, count in exposure.items())
             / positions
             if positions

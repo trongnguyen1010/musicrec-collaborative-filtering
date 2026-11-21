@@ -1,4 +1,7 @@
-"""Biased matrix factorization learned by observed-only SGD on train proxy scores."""
+"""SVD có độ lệch (mục 2.3): phân rã ma trận học bằng SGD chỉ trên các cặp đã quan sát.
+
+Dự đoán theo công thức (2.6), hàm mất mát (2.7), cập nhật tham số (2.8).
+"""
 
 import hashlib
 import json
@@ -18,10 +21,11 @@ NUMERIC_TIE_DECIMALS = 12
 
 
 class SVDRecommender(Recommender):
-    """Learn global mean + user bias + item bias + factor dot product, without clipping.
+    """Học r̂_ui = μ + b_u + b_i + p_uᵀ q_i, công thức (2.6), không cắt điểm về [1, 5].
 
-    Missing pairs are absent from the SGD objective. Validation may select an
-    epoch through a read-only callback; it never supplies gradient targets.
+    Cặp chưa quan sát không có trong hàm mất mát, nên mô hình tối ưu sai số dự đoán điểm
+    chứ không tối ưu thứ hạng, lý do nó không vượt được Popularity về NDCG@10. Tập xác
+    thực chỉ dùng để chọn vòng lặp tốt nhất (chỉ đọc), không cung cấp gradient.
     """
 
     def __init__(
@@ -76,7 +80,7 @@ class SVDRecommender(Recommender):
         *,
         validation_score: Callable[["SVDRecommender"], float] | None = None,
     ) -> "SVDRecommender":
-        """Shuffle canonical observed pairs per epoch; restore the first best checkpoint."""
+        """Huấn luyện SGD: mỗi vòng xáo trộn các cặp; giữ vòng có NDCG@10 xác thực tốt nhất."""
         rows = list(interactions)
         if not rows or any(row.proxy_score is None for row in rows):
             raise ValueError("SVD requires non-empty train interactions with proxy_score")
@@ -107,14 +111,16 @@ class SVDRecommender(Recommender):
         self.stop_reason = "max_epochs" if validation_score else "max_epochs_no_validation"
         rate, reg = self.learning_rate, self.regularization
         for epoch in range(1, self.max_epochs + 1):
-            # ponytail: sequential SGD; compile only if measured tuning cost needs it.
+            # Giới hạn: SGD tuần tự bằng Python; chỉ cần biên dịch nếu tinh chỉnh quá lâu.
             for index in rng.permutation(len(rows)):
                 user, item = user_indices[index], item_indices[index]
                 p, q = self._user_factors[user], self._item_factors[item]
+                # e_ui = r_ui − r̂_ui, sai số của cặp đang xét.
                 error = targets[index] - (
                     self._global_mean + self._user_bias[user] + self._item_bias[item] + p @ q
                 )
                 old_p = p.copy()
+                # Công thức (2.8): b ← b + η(e − λb), p ← p + η(e·q − λp), q tương tự.
                 self._user_bias[user] += rate * (error - reg * self._user_bias[user])
                 self._item_bias[item] += rate * (error - reg * self._item_bias[item])
                 p += rate * (error * q - reg * p)
@@ -174,7 +180,7 @@ class SVDRecommender(Recommender):
         return scores
 
     def predict(self, user_id: str, item_id: str) -> float:
-        """Return an unclipped score; unknown users retain only mean and learned item bias."""
+        """Trả điểm không cắt; người dùng lạ chỉ còn μ + b_i."""
         if not self._users:
             raise RuntimeError("Fit SVD before inference")
         if not user_id:
@@ -189,7 +195,7 @@ class SVDRecommender(Recommender):
         return float(score)
 
     def recommend(self, user_id: str, k: int, seen_item_ids: set[str]) -> list[Recommendation]:
-        """Rank the full unseen train catalog using rounded keys and numeric ID ties."""
+        """Xếp hạng mọi nghệ sĩ chưa nghe; điểm làm tròn để so, hòa thì theo mã số."""
         if type(k) is not int or k <= 0:
             raise ValueError("k must be a positive integer")
         scores = self._score_catalog(user_id)
@@ -204,7 +210,7 @@ class SVDRecommender(Recommender):
         return [Recommendation(self._items[i], float(scores[i]), reason) for i in ranked]
 
     def save(self, directory: Path) -> None:
-        """Write a new checkpoint of factors, biases, train observations and learning history."""
+        """Lưu nhân tố, độ lệch, dữ liệu huấn luyện và đường học ra thư mục mới."""
         if not self._users:
             raise RuntimeError("Fit SVD before saving")
         directory.mkdir(parents=True, exist_ok=False)
@@ -249,7 +255,7 @@ class SVDRecommender(Recommender):
 
     @classmethod
     def load(cls, directory: Path) -> "SVDRecommender":
-        """Restore numeric state without fit, gradients or epoch selection."""
+        """Nạp lại mô hình đã lưu, không huấn luyện lại."""
         state: dict[str, Any] = json.loads((directory / "state.json").read_text(encoding="utf-8"))
         if (
             state.get("schema_version") != 1

@@ -1,4 +1,8 @@
-"""Confidence-weighted implicit ALS with explicit validation checkpoint selection."""
+"""Implicit ALS (mục 2.3, thực nghiệm mở rộng): phân rã ma trận cho phản hồi ngầm.
+
+Sở thích nhị phân và độ tin cậy theo (2.11), hàm mục tiêu (2.12), cập nhật luân phiên (2.13).
+Vòng lặp tốt nhất được chọn trên tập xác thực.
+"""
 
 import hashlib
 import json
@@ -17,14 +21,15 @@ from musicrec.recommenders.base import Recommendation, Recommender
 
 
 class _StopTraining(Exception):
-    """Stop the library callback after the predeclared validation patience."""
+    """Ngoại lệ dừng huấn luyện khi NDCG@10 xác thực không cải thiện sau số vòng đã định."""
 
 
 class ImplicitALSRecommender(Recommender):
-    """Fit positive preferences with c=1+a*ln(1+count), including unobserved c=1,p=0.
+    """Học sở thích p_ui với độ tin cậy c_ui = 1 + a·ln(1 + lượt nghe), công thức (2.11).
 
-    Native CG uses three steps per alternating update and float32 factors.
-    Ranking uses float64 dot products of those factors without clipping/bias.
+    Khác SVD có độ lệch, ALS dùng cả cặp chưa nghe (c = 1, p = 0), nên hợp với phản hồi ngầm.
+    Mỗi bước luân phiên giải bằng gradient liên hợp ba bước, nhân tố dạng float32; khi xếp
+    hạng, điểm là tích vô hướng float64 của hai nhân tố, không cắt, không độ lệch.
     """
 
     def __init__(
@@ -78,7 +83,7 @@ class ImplicitALSRecommender(Recommender):
         *,
         validation_score: Callable[["ImplicitALSRecommender"], float] | None = None,
     ) -> "ImplicitALSRecommender":
-        """Train once; callbacks select epochs without contributing gradient targets."""
+        """Huấn luyện một lần; sau mỗi vòng chỉ đo tập xác thực để chọn vòng tốt nhất."""
         from implicit.cpu.als import AlternatingLeastSquares
 
         rows = list(interactions)
@@ -93,6 +98,7 @@ class ImplicitALSRecommender(Recommender):
             {u: i for i, u in enumerate(self._users)},
             {v: i for i, v in enumerate(self._items)},
         )
+        # Độ tin cậy (2.11): c_ui = 1 + a·ln(1 + lượt nghe); nghe càng nhiều càng tin là thích.
         values = (1.0 + self.confidence_scale * np.log1p(counts)).astype(np.float32)
         if not np.isfinite(values).all() or (values <= 1).any():
             raise ValueError("Confidence must be finite and greater than one in float32")
@@ -172,7 +178,7 @@ class ImplicitALSRecommender(Recommender):
         )
 
     def predict(self, user_id: str, item_id: str) -> float:
-        """Return a latent association score, not a proxy rating or probability."""
+        """Trả mức liên kết x_uᵀ y_i, không phải điểm dự đoán hay xác suất."""
         if not self._users:
             raise RuntimeError("Fit implicit ALS before inference")
         if item_id not in self._item_index:
@@ -180,7 +186,7 @@ class ImplicitALSRecommender(Recommender):
         return float(self._score_catalog(user_id)[self._item_index[item_id]])
 
     def recommend(self, user_id: str, k: int, seen_item_ids: set[str]) -> list[Recommendation]:
-        """Exclude all known train/history items and rank the full unseen train catalog."""
+        """Loại mọi nghệ sĩ đã biết trong lịch sử, xếp hạng toàn bộ nghệ sĩ chưa nghe."""
         if type(k) is not int or k <= 0:
             raise ValueError("k must be a positive integer")
         scores = self._score_catalog(user_id)
@@ -197,7 +203,7 @@ class ImplicitALSRecommender(Recommender):
         return [Recommendation(self._items[i], float(scores[i]), reason) for i in ranked]
 
     def save(self, directory: Path) -> None:
-        """Save numeric confidence/factor arrays and provenance without overwriting."""
+        """Lưu ma trận độ tin cậy, nhân tố và nguồn gốc ra thư mục mới, không ghi đè."""
         if not self._users:
             raise RuntimeError("Fit implicit ALS before saving")
         directory.mkdir(parents=True, exist_ok=False)
@@ -236,7 +242,7 @@ class ImplicitALSRecommender(Recommender):
 
     @classmethod
     def load(cls, directory: Path) -> "ImplicitALSRecommender":
-        """Load the saved checkpoint; never fit or fold in validation histories."""
+        """Nạp mô hình đã lưu; không huấn luyện lại, không gộp lịch sử xác thực vào."""
         state: dict[str, Any] = json.loads((directory / "state.json").read_text(encoding="utf-8"))
         if (
             state.get("schema_version") != 1

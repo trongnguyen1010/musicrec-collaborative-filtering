@@ -1,7 +1,7 @@
-"""H1 paired user bootstrap, intersection-union p-values and Holm adjustment.
+"""Bootstrap theo cặp người dùng cho H1, giá trị p giao–hợp và hiệu chỉnh Holm.
 
-The one-sided p-value is an approximate bootstrap under the null boundary mean=0:
-z is centered, resampled with the shared indices, and compared with the observed mean.
+Giá trị p một phía là xấp xỉ bootstrap dưới biên giả thuyết không (trung bình = 0):
+z được trừ trung bình, lấy mẫu lại bằng chỉ số dùng chung, rồi so với trung bình quan sát.
 """
 
 from collections.abc import Sequence
@@ -16,7 +16,11 @@ NDCG_MARGIN = 0.95
 
 
 def resample_indices(users: int, resamples: int = RESAMPLES, seed: int = SEED) -> NDArray[np.int64]:
-    """One shared (resamples, users) index matrix for every method and contrast."""
+    """Một ma trận chỉ số (số mẫu × số người dùng) dùng chung cho mọi mô hình và phép so sánh.
+
+    Bootstrap lấy mẫu lại người dùng (có hoàn lại), cố định hạt giống 42 để chạy lại ra cùng
+    kết quả, và mọi khoảng tin cậy trong một bảng đến từ cùng các mẫu.
+    """
     if type(users) is not int or users <= 0:
         raise ValueError("The cohort must be non-empty")
     if type(resamples) is not int or resamples <= 0:
@@ -27,7 +31,7 @@ def resample_indices(users: int, resamples: int = RESAMPLES, seed: int = SEED) -
 def bootstrap_contrast(
     z: Sequence[float] | NDArray[Any], indices: NDArray[np.int64]
 ) -> dict[str, Any]:
-    """Mean, linear-quantile CIs from uncentered resamples and a one-sided p for mean>0."""
+    """Trung bình, khoảng tin cậy phân vị từ mẫu chưa trừ tâm, và p một phía cho trung bình > 0."""
     values = np.asarray(z, dtype=np.float64)
     if values.ndim != 1 or not len(values):
         raise ValueError("The contrast needs a non-empty cohort")
@@ -62,7 +66,7 @@ def joint_test(
     exposure_base: Sequence[float] | NDArray[Any],
     indices: NDArray[np.int64],
 ) -> dict[str, Any]:
-    """Success needs mean(a-0.95b)>0 and mean(e_new-e_base)>0; p_joint=max(p_N, p_E)."""
+    """Đạt khi TB(a − 0,95b) > 0 và TB(e_mới − e_nền) > 0; p_joint = max(p_N, p_E)."""
     a, b = np.asarray(ndcg_new, dtype=np.float64), np.asarray(ndcg_base, dtype=np.float64)
     e, f = np.asarray(exposure_new, dtype=np.float64), np.asarray(exposure_base, dtype=np.float64)
     if not a.shape == b.shape == e.shape == f.shape:
@@ -77,7 +81,11 @@ def joint_test(
 
 
 def holm(p_values: Sequence[float]) -> list[float]:
-    """Holm step-down adjustment, monotone and capped at 1."""
+    """Hiệu chỉnh Holm từng bước xuống, công thức (2.29); đơn điệu và chặn trên ở 1.
+
+    Sắp p tăng dần; p nhỏ thứ j (j từ 1) nhân với (m − j + 1), rồi lấy max cộng dồn để
+    p đã hiệu chỉnh không giảm. Giúp kiểm soát sai lầm khi so sánh nhiều cặp một lúc.
+    """
     if not all(0 <= p <= 1 for p in p_values):
         raise ValueError("p-values must lie in [0, 1]")
     order = np.argsort(p_values, kind="stable")

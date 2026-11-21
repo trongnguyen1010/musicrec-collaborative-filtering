@@ -1,4 +1,9 @@
-"""Mean-centered UserCF predictions with full-vector cosine on train proxy scores."""
+"""UserCF: lọc cộng tác dựa trên người dùng (mục 2.2).
+
+Độ tương đồng côsin (2.1) trên toàn véc-tơ điểm của tập huấn luyện, co rút (2.5), và hai
+cách tổng hợp điểm: trung bình có trọng số quanh trung bình người dùng (2.2, mô hình chính
+đã khóa) hoặc tổng độ tương đồng kiểu top-N (3.6, phân tích bổ sung E7).
+"""
 
 import hashlib
 import json
@@ -20,11 +25,11 @@ REPRESENTATIONS = {"mean": ("proxy",), "sum": ("binary", "log_count")}
 
 
 class UserCFRecommender(Recommender):
-    """Keep global top-L positive neighbors, then intersect with each item's listeners.
+    """Giữ L láng giềng có độ tương đồng dương cao nhất, rồi chỉ dùng láng giềng đã nghe nghệ sĩ.
 
-    Cosine uses full uncentered proxy rows with missing positions zero-filled.
-    Means use observed train scores only; no contribution falls back to the
-    user's mean, or the global mean for an unknown user. Scores are not clipped.
+    Côsin dùng cả hàng điểm chưa trừ trung bình, vị trí thiếu coi là 0. Trung bình người
+    dùng chỉ tính trên điểm đã quan sát; nghệ sĩ không có láng giềng nào nghe thì lấy trung
+    bình của người dùng, người dùng lạ thì lấy trung bình toàn cục. Điểm không bị cắt.
     """
 
     def __init__(
@@ -34,10 +39,11 @@ class UserCFRecommender(Recommender):
         aggregation: str = "mean",
         representation: str | None = None,
     ) -> None:
-        """aggregation='mean' (default, locked Chapter 4 model) or 'sum' (top-N, E7).
+        """aggregation='mean' (mặc định, mô hình đã khóa ở Chương 4) hoặc 'sum' (top-N, E7).
 
-        'sum' uses representation 'binary' (x = 1) or 'log_count' (x = log2(1 + count)) for
-        both cosine and scores, with no division and score 0 without support.
+        neighbors là L (số láng giềng), shrinkage là γ của công thức co rút (2.5).
+        'sum' dùng biểu diễn 'binary' (x = 1) hoặc 'log_count' (x = log2(1 + lượt nghe)) cho
+        cả côsin lẫn điểm, không chia, và điểm bằng 0 khi không có láng giềng nào nghe.
         """
         if type(neighbors) is not int or neighbors <= 0:
             raise ValueError("neighbors must be a positive integer")
@@ -58,7 +64,7 @@ class UserCFRecommender(Recommender):
         self._weights: csr_matrix[np.float64]
 
     def _value(self, row: Interaction) -> float:
-        """Matrix entry of one interaction in this model's representation."""
+        """Giá trị trong ma trận của một tương tác, theo biểu diễn của mô hình."""
         if self.representation == "binary":
             return 1.0
         if self.representation == "log_count":
@@ -68,17 +74,18 @@ class UserCFRecommender(Recommender):
         return float(row.proxy_score)
 
     def _extra_state(self) -> dict[str, str]:
-        """Only non-default modes are persisted, so legacy state.json files stay byte-equal."""
+        """Chỉ lưu chế độ khác mặc định, để tệp state.json cũ giữ nguyên từng byte."""
         if self.aggregation == "mean":
             return {}
         return {"aggregation": self.aggregation, "representation": self.representation}
 
     @staticmethod
     def _id_key(value: str) -> tuple[bool, int, str]:
+        # Sắp mã theo giá trị số để thứ tự ánh xạ tất định.
         return not value.isdecimal(), int(value) if value.isdecimal() else 0, value
 
     def _prepare(self) -> None:
-        """Build inference views from persisted ratings without relearning neighbors."""
+        """Dựng các ma trận phụ cho suy luận từ điểm đã lưu, không học lại láng giềng."""
         self._user_index = {user: index for index, user in enumerate(self._users)}
         self._item_index = {item: index for index, item in enumerate(self._items)}
         counts = np.diff(self._ratings.indptr)
@@ -91,7 +98,7 @@ class UserCFRecommender(Recommender):
         self._centered.eliminate_zeros()
 
     def fit(self, interactions: Iterable[Interaction]) -> "UserCFRecommender":
-        """Fit only explicit proxy_score values, retaining raw counts separately."""
+        """Học từ tập huấn luyện: ma trận người dùng × nghệ sĩ, côsin, giữ L láng giềng."""
         rows = list(interactions)
         if not rows or (
             self.representation == "proxy" and any(row.proxy_score is None for row in rows)
@@ -117,16 +124,20 @@ class UserCFRecommender(Recommender):
         )
         self._ratings.sort_indices()
         self._prepare()
+        # Côsin (2.1): chuẩn hóa từng hàng về độ dài 1 rồi nhân ma trận.
         norms = np.sqrt(np.asarray(self._ratings.power(2).sum(axis=1)).ravel())
         normalized = csr_matrix(self._ratings.multiply(1 / norms[:, None]))
         similarity = csr_matrix(normalized @ normalized.T)
         similarity.data = np.clip(similarity.data, 0, 1)
+        # Co rút (2.5): nhân với n_uv / (n_uv + γ), giảm tin cậy khi hai người nghe chung ít nghệ
+        # sĩ.
         if self.shrinkage:
             common = csr_matrix(self._binary @ self._binary.T)
             common.data /= common.data + self.shrinkage
             similarity = csr_matrix(similarity.multiply(common))
         similarity.setdiag(0)
         similarity.eliminate_zeros()
+        # Giữ L láng giềng có độ tương đồng dương lớn nhất; hòa thì theo mã người dùng.
         neighbor_rows, neighbor_columns, weights = [], [], []
         for user in range(len(self._users)):
             start, end = similarity.indptr[user : user + 2]
@@ -145,6 +156,7 @@ class UserCFRecommender(Recommender):
         return self
 
     def _score_catalog(self, user_id: str) -> tuple[NDArray[np.float64], NDArray[np.bool_]]:
+        # Chấm điểm mọi nghệ sĩ cho một người dùng; trả (điểm, có láng giềng hỗ trợ hay không).
         if not self._users:
             raise RuntimeError("Fit UserCF before inference")
         if not user_id:
@@ -155,9 +167,12 @@ class UserCFRecommender(Recommender):
         user = self._user_index[user_id]
         weights = self._weights.getrow(user)
         if self.aggregation == "sum":
-            # s_ui = sum over v in N_L(u) of sim(u, v) * x_vi; no support -> 0.
+            # Công thức (3.6): s_ui = tổng trên v ∈ N_L(u) của sim(u, v) · x_vi; không ai nghe → 0.
+            # Không chia, nên nghệ sĩ được nhiều láng giềng cùng nghe có điểm cao hơn.
             support = csr_matrix(weights @ self._binary).toarray().ravel()
             return csr_matrix(weights @ self._ratings).toarray().ravel(), support > 0
+        # Công thức (2.2): r̂_ui = r̄_u + Σ sim(u, v)(r_vi − r̄_v) / Σ |sim(u, v)|.
+        # Phép chia làm mất thông tin "bao nhiêu láng giềng cùng nghe" — lý do NDCG thấp.
         numerator = csr_matrix(weights @ self._centered).toarray().ravel()
         denominator = csr_matrix(weights @ self._binary).toarray().ravel()
         supported = denominator > 0
@@ -166,15 +181,15 @@ class UserCFRecommender(Recommender):
         return scores, supported
 
     def predict(self, user_id: str, item_id: str) -> float:
-        """Predict a proxy target, including explicit mean fallback without clipping."""
-        # ponytail: scalar predict scores the catalog; add batching if pair scoring becomes hot.
+        """Dự đoán điểm đại diện 1–5 cho một cặp (dùng cho RMSE), có dự phòng bằng trung bình."""
+        # Giới hạn: mỗi lần gọi chấm cả danh mục; cần gom theo lô nếu phải chấm nhiều cặp.
         scores, _ = self._score_catalog(user_id)
         if item_id not in self._item_index:
             raise ValueError("Artist is outside the train catalog")
         return float(scores[self._item_index[item_id]])
 
     def recommend(self, user_id: str, k: int, seen_item_ids: set[str]) -> list[Recommendation]:
-        """Rank the full unseen train catalog, breaking ties by numeric mapping order."""
+        """Xếp hạng mọi nghệ sĩ chưa nghe trong danh mục, hòa điểm thì theo thứ tự ánh xạ."""
         if type(k) is not int or k <= 0:
             raise ValueError("k must be a positive integer")
         scores, supported = self._score_catalog(user_id)
@@ -199,7 +214,7 @@ class UserCFRecommender(Recommender):
         ]
 
     def save(self, directory: Path) -> None:
-        """Save a new JSON/NPZ model directory without overwriting existing artifacts."""
+        """Lưu mô hình ra thư mục mới (JSON + NPZ, kèm SHA-256), không ghi đè tệp cũ."""
         if not self._users:
             raise RuntimeError("Fit UserCF before saving")
         directory.mkdir(parents=True, exist_ok=False)
@@ -225,7 +240,7 @@ class UserCFRecommender(Recommender):
             handle.write("\n")
 
     def _valid_values(self, values: NDArray[np.float64]) -> bool:
-        """Stored entries must match the representation (proxy 1-5, binary 1, log > 0)."""
+        """Giá trị lưu phải khớp biểu diễn (đại diện 1–5, nhị phân 1, log ≥ 1)."""
         if self.representation == "proxy":
             return bool(np.isin(values, [1, 2, 3, 4, 5]).all())
         if self.representation == "binary":
@@ -234,7 +249,7 @@ class UserCFRecommender(Recommender):
 
     @classmethod
     def load(cls, directory: Path) -> "UserCFRecommender":
-        """Restore numeric state and neighbors without calling fit or recomputing similarities."""
+        """Nạp lại mô hình đã lưu, kiểm tra mã băm, không huấn luyện hay tính lại độ tương đồng."""
         state: dict[str, Any] = json.loads((directory / "state.json").read_text(encoding="utf-8"))
         if (
             state.get("schema_version") != 1

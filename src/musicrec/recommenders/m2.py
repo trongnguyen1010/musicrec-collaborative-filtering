@@ -1,4 +1,8 @@
-"""Cold-user ItemCF, train-pair tag TF-IDF and popularity with explicit provided profiles."""
+"""M2: cơ chế dự phòng lai cho người dùng mới (Thuật toán 3.2, mục 3.8).
+
+Kết hợp ba nguồn điểm: ItemCF trên hồ sơ người dùng cung cấp, nội dung thẻ TF–IDF (3.10)–(3.11)
+và mức phổ biến. Trọng số cộng tác ω(N) tăng theo độ dài hồ sơ, công thức (3.12)–(3.13).
+"""
 
 import hashlib
 import json
@@ -21,7 +25,10 @@ from musicrec.recommenders.popularity import PopularityRecommender
 
 @dataclass(frozen=True)
 class ProfileScores:
-    """Scores and availability before mixing; no profile row is added to learned matrices."""
+    """Điểm của từng thành phần và cờ "có dữ liệu" trước khi trộn.
+
+    Hồ sơ người dùng mới không được thêm vào các ma trận đã học.
+    """
 
     cf: NDArray[np.float64]
     cf_available: NDArray[np.bool_]
@@ -34,20 +41,32 @@ class ProfileScores:
 def mix_profile_scores(
     features: ProfileScores, alpha: float, history_threshold: int
 ) -> NDArray[np.float64]:
-    """Blend available components per candidate, replacing missing components explicitly."""
+    """Trộn ba nguồn điểm cho từng ứng viên, công thức (3.12)–(3.13).
+
+    Nhận điểm thành phần, α và n_min; trả điểm M2 của mọi nghệ sĩ trong danh mục.
+    Thành phần nào không có dữ liệu cho một ứng viên thì được thay thế rõ ràng.
+    """
     if not isfinite(alpha) or not 0 <= alpha <= 1:
         raise ValueError("alpha must be finite in [0, 1]")
     if type(history_threshold) is not int or history_threshold <= 0:
         raise ValueError("history_threshold must be a positive integer")
+    # Công thức (3.13): s_fallback = α·s_content + (1 − α)·s_pop; nghệ sĩ không có thẻ chỉ dùng
+    # s_pop.
     fallback = features.popularity.copy()
     valid = features.content_available
     fallback[valid] = alpha * features.content[valid] + (1 - alpha) * fallback[valid]
+    # Công thức (3.12): ω(N) = min(1, N / n_min). Hồ sơ càng dài càng tin ItemCF;
+    # N ≥ n_min thì dùng hẳn ItemCF. Nghệ sĩ không có láng giềng hỗ trợ thì ω = 0.
     weight = min(1, features.history_size / history_threshold) * features.cf_available
     return np.asarray(weight * features.cf + (1 - weight) * fallback)
 
 
 class M2Recommender(Recommender):
-    """Learn shared components once; set_profile supplies an ephemeral cold-user history."""
+    """Học các thành phần dùng chung một lần; set_profile gắn hồ sơ tạm của người dùng mới.
+
+    alpha là α trong (3.13), history_threshold là n_min trong (3.12) (đã khóa α = 0,75,
+    n_min = 10), min_tag_df là số nghệ sĩ tối thiểu của một thẻ để giữ thẻ đó.
+    """
 
     def __init__(
         self, *, alpha: float = 0.5, history_threshold: int = 5, min_tag_df: int = 2
@@ -68,6 +87,7 @@ class M2Recommender(Recommender):
         self.idf: NDArray[np.float64]
 
     def _prepare(self) -> None:
+        # Dựng chỉ mục, chuẩn hóa mức phổ biến về [0, 1] và thứ tự Popularity.
         self._items = self.item_cf._items.copy()
         self._item_index = {item: n for n, item in enumerate(self._items)}
         self._popularity = self._raw_popularity / self._raw_popularity.max()
@@ -77,10 +97,11 @@ class M2Recommender(Recommender):
 
     @property
     def catalog(self) -> list[str]:
-        """Learning-catalog artists; profile artists outside it carry no CF or tag signal."""
+        """Danh mục của nhóm học; nghệ sĩ ngoài danh mục không có tín hiệu cộng tác hay thẻ."""
         return self._items.copy()
 
     def _proxy(self, row: Interaction) -> Interaction:
+        # Quy đổi lượt nghe sang điểm đại diện 1–5 theo bốn ngưỡng phân vị, công thức (3.3).
         if not isfinite(row.listening_count):
             raise ValueError("Profile and train counts must be finite")
         value = np.log2(1 + row.listening_count)
@@ -97,13 +118,17 @@ class M2Recommender(Recommender):
         *,
         tags: Iterable[tuple[str, str, str]] = (),
     ) -> "M2Recommender":
-        """Fit using learning users' train only; reject tags not on these exact pairs."""
+        """Học từ tập huấn luyện của nhóm học; chỉ giữ thẻ gắn trên đúng các cặp này.
+
+        Gồm: ngưỡng điểm đại diện, ItemCF (L = 40), ma trận thẻ TF–IDF và mức phổ biến.
+        """
         rows = list(interactions)
         if not rows or any(not isfinite(r.listening_count) for r in rows):
             raise ValueError("Expected non-empty finite learning interactions")
         pairs = {(r.user_id, r.item_id) for r in rows}
         if len(pairs) != len(rows):
             raise ValueError("Duplicate learning user-artist pairs")
+        # Bốn ngưỡng θ_q = phân vị 20/40/60/80% của log2(1 + lượt nghe), công thức (3.3).
         self.thresholds = np.quantile(
             np.log2(1 + np.array([r.listening_count for r in rows], dtype=np.float64)),
             [0.2, 0.4, 0.6, 0.8],
@@ -122,6 +147,7 @@ class M2Recommender(Recommender):
             if normalized:
                 allowed_rows += 1
                 allowed.add((user, item, normalized))
+        # TF–IDF theo công thức (3.10); thẻ xuất hiện ở ít hơn min_tag_df nghệ sĩ bị bỏ.
         tf = Counter((item, tag) for _, item, tag in allowed)
         df = Counter(tag for _, tag in tf)
         self.vocabulary = sorted(tag for tag, count in df.items() if count >= self.min_tag_df)
@@ -141,6 +167,7 @@ class M2Recommender(Recommender):
             shape=(len(items), len(columns)),
             dtype=np.float64,
         )
+        # Chuẩn hóa véc-tơ thẻ của mỗi nghệ sĩ về độ dài 1 để tích vô hướng là côsin.
         norms = np.sqrt(np.asarray(self._features.power(2).sum(axis=1)).ravel())
         inverse = np.divide(1, norms, out=np.zeros_like(norms), where=norms > 0)
         self._features = csr_matrix(self._features.multiply(inverse[:, None]))
@@ -163,7 +190,7 @@ class M2Recommender(Recommender):
         return self
 
     def set_profile(self, user_id: str, interactions: Iterable[Interaction]) -> None:
-        """Bind only supplied raw observations; never fit shared components or save profiles."""
+        """Gắn hồ sơ N nghệ sĩ người dùng chọn; không học lại, không lưu hồ sơ."""
         if not self._items:
             raise RuntimeError("Fit M2 before binding profiles")
         rows = list(interactions)
@@ -174,7 +201,7 @@ class M2Recommender(Recommender):
         self._profiles[user_id] = [self._proxy(r) for r in rows]
 
     def profile_scores(self, user_id: str) -> ProfileScores:
-        """Compute ItemCF support and cosine from only the currently supplied observations."""
+        """Tính điểm ItemCF, điểm nội dung thẻ và mức phổ biến chỉ từ hồ sơ hiện tại."""
         if not self._items:
             raise RuntimeError("Fit M2 before inference")
         if not user_id:
@@ -184,6 +211,8 @@ class M2Recommender(Recommender):
         known = [r for r in rows if r.item_id in self._item_index]
         indices = [self._item_index[r.item_id] for r in known]
         weights = np.array([np.log2(1 + r.listening_count) for r in known])
+        # Công thức (3.11): véc-tơ sở thích h_u = trung bình có trọng số véc-tơ thẻ của các
+        # nghệ sĩ trong hồ sơ (trọng số log2(1 + lượt nghe)); chuẩn hóa nên bỏ được mẫu số.
         profile = np.asarray(self._features[indices].T @ weights).ravel()
         norm = float(np.linalg.norm(profile))
         content = (
@@ -191,6 +220,7 @@ class M2Recommender(Recommender):
             if norm
             else np.zeros(len(self._items))
         )
+        # Đưa điểm ItemCF từ thang 1–5 về [0, 1] để trộn được với hai thành phần còn lại.
         return ProfileScores(
             np.clip((raw_cf - 1) / 4, 0, 1),
             supported,
@@ -201,7 +231,7 @@ class M2Recommender(Recommender):
         )
 
     def predict(self, user_id: str, item_id: str) -> float:
-        """Return the mixed [0,1] association score, not a calibrated probability."""
+        """Trả điểm trộn trong [0, 1], không phải xác suất đã hiệu chỉnh."""
         values = mix_profile_scores(
             self.profile_scores(user_id), self.alpha, self.history_threshold
         )
@@ -212,7 +242,7 @@ class M2Recommender(Recommender):
     def rank_scores(
         self, user_id: str, scores: NDArray[np.float64], k: int, seen: set[str], *, reason: str
     ) -> list[Recommendation]:
-        """Rank a component or mixture on the same full unseen catalog and profile mask."""
+        """Xếp hạng một thành phần hoặc điểm trộn trên cùng danh mục và cùng cách loại hồ sơ."""
         if not self._items:
             raise RuntimeError("Fit M2 before ranking")
         if not user_id or type(k) is not int or k <= 0:
@@ -221,14 +251,14 @@ class M2Recommender(Recommender):
             raise ValueError("Expected finite scores for the full learning catalog")
         excluded = seen | {r.item_id for r in self._profiles.get(user_id, [])}
         if not self._profiles.get(user_id) or np.array_equal(scores, self._popularity):
-            order = self._popular_order  # Exact Popularity item order for every N=0 branch.
+            order = self._popular_order  # N = 0: dùng đúng thứ tự Popularity.
         else:
             order = np.argsort(-np.round(scores, 12), kind="stable")
         chosen = [int(i) for i in order if self._items[i] not in excluded][:k]
         return [Recommendation(self._items[i], float(scores[i]), reason) for i in chosen]
 
     def recommend(self, user_id: str, k: int, seen_item_ids: set[str]) -> list[Recommendation]:
-        """Filter only supplied history; expose CF/content availability for each result."""
+        """Gợi ý cho người dùng mới; lý do gợi ý ghi rõ có dùng ItemCF và thẻ hay không."""
         features = self.profile_scores(user_id)
         scores = mix_profile_scores(features, self.alpha, self.history_threshold)
         results = self.rank_scores(user_id, scores, k, seen_item_ids, reason="m2")
@@ -245,7 +275,7 @@ class M2Recommender(Recommender):
         ]
 
     def save(self, directory: Path) -> None:
-        """Save shared numeric components in a new directory; omit ephemeral query profiles."""
+        """Lưu thành phần dùng chung ra thư mục mới (kèm SHA-256); không lưu hồ sơ người dùng."""
         if not self._items:
             raise RuntimeError("Fit M2 before saving")
         directory.mkdir(parents=True, exist_ok=False)
@@ -279,7 +309,7 @@ class M2Recommender(Recommender):
 
     @classmethod
     def load(cls, directory: Path) -> "M2Recommender":
-        """Restore shared components without fitting; callers must provide profiles again."""
+        """Nạp lại thành phần dùng chung sau khi kiểm tra mã băm; hồ sơ phải được gắn lại."""
         state: dict[str, Any] = json.loads((directory / "state.json").read_text(encoding="utf-8"))
         if state.get("schema_version") != 1 or state.get("model") != "m2":
             raise ValueError("Unsupported M2 schema")

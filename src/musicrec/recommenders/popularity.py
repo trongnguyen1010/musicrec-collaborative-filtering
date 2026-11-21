@@ -1,4 +1,4 @@
-"""Popularity baseline used as the mandatory reference model."""
+"""Mô hình cơ sở Popularity, mốc so sánh bắt buộc cho mọi mô hình cá nhân hóa."""
 
 from collections import defaultdict
 from collections.abc import Iterable
@@ -9,14 +9,15 @@ from musicrec.recommenders.base import Recommendation, Recommender
 
 
 class PopularityRecommender(Recommender):
-    """Rank by sum of log2(1 + raw count) on train, with numeric ID tie-breaking.
+    """Xếp hạng theo tổng log2(1 + lượt nghe) trên tập huấn luyện, công thức (3.4).
 
-    Scores express aggregate listening intensity, not distinct listener counts
-    or predicted ratings. Unseen users receive the same non-personalized list.
+    Hòa điểm thì xét mã nghệ sĩ dạng số. Điểm thể hiện cường độ nghe tổng hợp, không phải
+    số người nghe hay điểm dự đoán. Mọi người dùng nhận cùng một danh sách (không cá nhân
+    hóa), nên mô hình này cũng là phương án dự phòng khi lịch sử rỗng.
     """
 
     def __init__(self, score: str = "log_count_sum") -> None:
-        """score='log_count_sum' (default, locked) or 'listeners' (distinct train users c_i)."""
+        """score='log_count_sum' (mặc định, đã khóa) hoặc 'listeners' (số người nghe c_i)."""
         if score not in ("log_count_sum", "listeners"):
             raise ValueError("score must be 'log_count_sum' or 'listeners'")
         self.score = score
@@ -25,7 +26,7 @@ class PopularityRecommender(Recommender):
         self._users: set[str] = set()
 
     def fit(self, interactions: Iterable[Interaction]) -> "PopularityRecommender":
-        """Transform each observed raw count once; sum independently of row order."""
+        """Biến đổi từng lượt nghe rồi cộng theo nghệ sĩ; không phụ thuộc thứ tự dòng."""
         values: defaultdict[str, list[float]] = defaultdict(list)
         pairs: set[tuple[str, str]] = set()
         for interaction in interactions:
@@ -35,6 +36,7 @@ class PopularityRecommender(Recommender):
             if pair in pairs:
                 raise ValueError("Duplicate user-artist pair")
             pairs.add(pair)
+            # log2 làm giảm ảnh hưởng của vài người nghe một nghệ sĩ hàng nghìn lần.
             values[interaction.item_id].append(log2(1 + interaction.listening_count))
         if not values:
             raise ValueError("Expected non-empty training interactions")
@@ -55,7 +57,7 @@ class PopularityRecommender(Recommender):
         return self
 
     def predict(self, user_id: str, item_id: str) -> float:
-        """Return a global log-count score; reject artists outside train."""
+        """Trả điểm phổ biến toàn cục; từ chối nghệ sĩ ngoài danh mục huấn luyện."""
         del user_id
         if not self._scores:
             raise RuntimeError("Fit Popularity before inference")
@@ -64,7 +66,7 @@ class PopularityRecommender(Recommender):
         return self._scores[item_id]
 
     def recommend(self, user_id: str, k: int, seen_item_ids: set[str]) -> list[Recommendation]:
-        """Filter the full pre-ranked train catalog without filling from held-out items."""
+        """Lọc danh sách đã xếp sẵn, bỏ nghệ sĩ đã nghe, lấy k nghệ sĩ đầu."""
         if type(k) is not int or k <= 0:
             raise ValueError("k must be a positive integer")
         if not self._scores:

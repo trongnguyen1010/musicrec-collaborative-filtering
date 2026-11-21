@@ -1,4 +1,4 @@
-"""HTTP schemas kept separate from recommendation domain objects."""
+"""Lược đồ HTTP, tách riêng khỏi đối tượng của phần khuyến nghị."""
 
 from typing import Literal
 
@@ -13,7 +13,7 @@ class HistoryEntry(BaseModel):
 
 
 class RecommendRequest(BaseModel):
-    """user_id selects an existing user; otherwise history (0-5 artists) is a new user."""
+    """Có user_id là người dùng có sẵn; nếu không, history (0–5 nghệ sĩ) là người dùng mới."""
 
     user_id: str | None = None
     history: list[HistoryEntry] | None = Field(default=None, max_length=MAX_PROFILE_ARTISTS)

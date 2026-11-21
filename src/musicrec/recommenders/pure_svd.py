@@ -1,4 +1,7 @@
-"""PureSVD on zero-filled train values, without centering or learned biases."""
+"""PureSVD (mục 2.3): SVD rút gọn trên ma trận huấn luyện điền 0, không trừ trung bình.
+
+R ≈ U_k Σ_k V_kᵀ (2.9) và điểm của người dùng s_u = r_u V_k V_kᵀ (2.10).
+"""
 
 import hashlib
 import json
@@ -19,12 +22,12 @@ NUMERIC_TIE_DECIMALS = 12
 
 
 class PureSVDRecommender(Recommender):
-    """Score R V_k V_k.T using leading right singular vectors of sparse train R.
+    """Chấm điểm R V_k V_kᵀ bằng k véc-tơ kỳ dị phải lớn nhất của ma trận huấn luyện R.
 
-    Observations use the 1-5 proxy, binary presence or log2(1 + count).
-    Missing entries are algebraic zeros,
-    not observed dislikes. Scores are association strengths, not proxy ratings.
-    Unknown users have a zero profile and an explicitly marked ID-order fallback.
+    Giá trị quan sát là điểm đại diện 1–5, nhị phân (mô hình đã khóa, k = 16) hoặc
+    log2(1 + lượt nghe). Ô trống được điền 0 về mặt đại số, không có nghĩa là "không thích".
+    Khác SVD có độ lệch, PureSVD dùng cả ô trống nên học được thứ hạng tốt cho top-N.
+    Điểm là mức liên kết, không phải điểm dự đoán. Người dùng lạ có hồ sơ 0.
     """
 
     def __init__(
@@ -65,7 +68,7 @@ class PureSVDRecommender(Recommender):
         self._item_index = {item: i for i, item in enumerate(self._items)}
 
     def fit(self, interactions: Iterable[Interaction]) -> "PureSVDRecommender":
-        """Decompose canonical train CSR once; no validation fitting or SGD epochs."""
+        """Phân rã ma trận huấn luyện đúng một lần bằng ARPACK; không có vòng lặp SGD."""
         rows = list(interactions)
         if not rows or (
             self.representation == "proxy_score" and any(row.proxy_score is None for row in rows)
@@ -111,13 +114,16 @@ class PureSVDRecommender(Recommender):
             tol=self.tolerance,
             maxiter=self.max_iter,
         )
+        # Sắp giá trị kỳ dị giảm dần và cố định dấu từng véc-tơ để kết quả tất định.
         order = np.argsort(-singular, kind="stable")
         self._singular_values = np.asarray(singular[order], dtype=np.float64)
         self._components = np.array(components[order], dtype=np.float64, order="C")
         for component in self._components:
             if component[np.argmax(np.abs(component))] < 0:
                 component *= -1
+        # Chiếu người dùng: r_u V_k. Điểm cuối cùng = r_u V_k V_kᵀ, công thức (2.10).
         self._user_embeddings = np.asarray(self._ratings @ self._components.T)
+        # Kiểm tra số học: V_k trực chuẩn và sai số tái tạo nhỏ, nếu không thì dừng.
         orthogonality = float(
             np.abs(self._components @ self._components.T - np.eye(self.latent_factors)).max()
         )
@@ -143,6 +149,7 @@ class PureSVDRecommender(Recommender):
         return self
 
     def _score_catalog(self, user_id: str) -> NDArray[np.float64]:
+        # Điểm mọi nghệ sĩ cho một người dùng: (r_u V_k) V_kᵀ; người dùng lạ nhận toàn 0.
         if not self._users:
             raise RuntimeError("Fit PureSVD before inference")
         if not user_id:
@@ -152,7 +159,7 @@ class PureSVDRecommender(Recommender):
         return np.asarray(self._user_embeddings[self._user_index[user_id]] @ self._components)
 
     def predict(self, user_id: str, item_id: str) -> float:
-        """Return an unclipped association score, or zero for an unknown user profile."""
+        """Trả mức liên kết (không cắt) của một cặp; người dùng lạ trả 0."""
         if not self._users:
             raise RuntimeError("Fit PureSVD before inference")
         if not user_id:
@@ -167,7 +174,7 @@ class PureSVDRecommender(Recommender):
         )
 
     def recommend(self, user_id: str, k: int, seen_item_ids: set[str]) -> list[Recommendation]:
-        """Rank unseen train items with rounded score keys and numeric mapping ties."""
+        """Xếp hạng nghệ sĩ chưa nghe; điểm làm tròn để so, hòa thì theo thứ tự ánh xạ."""
         if type(k) is not int or k <= 0:
             raise ValueError("k must be a positive integer")
         scores = self._score_catalog(user_id)
@@ -182,7 +189,7 @@ class PureSVDRecommender(Recommender):
         return [Recommendation(self._items[i], float(scores[i]), reason) for i in ranked]
 
     def save(self, directory: Path) -> None:
-        """Save a new numeric projection artifact without overwriting existing runs."""
+        """Lưu phép chiếu đã học ra thư mục mới (kèm SHA-256), không ghi đè lần chạy cũ."""
         if not self._users:
             raise RuntimeError("Fit PureSVD before saving")
         directory.mkdir(parents=True, exist_ok=False)
@@ -214,7 +221,7 @@ class PureSVDRecommender(Recommender):
                 for name in ["ratings.npz", "projection.npz"]
             },
         }
-        # Keep existing proxy artifacts byte-compatible with the Step 12 control.
+        # Giữ tệp của biểu diễn điểm đại diện trùng từng byte với bản đối chứng ở Bước 12.
         if self.representation != "proxy_score":
             state["config"]["representation"] = self.representation
         with (directory / "state.json").open("x", encoding="utf-8") as handle:
@@ -223,7 +230,7 @@ class PureSVDRecommender(Recommender):
 
     @classmethod
     def load(cls, directory: Path) -> "PureSVDRecommender":
-        """Restore checked saved projections without fitting or decomposing the matrix."""
+        """Nạp lại phép chiếu đã lưu sau khi kiểm tra, không phân rã lại ma trận."""
         state: dict[str, Any] = json.loads((directory / "state.json").read_text(encoding="utf-8"))
         if (
             state.get("schema_version") != 1

@@ -1,4 +1,4 @@
-"""Repeatable Random baseline on the numeric HetRec train catalog."""
+"""Mô hình cơ sở Random, chạy lại cho cùng kết quả, trên danh mục huấn luyện HetRec."""
 
 import random
 from collections.abc import Iterable
@@ -8,11 +8,11 @@ from musicrec.recommenders.base import Recommendation, Recommender
 
 
 class RandomRecommender(Recommender):
-    """Shuffle the full train catalog per user, then remove observed history.
+    """Xáo trộn toàn bộ danh mục huấn luyện cho từng người dùng, rồi bỏ lịch sử đã nghe.
 
-    A fresh local RNG seeded with ``musicrec-random-v1:{seed}:{user_id}`` makes
-    inference independent of call order, cutoff and previously seen requests.
-    Scores are descending permutation ranks, not ratings or probabilities.
+    Bộ sinh ngẫu nhiên riêng gieo bằng ``musicrec-random-v1:{seed}:{user_id}`` nên kết quả
+    không phụ thuộc thứ tự gọi, giá trị K hay các yêu cầu trước. Điểm là thứ hạng giảm dần
+    của hoán vị, không phải điểm đánh giá hay xác suất. Random là mức sàn để so sánh.
     """
 
     def __init__(self, seed: int = 42) -> None:
@@ -23,7 +23,7 @@ class RandomRecommender(Recommender):
         self._users: set[str] = set()
 
     def fit(self, interactions: Iterable[Interaction]) -> "RandomRecommender":
-        """Learn only the train catalog and known user IDs; ignore counts."""
+        """Chỉ học danh mục huấn luyện và mã người dùng đã biết; bỏ qua lượt nghe."""
         items, users = set(), set()
         for interaction in interactions:
             items.add(interaction.item_id)
@@ -37,6 +37,7 @@ class RandomRecommender(Recommender):
         return self
 
     def _ranking(self, user_id: str) -> list[str]:
+        # Hoán vị danh mục cố định cho mỗi (hạt giống, người dùng).
         if not self._catalog:
             raise RuntimeError("Fit the Random baseline before inference")
         if not user_id:
@@ -46,15 +47,15 @@ class RandomRecommender(Recommender):
         return ranked
 
     def predict(self, user_id: str, item_id: str) -> float:
-        """Return the same rank score as recommend; reject unknown artists."""
-        # ponytail: scalar predict is O(catalog); cache per request if pair scoring becomes hot.
+        """Trả cùng điểm thứ hạng như recommend; từ chối nghệ sĩ không có trong danh mục."""
+        # Giới hạn: mỗi lần gọi duyệt cả danh mục; cần bộ nhớ đệm nếu phải chấm nhiều cặp.
         ranked = self._ranking(user_id)
         if item_id not in self._catalog:
             raise ValueError("Artist is outside the train catalog")
         return float(len(ranked) - ranked.index(item_id))
 
     def recommend(self, user_id: str, k: int, seen_item_ids: set[str]) -> list[Recommendation]:
-        """Return up to k distinct unseen artists; unknown users use the same baseline."""
+        """Trả tối đa k nghệ sĩ chưa nghe; người dùng mới cũng dùng cùng cách này."""
         if type(k) is not int or k <= 0:
             raise ValueError("k must be a positive integer")
         ranked = self._ranking(user_id)

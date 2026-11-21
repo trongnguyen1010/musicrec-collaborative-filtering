@@ -1,4 +1,4 @@
-"""H1 artist-side exposure and popularity-alignment metrics from train-only groups."""
+"""Độ xuất hiện phía nghệ sĩ và độ khớp mức phổ biến (H1), học từ tập huấn luyện."""
 
 import hashlib
 import json
@@ -10,7 +10,7 @@ from typing import Any
 
 @dataclass(frozen=True)
 class HeadSplit:
-    """Head = shortest listener-sorted prefix holding >= share of train pairs, plus ties."""
+    """Nhóm đầu: ít nghệ sĩ nhất (nhiều người nghe trước) chiếm ≥ share số cặp, kể cả hòa."""
 
     head: frozenset[str]
     non_head: frozenset[str]
@@ -19,7 +19,7 @@ class HeadSplit:
     total_pairs: int
 
     def summary(self) -> dict[str, Any]:
-        """Sizes, real shares and hashes of the sorted member lists, for the run record."""
+        """Kích thước, tỷ lệ thực và mã băm của danh sách thành viên, để ghi vào nhật ký chạy."""
         head, non_head = sorted(self.head), sorted(self.non_head)
         return {
             "rule": "shortest_prefix_by_train_distinct_listeners_with_ties_at_cut",
@@ -35,10 +35,11 @@ class HeadSplit:
 
 
 def head_split(listeners: Mapping[str, int], share: float = 0.2) -> HeadSplit:
-    """Split by distinct train listeners n_i; M = sum n_i is the number of train pairs.
+    """Chia nghệ sĩ thành nhóm đầu (phổ biến) và phần còn lại theo số người nghe n_i.
 
-    Every artist tied with the last head artist joins the head, so its real share can
-    exceed the target. The non-head group may be empty; callers must report that case.
+    M = tổng n_i là số cặp huấn luyện. Nghệ sĩ hòa với nghệ sĩ cuối của nhóm đầu cũng
+    vào nhóm đầu, nên tỷ lệ thực có thể vượt mục tiêu. Nhóm còn lại có thể rỗng; bên gọi
+    phải báo cáo trường hợp đó.
     """
     if not listeners or any(type(n) is not int or n <= 0 for n in listeners.values()):
         raise ValueError("Expected a non-empty catalog with positive integer listener counts")
@@ -68,7 +69,7 @@ def non_head_exposure(
     non_head: frozenset[str],
     k: int = 10,
 ) -> dict[str, float]:
-    """e_u = |R_u[:k] & T| / k; the denominator stays k for short or empty lists."""
+    """e_u = |R_u[:k] ∩ T| / k: tỷ lệ gợi ý thuộc nhóm ngoài đầu; mẫu số luôn là k."""
     if type(k) is not int or k <= 0:
         raise ValueError("k must be a positive integer")
     return {u: sum(i in non_head for i in recommendations[u][:k]) / k for u in users}
@@ -81,11 +82,11 @@ def popularity_alignment(
     users: Iterable[str],
     k: int = 10,
 ) -> dict[str, float | None]:
-    """|mean p(R_u[:k]) - mean p(reference_u in catalog)| with equal artist weights.
+    """|trung bình p(R_u[:k]) − trung bình p(tham chiếu của u)|, mỗi nghệ sĩ cùng trọng số.
 
-    With train histories as references this is A_history; with held-out targets it is
-    A_target. Users with an empty list or no in-catalog reference get None, never a zero
-    popularity for artists outside the train catalog.
+    Dùng để chia người dùng theo mức ưa chuộng nghệ sĩ phổ biến. Tham chiếu là lịch sử
+    huấn luyện thì ra A_history, là đích để dành thì ra A_target. Người có danh sách rỗng
+    hoặc không có tham chiếu trong danh mục nhận None, không gán độ phổ biến 0.
     """
     if type(k) is not int or k <= 0:
         raise ValueError("k must be a positive integer")
@@ -102,6 +103,6 @@ def popularity_alignment(
 
 
 def mean_defined(values: Mapping[str, float | None]) -> dict[str, Any]:
-    """Mean over users with a defined value, reporting the denominator."""
+    """Trung bình trên người dùng có giá trị xác định, kèm mẫu số."""
     defined = [v for v in values.values() if v is not None]
     return {"mean": fsum(defined) / len(defined) if defined else None, "users": len(defined)}

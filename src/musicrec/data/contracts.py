@@ -1,11 +1,11 @@
-"""Stable data contracts shared by offline and online layers."""
+"""Kiểu dữ liệu dùng chung giữa phần đánh giá ngoại tuyến và dịch vụ trực tuyến."""
 
 from dataclasses import dataclass
 
 
 @dataclass(frozen=True, slots=True)
 class Interaction:
-    """One implicit-feedback interaction after validation."""
+    """Một tương tác phản hồi ngầm: người dùng, nghệ sĩ, lượt nghe, điểm 1–5."""
 
     user_id: str
     item_id: str
@@ -13,6 +13,7 @@ class Interaction:
     proxy_score: float | None = None
 
     def __post_init__(self) -> None:
+        # Chặn tương tác không hợp lệ ngay khi tạo.
         if not self.user_id or not self.item_id:
             raise ValueError("user_id and item_id must be non-empty")
         if self.listening_count <= 0:

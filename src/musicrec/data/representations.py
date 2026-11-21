@@ -1,4 +1,4 @@
-"""Prepare observed interaction values with thresholds fitted on train only."""
+"""Biến đổi lượt nghe thành các biểu diễn đầu vào; ngưỡng chỉ học từ tập huấn luyện."""
 
 from typing import Any
 
@@ -17,7 +17,12 @@ REPRESENTATION_CONFIG: dict[str, Any] = {
 def prepare_representations(
     splits: dict[str, pd.DataFrame], mappings: dict[str, dict[str, int]]
 ) -> tuple[dict[str, pd.DataFrame], dict[str, csr_matrix], dict[str, Any]]:
-    """Keep complete split rows and build four sparse train inputs on the existing catalog."""
+    """Tạo bốn biểu diễn: lượt nghe gốc, log2(1 + lượt nghe), điểm đại diện 1–5 và nhị phân.
+
+    Nhận ba tập và ánh xạ; trả bảng có thêm cột biểu diễn, bốn ma trận thưa của tập huấn
+    luyện và tóm tắt. Ngưỡng điểm 1–5 chỉ học từ tập huấn luyện rồi áp cho cả ba tập
+    (chống rò rỉ thông tin từ tập kiểm thử).
+    """
     if set(splits) != {"train", "validation", "test"}:
         raise ValueError("Expected train, validation and test splits")
     if set(mappings) != {"user_id_to_index", "item_id_to_index"}:
@@ -56,11 +61,14 @@ def prepare_representations(
                 raise ValueError(f"{name}: indices do not match train mappings")
         if frame.user_index.isna().any() or (name == "train" and frame.item_index.isna().any()):
             raise ValueError("Train indices and all user indices must be known")
+        # log2(1 + lượt nghe) làm co lại khoảng giá trị rất lệch của lượt nghe.
         frame["log_count"] = np.log2(1.0 + frame.listening_count.to_numpy(dtype=np.float64))
+        # Bốn ngưỡng θ_q là phân vị 20/40/60/80% của tập huấn luyện; chỉ tính khi name == "train".
         if name == "train":
             thresholds = np.quantile(
                 frame.log_count, REPRESENTATION_CONFIG["quantiles"], method="linear"
             )
+        # Công thức (3.3): r_ui = 1 + số ngưỡng θ_q mà y_ui vượt hẳn (bằng ngưỡng thì giữ mức thấp).
         frame["proxy_score"] = (
             1 + (frame.log_count.to_numpy()[:, None] > thresholds).sum(axis=1)
         ).astype("uint8")

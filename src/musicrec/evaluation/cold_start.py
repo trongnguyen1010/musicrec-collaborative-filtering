@@ -1,4 +1,7 @@
-"""M2 validation with disjoint query users, explicit profiles and learning-only statistics."""
+"""Đánh giá M2 (Given-N) trên tập xác thực: nhóm người hỏi tách khỏi nhóm học.
+
+Thống kê (danh mục, số người nghe) chỉ học từ nhóm học; người hỏi chỉ cung cấp hồ sơ N nghệ sĩ.
+"""
 
 from collections import Counter
 from itertools import combinations
@@ -9,7 +12,7 @@ from musicrec.evaluation.ranking import gini_index, ndcg_at_k, precision_at_k, r
 
 
 def select_m2_config(rows: list[dict[str, Any]]) -> dict[str, Any]:
-    """Select on exactly N=1/3/5 validation NDCG@10, then lower alpha/threshold."""
+    """Chọn cấu hình M2 theo trung bình NDCG@10 xác thực ở N = 1, 3, 5; hòa thì α, n_min nhỏ hơn."""
     if not rows:
         raise ValueError("Expected non-empty M2 grid results")
     candidates = []
@@ -34,11 +37,11 @@ def evaluate_cold_start(
     *,
     ks: tuple[int, ...] = (5, 10, 20),
 ) -> dict[str, Any]:
-    """Reuse ranking metric definitions while separating learned data from the query cohort.
+    """Dùng lại định nghĩa thước đo xếp hạng nhưng tách dữ liệu học khỏi nhóm người hỏi.
 
-    Unlike warm-start evaluation, profiles may be empty and mask only supplied
-    artists. Query users never contribute to catalog/listeners/novelty/ILD.
-    This entry point handles validation only; Step 16 never opens test.
+    Khác với người dùng có sẵn, hồ sơ có thể rỗng và chỉ loại các nghệ sĩ đã cung cấp.
+    Người hỏi không bao giờ góp vào danh mục, số người nghe, độ mới hay ILD.
+    Hàm này chỉ dùng cho tập xác thực; Bước 16 không mở tập kiểm thử.
     """
     users = set(profiles)
     if not users or set(recommendations) != users or set(targets) != users:

@@ -1,4 +1,9 @@
-"""Train-only greedy relevance, redundancy and popularity re-ranking over a fixed pool."""
+"""M1: tái xếp hạng tham lam (Thuật toán 3.1, mục 3.7) trên một tập ứng viên cố định.
+
+Mỗi bước chọn nghệ sĩ cân bằng mức phù hợp, độ trùng lặp với các nghệ sĩ đã chọn và mức
+phổ biến, công thức (3.9). Mọi thống kê (số người nghe, độ tương đồng) chỉ học từ tập
+huấn luyện. Ý tưởng kế thừa MMR (2.14), thêm thành phần phạt phổ biến.
+"""
 
 import hashlib
 import json
@@ -18,7 +23,11 @@ from musicrec.recommenders.base import Recommendation, Recommender
 
 @dataclass(frozen=True)
 class CandidatePool:
-    """Base order and train-derived features, shared unchanged across all grid variants."""
+    """Tập ứng viên của mô hình nền và các đặc trưng học từ tập huấn luyện.
+
+    Dùng chung, không đổi, cho mọi cấu hình λ, β trong lưới, nên các biến thể so sánh
+    công bằng trên cùng ứng viên.
+    """
 
     recommendations: list[Recommendation]
     relevance: NDArray[np.float64]
@@ -29,26 +38,36 @@ class CandidatePool:
 def rerank_candidates(
     pool: CandidatePool, k: int, lambda_weight: float, beta: float
 ) -> list[Recommendation]:
-    """Select greedily; preserve base scores and break objective ties by base rank."""
+    """Chọn tham lam K nghệ sĩ từ tập ứng viên theo công thức (3.9).
+
+    Nhận tập ứng viên, K, λ (trọng số phù hợp so với đa dạng) và β (mức phạt phổ biến);
+    trả K nghệ sĩ theo thứ tự được chọn, giữ điểm gốc của mô hình nền. Hòa thì theo
+    thứ hạng gốc.
+    """
     if type(k) is not int or k <= 0:
         raise ValueError("k must be a positive integer")
     if not isfinite(lambda_weight) or not 0 <= lambda_weight <= 1:
         raise ValueError("lambda_weight must be finite and in [0, 1]")
     if not isfinite(beta) or beta < 0:
         raise ValueError("beta must be finite and non-negative")
+    # λ = 1, β = 0: không đa dạng, không phạt, giữ nguyên thứ tự của mô hình nền.
     if lambda_weight == 1 and beta == 0:
         return pool.recommendations[:k]
     n = len(pool.recommendations)
     selected: list[int] = []
     redundancy = np.zeros(n, dtype=np.float64)
     available = np.ones(n, dtype=bool)
+    # Phần không đổi qua các bước: λ·s_ui − β·p_i.
     fixed = lambda_weight * pool.relevance - beta * pool.popularity
     for _ in range(min(k, n)):
+        # Công thức (3.9): λ·s_ui − (1 − λ)·max_{j∈S} sim(i, j) − β·p_i.
+        # redundancy[i] = độ tương đồng lớn nhất của i với các nghệ sĩ đã chọn (tập S).
         utility = np.round(fixed - (1 - lambda_weight) * redundancy, 12)
         utility[~available] = -np.inf
         index = int(np.argmax(utility))
         selected.append(index)
         available[index] = False
+        # Sau khi chọn nghệ sĩ mới, cập nhật độ trùng lặp của các ứng viên còn lại.
         redundancy = np.maximum(redundancy, pool.similarity[:, index])
     return [
         Recommendation(
@@ -62,7 +81,11 @@ def rerank_candidates(
 
 
 class M1Recommender(Recommender):
-    """Wrap an already fitted base; fit learns binary train statistics without fitting it."""
+    """Bọc một mô hình nền đã huấn luyện (PureSVD); fit chỉ học thống kê nhị phân từ tập huấn luyện.
+
+    candidate_size = 100: M1 chỉ tái xếp hạng 100 ứng viên đầu của mô hình nền, vừa đủ rộng
+    để có nghệ sĩ ít phổ biến, vừa giữ ứng viên đủ phù hợp và tính nhanh.
+    """
 
     def __init__(
         self,
@@ -85,6 +108,7 @@ class M1Recommender(Recommender):
         self._binary: csc_matrix[np.float64]
 
     def _prepare(self) -> None:
+        # Công thức (3.8): p_i = ln(1 + c_i) / ln(1 + max c_j), mức phổ biến chuẩn hóa về [0, 1].
         self._item_index = {item: i for i, item in enumerate(self._items)}
         self._user_index = {user: i for i, user in enumerate(self._users)}
         self._histories = self._binary.tocsr()
@@ -92,7 +116,7 @@ class M1Recommender(Recommender):
         self._popularity = np.log1p(self._listeners) / np.log1p(self._listeners.max())
 
     def fit(self, interactions: Iterable[Interaction]) -> "M1Recommender":
-        """Ignore listening magnitude; duplicates are rejected rather than double-counted."""
+        """Học ma trận nghe nhị phân từ tập huấn luyện (bỏ qua số lượt nghe); từ chối cặp trùng."""
         rows = list(interactions)
         if not rows or len({(r.user_id, r.item_id) for r in rows}) != len(rows):
             raise ValueError("Expected non-empty unique train user-artist pairs")
@@ -113,11 +137,16 @@ class M1Recommender(Recommender):
         return self
 
     def _require_fit(self) -> None:
+        # Chặn gọi suy luận trước khi học thống kê.
         if not self._users:
             raise RuntimeError("Fit M1 train statistics before inference")
 
     def prepare_candidates(self, user_id: str, seen_item_ids: set[str]) -> CandidatePool:
-        """Retrieve once, min-max over the full pool, and compute only its small Gram matrix."""
+        """Lấy 100 ứng viên từ mô hình nền và tính đặc trưng cho M1.
+
+        Nhận người dùng và nghệ sĩ cần loại; trả CandidatePool gồm mức phù hợp chuẩn hóa
+        (3.7), mức phổ biến (3.8) và ma trận côsin giữa các ứng viên.
+        """
         self._require_fit()
         if not user_id:
             raise ValueError("user_id must be non-empty")
@@ -135,21 +164,24 @@ class M1Recommender(Recommender):
             raise ValueError("Base scores must be finite")
         if not len(ids):
             return CandidatePool(candidates, scores, scores.copy(), np.empty((0, 0)))
+        # Công thức (3.7): chuẩn hóa min–max điểm mô hình nền về [0, 1] để so được với p_i.
         spread = float(np.ptp(scores))
         relevance = (scores - scores.min()) / spread if spread else np.ones(len(scores))
         indices = [self._item_index[item] for item in ids]
         columns = self._binary[:, indices]
+        # Côsin giữa hai nghệ sĩ trên véc-tơ người nghe nhị phân: số người nghe chung chia
+        # căn tích số người nghe. Chỉ tính cho 100 ứng viên nên ma trận nhỏ.
         similarity = (columns.T @ columns).toarray()
         similarity /= np.sqrt(np.outer(self._listeners[indices], self._listeners[indices]))
         return CandidatePool(candidates, relevance, self._popularity[indices], similarity)
 
     def predict(self, user_id: str, item_id: str) -> float:
-        """Return the base relevance score; greedy utility depends on the selected prefix."""
+        """Trả điểm của mô hình nền; điểm M1 phụ thuộc các nghệ sĩ đã chọn nên không tính riêng."""
         self._require_fit()
         return self.base.predict(user_id, item_id)
 
     def recommend(self, user_id: str, k: int, seen_item_ids: set[str]) -> list[Recommendation]:
-        """Return greedy order with base scores; scores need not decrease after re-ranking."""
+        """Trả danh sách theo thứ tự tham lam, kèm điểm gốc (điểm không nhất thiết giảm dần)."""
         if type(k) is not int or not 0 < k <= self.candidate_size:
             raise ValueError("k must be a positive integer no larger than candidate_size")
         return rerank_candidates(
@@ -157,7 +189,7 @@ class M1Recommender(Recommender):
         )
 
     def save(self, directory: Path) -> None:
-        """Save numeric train context and parameters; base checkpoint stays separately pinned."""
+        """Lưu thống kê huấn luyện và tham số λ, β; mô hình nền được lưu và kiểm tra riêng."""
         self._require_fit()
         directory.mkdir(parents=True, exist_ok=False)
         save_npz(directory / "binary.npz", self._binary)
@@ -177,7 +209,7 @@ class M1Recommender(Recommender):
 
     @classmethod
     def load(cls, directory: Path, *, base: Recommender) -> "M1Recommender":
-        """Load context without fit; the caller supplies the matching pinned base checkpoint."""
+        """Nạp lại M1 không huấn luyện; bên gọi đưa vào đúng mô hình nền đã ghim."""
         state: dict[str, Any] = json.loads((directory / "state.json").read_text(encoding="utf-8"))
         if state.get("schema_version") != 1 or state.get("model") != "m1":
             raise ValueError("Unsupported M1 schema")

@@ -1,4 +1,4 @@
-"""Offline evaluation metrics."""
+"""Các thước đo đánh giá ngoại tuyến."""
 
 from musicrec.evaluation.ranking import (
     evaluate_ranking,

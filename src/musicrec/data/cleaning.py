@@ -1,4 +1,4 @@
-"""Clean source observations without splitting or learning model inputs."""
+"""Làm sạch dữ liệu gốc Last.fm HetRec 2011 (mục 3.4), chưa chia tập và chưa học gì từ dữ liệu."""
 
 import csv
 from pathlib import Path
@@ -8,7 +8,7 @@ import pandas as pd
 
 
 def read_source_table(path: Path) -> pd.DataFrame:
-    """Read literal TAB fields, preserving NA text and per-file encoding."""
+    """Đọc tệp .dat phân tách bằng TAB, giữ nguyên chữ "NA" và bảng mã của từng tệp."""
     frame = pd.read_csv(
         path,
         sep="\t",
@@ -23,7 +23,11 @@ def read_source_table(path: Path) -> pd.DataFrame:
 def clean_interactions(
     source: pd.DataFrame, artist_ids: set[str], min_user_interactions: int = 5
 ) -> tuple[pd.DataFrame, pd.DataFrame, dict[str, int]]:
-    """Keep valid distinct counts; reject conflicting pairs instead of summing."""
+    """Làm sạch bảng user_artists: loại dòng lỗi, cặp trùng và người dùng có dưới 5 nghệ sĩ.
+
+    Nhận bảng gốc và danh mục nghệ sĩ; trả (bảng sạch, bảng dòng bị loại kèm lý do, tóm tắt).
+    Cặp trùng có lượt nghe khác nhau bị báo lỗi thay vì cộng dồn, vì không biết giá trị nào đúng.
+    """
     if type(min_user_interactions) is not int or min_user_interactions < 1:
         raise ValueError("min_user_interactions must be a positive integer")
     frame = source.loc[:, ["userID", "artistID", "weight"]].copy()
@@ -34,7 +38,7 @@ def clean_interactions(
         .apply(lambda column: column.str.fullmatch(r"[1-9][0-9]*", na=False))
         .all(axis=1)
     )
-    # HetRec counts are positive int64 integers, not explicit ratings or floats.
+    # Lượt nghe trong HetRec là số nguyên dương int64, không phải điểm đánh giá hay số thực.
     integers = frame.weight.str.fullmatch(r"[0-9]+", na=False)
     counts = frame.weight.where(integers, "0").map(int)
     valid_counts = integers & counts.gt(0) & counts.le(2**63 - 1)
@@ -54,6 +58,8 @@ def clean_interactions(
     duplicate = observed.duplicated(["userID", "artistID", "weight"])
     frame.loc[observed.index[duplicate], "removal_reason"] = "duplicate_observation"
     eligible = frame.removal_reason.eq("")
+    # Người có dưới min_user_interactions (5) nghệ sĩ không đủ để chia ba tập huấn luyện,
+    # xác thực, kiểm thử nên bị loại.
     histories = frame.loc[eligible].groupby("userID").artistID.nunique()
     short_users = set(histories[histories < min_user_interactions].index)
     frame.loc[eligible & frame.userID.isin(short_users), "removal_reason"] = "user_below_minimum"
@@ -86,7 +92,7 @@ def clean_tables(
     assignments: pd.DataFrame,
     min_user_interactions: int = 5,
 ) -> tuple[dict[str, pd.DataFrame], dict[str, Any]]:
-    """Separate foreign artist tags while keeping authorship and missing content."""
+    """Làm sạch các bảng nghệ sĩ, thẻ và gán thẻ; tách thẻ của nghệ sĩ ngoài danh mục ra riêng."""
     for frame, key in [(artists, "id"), (tags, "tagID")]:
         if (
             frame[key].duplicated().any()

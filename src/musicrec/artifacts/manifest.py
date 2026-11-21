@@ -1,11 +1,11 @@
-"""Validate the minimum provenance information for a serving artifact."""
+"""Kiểm tra thông tin nguồn gốc tối thiểu của một gói mô hình phục vụ."""
 
 from dataclasses import dataclass
 
 
 @dataclass(frozen=True, slots=True)
 class ReleaseManifest:
-    """Metadata required to trace a deployed model back to an experiment."""
+    """Siêu dữ liệu cần để truy ngược mô hình đang chạy về đúng lần thực nghiệm."""
 
     model_version: str
     git_sha: str

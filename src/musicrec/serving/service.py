@@ -1,9 +1,10 @@
-"""Route demo requests to the pinned models; shared by FastAPI, Streamlit and offline checks.
+"""Điều hướng yêu cầu tới mô hình đã ghim; dùng chung cho FastAPI, Streamlit và kiểm tra ngoại
+tuyến.
 
-Branches follow the approved demo plan (docs/KE_HOACH_PROTOTYPE_DEMO.md, P1-P5):
-an existing train user gets PureSVD, M1 over that PureSVD, or ALS, with train and
-validation masked as in the official test; a new user with 1-5 chosen artists gets M2;
-an empty profile falls back to Popularity.
+Ba nhánh theo kế hoạch demo (docs/KE_HOACH_PROTOTYPE_DEMO.md, P1–P5): người dùng có sẵn
+nhận PureSVD, M1 trên PureSVD hoặc ALS, loại lịch sử huấn luyện và xác thực đúng như khi
+chấm tập kiểm thử; người dùng mới chọn 1–5 nghệ sĩ thì dùng M2; hồ sơ rỗng thì dùng
+Popularity. Vì cùng cách loại lịch sử, danh sách trên API trùng với đánh giá ngoại tuyến.
 """
 
 import threading
@@ -21,19 +22,19 @@ from musicrec.serving.release import Release
 ExistingModel = Literal["pure_svd", "m1", "implicit_als"]
 Branch = Literal["existing_user", "new_user", "popularity"]
 MAX_PROFILE_ARTISTS = 5
-# The validation grid of configs/models/m1_pure_svd.yaml; only these points have metrics.
+# Lưới xác thực trong configs/models/m1_pure_svd.yaml; chỉ các điểm này có số liệu đánh giá.
 M1_LAMBDAS = (0.5, 0.75, 1.0)
 M1_BETAS = (0.0, 0.1, 0.25, 0.5)
 _PROFILE_ID = "demo_new_user"
 
 
 class UnknownUserError(LookupError):
-    """The requested user is not one of the train users the checkpoints were fitted on."""
+    """Người dùng được yêu cầu không có trong tập huấn luyện của mô hình (API trả 404)."""
 
 
 @dataclass(frozen=True, slots=True)
 class ArtistInfo:
-    """Display data for one artist; listeners counts distinct train users (as ARP does)."""
+    """Thông tin hiển thị một nghệ sĩ; listeners là số người nghe trong tập huấn luyện (như ARP)."""
 
     item_id: str
     name: str
@@ -44,7 +45,7 @@ class ArtistInfo:
 
 @dataclass(frozen=True, slots=True)
 class RecommendationResult:
-    """Serialization-independent output of one routed request."""
+    """Kết quả của một yêu cầu, chưa phụ thuộc định dạng trả về."""
 
     release: str
     branch: Branch
@@ -57,14 +58,14 @@ class RecommendationResult:
 
 @dataclass(frozen=True, slots=True)
 class ProfileEntry:
-    """One artist chosen by a new user; listening_count is optional in the demo."""
+    """Một nghệ sĩ người dùng mới chọn; listening_count không bắt buộc trong demo."""
 
     item_id: str
     listening_count: float | None = None
 
 
 class DemoService:
-    """Keeps model routing and masking out of HTTP handlers."""
+    """Tách việc chọn mô hình và loại lịch sử ra khỏi phần xử lý HTTP."""
 
     def __init__(self, release: Release) -> None:
         self.release = release
@@ -84,23 +85,23 @@ class DemoService:
         self._train_users = set(release.train.user_id)
         self._listeners = release.train.groupby("item_id").user_id.nunique().to_dict()
         self._m2_catalog = set(release.m2.catalog)
-        # Unknown counts get the middle proxy level: log2(1+c) halfway between the
-        # 40% and 60% train quantiles that M2 uses as proxy thresholds.
+        # Lượt nghe không rõ nhận mức đại diện ở giữa: log2(1 + c) nằm giữa phân vị
+        # 40% và 60% của tập huấn luyện, là các ngưỡng điểm đại diện mà M2 dùng.
         low, high = release.m2.thresholds[1], release.m2.thresholds[2]
         self.default_listening_count = float(2 ** ((low + high) / 2) - 1)
         self._m2_lock = threading.Lock()
 
     @property
     def users(self) -> list[str]:
-        """Train users in numeric order."""
+        """Người dùng trong tập huấn luyện, theo thứ tự mã số."""
         return sorted(self._train_users, key=lambda u: (not u.isdecimal(), len(u), u))
 
     def masked_items(self, user_id: str) -> set[str]:
-        """Train plus validation artists of a user, the official test mask."""
+        """Nghệ sĩ huấn luyện và xác thực của một người: đúng phần bị loại khi chấm tập kiểm thử."""
         return set(self._masks.get(user_id, set()))
 
     def artist(self, item_id: str) -> ArtistInfo:
-        """Name and train popularity of one artist; unnamed ids keep the id as name."""
+        """Tên và mức phổ biến của một nghệ sĩ; nghệ sĩ không có tên thì dùng mã làm tên."""
         row = self.release.artists.get(item_id, {})
         return ArtistInfo(
             item_id,
@@ -111,7 +112,7 @@ class DemoService:
         )
 
     def search_artists(self, query: str, limit: int) -> list[ArtistInfo]:
-        """Case-insensitive substring search over the M2 catalog, most listened first."""
+        """Tìm nghệ sĩ theo chuỗi con trong danh mục M2, nhiều người nghe trước."""
         needle = query.casefold().strip()
         matches = [
             self.artist(item)
@@ -128,10 +129,10 @@ class DemoService:
         model: ExistingModel,
         m1_params: tuple[float, float] | None = None,
     ) -> RecommendationResult:
-        """Rank the unseen train catalog for a known user with one pinned model.
+        """Nhánh 1: gợi ý cho người dùng có sẵn bằng một mô hình đã ghim.
 
-        m1_params=(lambda, beta) re-ranks the same PureSVD top-100 pool with another point
-        of the M1 validation grid; None keeps the selected (pinned) configuration.
+        m1_params=(λ, β) tái xếp hạng cùng 100 ứng viên PureSVD với một điểm khác trong lưới
+        xác thực của M1; None giữ cấu hình đã chọn.
         """
         if user_id not in self._train_users:
             raise UnknownUserError(user_id)
@@ -153,18 +154,19 @@ class DemoService:
         )
 
     def recommend_popular(self, k: int, reason: str, seen: set[str]) -> RecommendationResult:
-        """Popularity over train, flagged as a fallback with the cause."""
+        """Nhánh 3: Popularity trên tập huấn luyện, đánh dấu là dự phòng kèm lý do."""
         recommendations = self.release.popularity.recommend(_PROFILE_ID, k, seen)
         return RecommendationResult(
             self.release.version, "popularity", "popularity", True, reason, recommendations
         )
 
     def recommend_new(self, profile: Sequence[ProfileEntry], k: int) -> RecommendationResult:
-        """M2 on every chosen artist, exactly as evaluated; Popularity for an empty profile.
+        """Nhánh 2: M2 trên mọi nghệ sĩ đã chọn, đúng như lúc đánh giá; hồ sơ rỗng thì dùng
+        Popularity.
 
-        Artists outside the M2 catalog still count toward the profile size (as in the
-        official M2 test) but carry no signal; if none is known, M2 reduces to its
-        popularity component and the result is flagged as a fallback.
+        Nghệ sĩ ngoài danh mục M2 vẫn được tính vào độ dài hồ sơ (như khi chấm M2) nhưng
+        không mang tín hiệu; nếu không có nghệ sĩ nào đã biết, M2 chỉ còn thành phần phổ
+        biến và kết quả được đánh dấu là dự phòng.
         """
         if len(profile) > MAX_PROFILE_ARTISTS:
             raise ValueError(f"A new-user profile holds at most {MAX_PROFILE_ARTISTS} artists")
@@ -199,7 +201,7 @@ class DemoService:
         )
 
     def mean_listeners(self, recommendations: Sequence[Recommendation]) -> float | None:
-        """Mean train listeners of one list, i.e. ARP restricted to a single user."""
+        """Số người nghe trung bình của một danh sách, tức ARP của riêng một người dùng."""
         if not recommendations:
             return None
         return float(np.mean([self._listeners.get(r.item_id, 0) for r in recommendations]))

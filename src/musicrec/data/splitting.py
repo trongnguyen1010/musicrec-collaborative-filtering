@@ -1,4 +1,7 @@
-"""Split observed pairs without learning features or dropping held-out artists."""
+"""Chia dữ liệu thành tập huấn luyện, xác thực, kiểm thử theo từng người dùng (mục 3.5).
+
+Chỉ chia, không học đặc trưng; nghệ sĩ chỉ xuất hiện ở tập để dành vẫn được giữ lại.
+"""
 
 import math
 import random
@@ -14,7 +17,11 @@ def split_interactions(
     validation_fraction: float = 0.1,
     test_fraction: float = 0.1,
 ) -> tuple[dict[str, pd.DataFrame], dict[str, dict[str, int]], dict[str, Any]]:
-    """Return complete splits, train-only mappings and catalog diagnostics."""
+    """Chia 80/10/10 trong từng người dùng với hạt giống cố định, công thức (3.2).
+
+    Nhận bảng đã làm sạch; trả ba tập, ánh xạ mã → chỉ số (chỉ từ tập huấn luyện) và
+    thống kê danh mục. Dữ liệu không có dấu thời gian nên chia ngẫu nhiên trong từng người.
+    """
     columns = ["user_id", "item_id", "listening_count"]
     if list(interactions.columns) != columns or interactions.empty:
         raise ValueError("Expected non-empty cleaned user_id/item_id/listening_count columns")
@@ -51,11 +58,14 @@ def split_interactions(
     frame = frame.sort_values(["user_id", "item_id"], key=lambda col: col.map(int)).reset_index(
         drop=True
     )
+    # Một bộ sinh ngẫu nhiên với hạt giống cố định (42) để chạy lại ra đúng cách chia.
     rng = random.Random(seed)
     indices: dict[str, list[int]] = {name: [] for name in ["train", "validation", "test"]}
     counts = []
     for user_id, group in frame.groupby("user_id", sort=False):
         n = len(group)
+        # Công thức (3.2): n_val = n_test = max(1, ⌊0,1·n⌋), phần còn lại là huấn luyện,
+        # nên mỗi người có ít nhất một nghệ sĩ ở mỗi tập.
         n_val = max(1, math.floor(validation_fraction * n))
         n_test = max(1, math.floor(test_fraction * n))
         if n - n_val - n_test < 1:
